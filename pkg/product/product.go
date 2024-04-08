@@ -40,6 +40,11 @@ func (p *Product) Parse(line string) error {
 	p.Provider = fields[fieldProvider]
 	p.providerArgs = fields[fieldArgv:]
 
+	// Remove trailing empty arguments
+	for p.providerArgs[len(p.providerArgs)-1] == "" {
+		p.providerArgs = p.providerArgs[:len(p.providerArgs)-1]
+	}
+
 	return nil
 }
 
