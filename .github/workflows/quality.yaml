@@ -1,0 +1,41 @@
+name: Quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  quality-go:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: go.mod
+        check-latest: true
+        cache: false
+    - name: Install dependencies
+      run: |
+        export DEBIAN_NONINTERACTIVE=1
+        sudo apt update
+        sudo apt install -y make
+    - name: Tidy up
+      run: |
+        make tidy
+        if [ -n "$(git status --porcelain)" ]; then
+          echo "Error: go.mod and/or go.sum are out of sync. Please run 'go mod tidy' and commit the changes."
+          exit 1
+        else
+    - name: Build
+      run: make build
+    - name: Lint
+      uses: golangci/golangci-lint-action@v4
+      with:
+        version: latest
+        timeout: 10m
+        enable: true
+        config: .golangci.yml
+    - name: Test
+      run: make test
