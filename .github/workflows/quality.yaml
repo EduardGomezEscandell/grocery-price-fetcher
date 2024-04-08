@@ -27,9 +27,9 @@ jobs:
       run: |
         make tidy
         if [ -n "$(git status --porcelain)" ]; then
-          echo "Error: go.mod and/or go.sum are out of sync. Please run 'go mod tidy' and commit the changes."
+          echo "Error: go.mod and/or go.sum are out of sync. Please run 'go mod tidy' and commit the changes." &>2
           exit 1
-        else
+        fi
     - name: Build
       run: make build
     - name: Lint
