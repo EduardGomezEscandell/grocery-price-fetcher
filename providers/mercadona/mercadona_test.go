@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"example.com/compra/providers/mercadona"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/providers/mercadona"
 	"github.com/stretchr/testify/require"
 )
 

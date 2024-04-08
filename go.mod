@@ -1,4 +1,4 @@
-module example.com/compra
+module github.com/EduardGomezEscandell/grocery-price-fetcher
 
 go 1.22
 

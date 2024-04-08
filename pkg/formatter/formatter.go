@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"example.com/compra/pkg/product"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/product"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"

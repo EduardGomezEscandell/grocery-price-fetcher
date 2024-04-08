@@ -10,10 +10,10 @@ import (
 	"sync"
 	"time"
 
-	"example.com/compra/pkg/formatter"
-	"example.com/compra/pkg/product"
-	"example.com/compra/providers/bonpreu"
-	"example.com/compra/providers/mercadona"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/formatter"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/product"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/providers/bonpreu"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/providers/mercadona"
 	log "github.com/sirupsen/logrus"
 )
 
