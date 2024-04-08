@@ -1,6 +1,6 @@
 module example.com/compra
 
-go 1.22.1
+go 1.22
 
 require (
 	github.com/sirupsen/logrus v1.9.3
