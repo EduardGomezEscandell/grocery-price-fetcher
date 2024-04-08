@@ -18,7 +18,10 @@ func TestEndToEnd(t *testing.T) {
 
 	output := filepath.Join(t.TempDir(), "output.tsv")
 
-	out, err := exec.Command("../bin/compra", "-i", input, "-o", output).CombinedOutput()
+	cmd := exec.Command("../bin/compra", "-i", input, "-o", output)
+	cmd.Env = append(os.Environ(), "LC_NUMERIC=ca_ES.UTF8")
+
+	out, err := cmd.CombinedOutput()
 	require.NoError(t, err, "Stdout+Stderr: %s", string(out))
 
 	require.FileExists(t, output)
