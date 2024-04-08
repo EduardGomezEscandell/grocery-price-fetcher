@@ -1,0 +1,45 @@
+linters:
+  enable:
+    - copyloopvar
+    - dupl
+    - dupword
+    - durationcheck
+    - errname
+    - errorlint
+    - forbidigo
+    - forcetypeassert
+    - gci
+    - gocheckcompilerdirectives
+    - godot
+    - gofmt
+    - gosec
+    - intrange
+    - misspell
+    - nakedret
+    - nolintlint
+    - protogetter
+    - revive
+    - sloglint
+    - testifylint
+    - thelper
+    - tparallel
+    - unconvert
+    - unparam
+    - usestdlibvars
+    - whitespace
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+
+linters-settings:
+  forbidigo:
+    forbid:
+      - ioutil\.
+      - ^print.*$
+  nakedret:
+    max-func-lines: 1
+  nolintlint:
+    require-explanation: true
+    require-specific: true

@@ -24,7 +24,7 @@ const (
 	fieldArgv
 )
 
-func (p *Product) Parse(r Registry, line string) error {
+func (p *Product) Parse(line string) error {
 	fields := strings.Split(line, "\t")
 	if len(fields) < 2 {
 		p.Name = "COULD NOT PARSE"
@@ -34,7 +34,7 @@ func (p *Product) Parse(r Registry, line string) error {
 	p.Name = fields[flieldName]
 
 	if _, err := fmt.Sscanf(fields[fieldCount], "%f", &p.Count); err != nil {
-		return fmt.Errorf("could not parse count for %s: %v", p.Name, err)
+		return fmt.Errorf("could not parse count for %s: %w", p.Name, err)
 	}
 
 	p.Provider = fields[fieldProvider]
@@ -52,7 +52,7 @@ func (p *Product) Get(ctx context.Context, r *Registry) error {
 	log.Debugf("Provider %s: fetching price for %s", p.Provider, p.Name)
 	price, err := getter(ctx, p.Name, p.providerArgs...)
 	if err != nil {
-		return fmt.Errorf("could not get price for %s: %v", p.Name, err)
+		return fmt.Errorf("could not get price for %s: %w", p.Name, err)
 	}
 	log.Debugf("Provider %s: got price for %s", p.Provider, p.Name)
 

@@ -10,12 +10,11 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/sirupsen/logrus"
-
 	"example.com/compra/pkg/formatter"
 	"example.com/compra/pkg/product"
 	"example.com/compra/providers/bonpreu"
 	"example.com/compra/providers/mercadona"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -29,17 +28,28 @@ func main() {
 		log.Fatalf("Error: %v", err)
 	}
 
-	in, err := os.Open(s.inputPath)
-	if err != nil {
-		log.Fatalf("could not open file: %v", err)
+	var in *os.File
+	if s.inputPath == "" {
+		in = os.Stdin
+		log.Info("Reading from STDIN. Write your products and press Ctrl+D to finish.")
+	} else {
+		in, err = os.Open(s.inputPath)
+		if err != nil {
+			log.Fatalf("could not open file: %v", err)
+		}
+		defer in.Close()
 	}
-	defer in.Close()
 
-	out, err := os.Open(s.outputPath)
-	if err != nil {
-		log.Fatalf("could not open file: %v", err)
+	var out *os.File
+	if s.outputPath == "" {
+		out = os.Stdout
+	} else {
+		out, err = os.Create(s.outputPath)
+		if err != nil {
+			log.Fatalf("could not open file: %v", err)
+		}
+		defer out.Close()
 	}
-	defer out.Close()
 
 	var registry product.Registry
 	registry.Register("Bonpreu", bonpreu.Get)
@@ -50,7 +60,7 @@ func main() {
 		log.Fatalf("Error: %v", err)
 	}
 
-	if err := printOutput(out, products, outFmt); err != nil {
+	if err := formatOutput(out, products, outFmt); err != nil {
 		log.Fatalf("Error: %v", err)
 	}
 }
@@ -66,16 +76,16 @@ func parseInput() settings {
 	var sett settings
 
 	flag.BoolVar(&sett.verbose, "v", false, "verbose mode")
-	flag.StringVar(&sett.format, "fmt", "", "output format (json, csv, tsv, ini)")
-	flag.StringVar(&sett.inputPath, "i", os.Stdin.Name(), "input file path")
-	flag.StringVar(&sett.outputPath, "o", os.Stdout.Name(), "output file path")
+	flag.StringVar(&sett.format, "fmt", "table", "output format (json, csv, tsv, ini)")
+	flag.StringVar(&sett.inputPath, "i", "", "input file path (default: STDIN)")
+	flag.StringVar(&sett.outputPath, "o", "", "output file path (default: STDOUT)")
 
 	flag.Parse()
 	return sett
 }
 
 func run(r io.Reader, reg product.Registry) ([]*product.Product, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	scanner := bufio.NewScanner(r)
@@ -91,12 +101,13 @@ func run(r io.Reader, reg product.Registry) ([]*product.Product, error) {
 		go func() {
 			defer wg.Done()
 
-			log.Debug("Parsing row: ", row)
-
-			if err := p.Parse(reg, row); err != nil {
+			if err := p.Parse(row); err != nil {
 				log.Warningf("could not parse row %q: %v", row, err)
 				return
 			}
+
+			ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+			defer cancel()
 
 			err := p.Get(ctx, &reg)
 			if err != nil {
@@ -107,27 +118,28 @@ func run(r io.Reader, reg product.Registry) ([]*product.Product, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("could not scan file: %v", err)
+		return nil, fmt.Errorf("could not scan file: %w", err)
 	}
 
 	wg.Wait()
+	log.Debug("All products have been processed")
 
 	return products, nil
 }
 
-func printOutput(w io.Writer, products []*product.Product, f formatter.Formatter) error {
+func formatOutput(w io.Writer, products []*product.Product, f formatter.Formatter) error {
 	if err := f.PrintHead(w); err != nil {
-		return fmt.Errorf("could not write to output: %v", err)
+		return fmt.Errorf("could not write header to output: %w", err)
 	}
 
 	for _, p := range products {
 		if err := f.Println(w, p); err != nil {
-			return fmt.Errorf("could not write to output: %v", err)
+			return fmt.Errorf("could not write results to output: %w", err)
 		}
 	}
 
 	if err := f.PrintTail(w); err != nil {
-		return fmt.Errorf("could not write to output: %v", err)
+		return fmt.Errorf("could not write footer to output: %w", err)
 	}
 
 	return nil

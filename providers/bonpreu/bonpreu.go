@@ -31,9 +31,13 @@ func Get(ctx context.Context, name string, args ...string) (price float32, err e
 	}
 	defer r.Body.Close()
 
+	if r.StatusCode != http.StatusOK {
+		return 0, fmt.Errorf("unexpected status code: %d", r.StatusCode)
+	}
+
 	content, err := io.ReadAll(r.Body)
 	if err != nil {
-		return 0, fmt.Errorf("could not read response: %v", err)
+		return 0, fmt.Errorf("could not read response: %w", err)
 	}
 
 	matches := regex.FindAllSubmatch(content, -1)
@@ -53,7 +57,7 @@ func Get(ctx context.Context, name string, args ...string) (price float32, err e
 	m := string(matches[0][1])
 	_, err = fmt.Sscanf(m, "%d,%d", &euro, &cent)
 	if err != nil {
-		return 0, fmt.Errorf("could not parse price %q: %v", m, err)
+		return 0, fmt.Errorf("could not parse price %q: %w", m, err)
 	}
 
 	if cent > 99 {
