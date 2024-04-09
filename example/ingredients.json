@@ -1,0 +1,264 @@
+{
+    "ingredients": [
+    {
+        "nom": "Fruita",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "90041"}
+        }
+    },{
+        "nom": "Alvocat",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "82055"}
+        }
+    },{
+        "nom": "Fullaraca",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "61688"}
+        }
+    },{
+        "nom": "Pastanaga",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "015297"}
+        }
+    },{
+        "nom": "Pebrot verd",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "46754"}
+        }
+    },{
+        "nom": "Pebrot vermell",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "82148"}
+        }
+    },{
+        "nom": "Espàrrecs",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "25431"}
+        }
+    },{
+        "nom": "Ceba",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "00394"}
+        }
+    },{
+        "nom": "All",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "01200"}
+        }
+    },{
+        "nom": "Bolets",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "24224"}
+        }
+    },{
+        "nom": "Llenties",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "17744"}
+        }
+    },{
+        "nom": "Cigrons",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "17785"}
+        }
+    },{
+        "nom": "Patates",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "02961"}
+        }
+    },{
+        "nom": "Arròs",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "84755"}
+        }
+    },{
+        "nom": "Civada",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "07381"}
+        }
+    },{
+        "nom": "Cereals",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "48182"}
+        }
+    },{
+        "nom": "Pa de motlle",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "79645"}
+        }
+    },{
+        "nom": "Macarrons",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "59968"}
+        }
+    },{
+        "nom": "Galets",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "02773"}
+        }
+    },{
+        "nom": "Fideus",
+        "providers": {
+            "Mercadona": { "units": 1, "id": "8713", "location":	"bcn1" }
+        }
+    },{
+        "nom": "Ravioli",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "71240"}
+        }
+    },{
+        "nom": "Caldo",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "41571"}
+        }
+    },{
+        "nom": "Llet",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "39666"}
+        }
+    },{
+        "nom": "Iogurt",
+        "providers": {
+            "Bonpreu": { "units": 4, "id": "49529"}
+        }
+    },{
+        "nom": "Iogurt v",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "45511"}
+        }
+    },{
+        "nom": "Salsa tomàquet",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "60771"}
+        }
+    },{
+        "nom": "Tomàquet triturat",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "59481"}
+        }
+    },{
+        "nom": "Fajita",
+        "providers": {
+            "Mercadona": { "units": 1, "id": "80859", "location": "bcn1" }
+        }
+    },{
+        "nom": "Suc de taronja",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "25562"}
+        }
+    },{
+        "nom": "Olives",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "28569"}
+        }
+    },{
+        "nom": "Patates fregides",
+        "providers": {
+            "Bonpreu": { "units": 2, "id": "77957"}
+        }
+    },{
+        "nom": "Ous",
+        "providers": {
+            "Bonpreu": { "units": 6, "id": "29974"}
+        }
+    },{
+        "nom": "Embotit",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "34705"}
+        }
+    },{
+        "nom": "Xoriço",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "24374"}
+        }
+    },{
+        "nom": "Tofu",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "91774"}
+        }
+    },{
+        "nom": "Vamburguesa",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "78516"}
+        }
+    },{
+        "nom": "Hamburguesa",
+        "providers": {
+            "Bonpreu": { "units": 4, "id": "43136"}
+        }
+    },{
+        "nom": "Llom",
+        "providers": {
+            "Bonpreu": { "units": 4, "id": "07084"}
+        }
+    },{
+        "nom": "Pollastre",
+        "providers": {
+            "Bonpreu": { "units": 3, "id": "76013"}
+        }
+    },{
+        "nom": "Carn picada",
+        "providers": {
+            "Bonpreu": { "units": 5, "id": "16193"}
+        }
+    },{
+        "nom": "Peix",
+        "providers": {
+            "Bonpreu": { "units": 5, "id": "56640"}
+        }
+    },{
+        "nom": "Barretes de cranc",
+        "providers": {
+            "Bonpreu": { "units": 5, "id": "02234"}
+        }
+    },{
+        "nom": "Formatge",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "41984"}
+        }
+    },{
+        "nom": "Cafè",
+        "providers": {
+            "Bonpreu": { "units": 3, "id": "032238"}
+        }
+    },{
+        "nom": "Avellanes",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "64776"}
+        }
+    },{
+        "nom": "Nous",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "20071"}
+        }
+    },{
+        "nom": "Atmetlles",
+        "providers": {
+            "Bonpreu": { "units": 1, "id": "13709"}
+        }
+    }],
+    "dishes": [
+        {
+            "name": "Amanida de cigrons",
+            "ingredients": [
+                {"name": "Canonges", "amount": "0.25"},
+                {"name": "Cigrons", "amount": "0.5"},
+                {"name": "Olives", "amount": "0.25"},
+                {"name": "Barretes de cranc", "amount": "1"},
+                {"name": "Formatge", "amount": "0.5"},
+                {"name": "Avellanes", "amount": "0.15"},
+                {"name": "Nous", "amount": "0.15"}
+            ]
+        },{
+            "name": "Amanida de llenties",
+            "ingredients": [
+                {"name": "Canonges", "amount": "0.25"},
+                {"name": "Llenties", "amount": "0.5"},
+                {"name": "Olives", "amount": "0.25"},
+                {"name": "Barretes de cranc", "amount": "1"},
+                {"name": "Formatge", "amount": "0.5"},
+                {"name": "Avellanes", "amount": "0.15"},
+                {"name": "Nous", "amount": "0.15"}
+            ]
+        }
+    ]
+}
