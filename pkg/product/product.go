@@ -12,7 +12,6 @@ import (
 
 type Product struct {
 	Name  string
-	Count float32
 	Price float32
 
 	provider provider.Provider
@@ -40,7 +39,7 @@ func (p *Product) UnmarshalTSV(args []string) (err error) {
 	return nil
 }
 
-func (p *Product) ParseMap(b []byte) (err error) {
+func (p *Product) UnmarshalJSON(b []byte) (err error) {
 	var helper struct {
 		Name      string
 		Providers map[string](map[string]string)

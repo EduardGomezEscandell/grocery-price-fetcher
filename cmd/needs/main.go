@@ -1,19 +1,16 @@
 package main
 
 import (
-	"bufio"
-	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
 	"os"
-	"strings"
-	"sync"
-	"time"
 
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/cmd/compra/formatter"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/cmd/needs/formatter"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/product"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/provider"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/recipe"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/providers/bonpreu"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/providers/mercadona"
 	log "github.com/sirupsen/logrus"
@@ -85,58 +82,68 @@ func parseInput() settings {
 	return sett
 }
 
-func run(r io.Reader) ([]*product.Product, error) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+type ProductCount struct {
+	product product.Product
+	count   float32
+}
 
-	scanner := bufio.NewScanner(r)
-	var products []*product.Product
+type Database struct {
+	Products []product.Product
+	Recipes  []recipe.Recipe
+}
 
-	var wg sync.WaitGroup
-	for scanner.Scan() {
-		row := scanner.Text()
-		var p product.Product
-		products = append(products, &p)
+func run(r io.Reader) ([]ProductCount, error) {
+	var db Database
 
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-
-			fields := strings.Split(row, "\t")
-
-			if err := p.UnmarshalTSV(fields); err != nil {
-				log.Warningf("could not parse row %q: %v", row, err)
-				return
-			}
-
-			ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-			defer cancel()
-
-			err := p.FetchPrice(ctx)
-			if err != nil {
-				log.Warningf("Get: %v", err)
-				return
-			}
-		}()
+	b, err := io.ReadAll(r)
+	if err != nil {
+		return nil, err
 	}
 
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("could not scan file: %w", err)
+	if err := json.Unmarshal(b, &db); err != nil {
+		return nil, err
 	}
 
-	wg.Wait()
-	log.Debug("All products have been processed")
+	counts := make(map[string]float32)
+	for _, r := range db.Products {
+		counts[r.Name] = 0
+	}
+
+	log.Debug("Database loaded successfully")
+	log.Debugf("Products: %d", len(db.Products))
+	log.Debugf("Recipes: %d", len(db.Recipes))
+
+	// Calculate the amount of each product needed
+	for _, r := range db.Recipes {
+		for _, i := range r.Ingredients {
+			_, ok := counts[i.Name]
+			if !ok {
+				log.Warningf("Recipe %q contains product %q which is not registered", r.Name, i.Name)
+				continue
+			}
+			counts[i.Name] += i.Amount
+		}
+	}
+
+	// Create the output
+	products := make([]ProductCount, 0, len(counts))
+	for _, p := range db.Products {
+		products = append(products, ProductCount{
+			product: p,
+			count:   counts[p.Name],
+		})
+	}
 
 	return products, nil
 }
 
-func formatOutput(w io.Writer, products []*product.Product, f formatter.Formatter) error {
+func formatOutput(w io.Writer, products []ProductCount, f formatter.Formatter) error {
 	if err := f.PrintHead(w); err != nil {
 		return fmt.Errorf("could not write header to output: %w", err)
 	}
 
 	for _, p := range products {
-		if err := f.Println(w, p); err != nil {
+		if err := f.Println(w, p.product.Name, p.count); err != nil {
 			return fmt.Errorf("could not write results to output: %w", err)
 		}
 	}
