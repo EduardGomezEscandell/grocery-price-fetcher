@@ -1,3 +1,5 @@
+.PHONY: tidy build test update-golden lint quality clean
+
 tidy:
 	go mod tidy
 
