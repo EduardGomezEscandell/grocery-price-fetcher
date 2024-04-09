@@ -45,6 +45,14 @@ Aquest és el significat de cada valor:
 
 ### Exemple
 Tens un exemple [aquí](./end-to-end/example.tsv).
+```tsv
+Fruita	Bonpreu	1	90041
+Alvocat	Bonpreu	1	82055
+Fullaraca	Bonpreu	1	61688
+Pastanaga	Bonpreu	10	15297
+Pebrot verd	Bonpreu	1	46754
+...
+```
 
 ## Executció
 Un cop compilat pots executar-ho:
@@ -52,7 +60,7 @@ Un cop compilat pots executar-ho:
 ./bin/compra -i data.tsv
 ```
 Trigarà uns segons en executar però produirà un resultat com el següent:
-```
+```tsv
 Product               Price
 Fruita                0,65 €
 Alvocat               1,39 €
