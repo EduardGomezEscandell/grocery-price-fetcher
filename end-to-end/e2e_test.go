@@ -35,14 +35,15 @@ func TestCompra(t *testing.T) {
 
 func TestNeeds(t *testing.T) {
 	const (
-		input  = "testdata/needs/database.json"
-		format = "table"
-		golden = "testdata/needs/result.tsv"
+		inputDB = "testdata/needs/database.json"
+		input   = "testdata/needs/menu.json"
+		format  = "table"
+		golden  = "testdata/needs/result.tsv"
 	)
 
 	output := filepath.Join(t.TempDir(), "output.tsv")
 
-	cmd := exec.Command("../bin/needs", "-i", input, "-o", output, "-v")
+	cmd := exec.Command("../bin/needs", "-i", input, "-db", inputDB, "-o", output, "-v", "--skip-empty")
 	cmd.Env = append(os.Environ(), "LC_NUMERIC=ca_ES.UTF8")
 
 	out, err := cmd.CombinedOutput()

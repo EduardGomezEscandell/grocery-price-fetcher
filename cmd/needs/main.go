@@ -1,16 +1,18 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
 	"os"
+	"time"
 
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/formatter"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/product"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/menu"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/provider"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/recipe"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/providers/bonpreu"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/providers/mercadona"
 	log "github.com/sirupsen/logrus"
@@ -27,18 +29,6 @@ func main() {
 		log.Fatalf("Error: %v", err)
 	}
 
-	var in *os.File
-	if s.inputPath == "" {
-		in = os.Stdin
-		log.Info("Reading from STDIN. Write your products and press Ctrl+D to finish.")
-	} else {
-		in, err = os.Open(s.inputPath)
-		if err != nil {
-			log.Fatalf("could not open file: %v", err)
-		}
-		defer in.Close()
-	}
-
 	var out *os.File
 	if s.outputPath == "" {
 		out = os.Stdout
@@ -53,99 +43,75 @@ func main() {
 	provider.Register("Bonpreu", bonpreu.New)
 	provider.Register("Mercadona", mercadona.New)
 
-	products, err := run(in)
+	db, err := unmarshalFile[database.DB](s.dbPath)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
-	}
-
-	if err := formatOutput(out, products, outFmt); err != nil {
-		log.Fatalf("Error: %v", err)
-	}
-}
-
-type settings struct {
-	verbose    bool
-	format     string
-	inputPath  string
-	outputPath string
-}
-
-func parseInput() settings {
-	var sett settings
-
-	flag.BoolVar(&sett.verbose, "v", false, "verbose mode")
-	flag.StringVar(&sett.format, "fmt", "table", "output format (json, csv, tsv, ini)")
-	flag.StringVar(&sett.inputPath, "i", "", "input file path (default: STDIN)")
-	flag.StringVar(&sett.outputPath, "o", "", "output file path (default: STDOUT)")
-
-	flag.Parse()
-	return sett
-}
-
-type ProductCount struct {
-	product product.Product
-	count   float32
-}
-
-type Database struct {
-	Products []product.Product
-	Recipes  []recipe.Recipe
-}
-
-func run(r io.Reader) ([]ProductCount, error) {
-	var db Database
-
-	b, err := io.ReadAll(r)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := json.Unmarshal(b, &db); err != nil {
-		return nil, err
-	}
-
-	counts := make(map[string]float32)
-	for _, r := range db.Products {
-		counts[r.Name] = 0
+		log.Fatalf("Error: could not parse database: %v", err)
 	}
 
 	log.Debug("Database loaded successfully")
 	log.Debugf("Products: %d", len(db.Products))
 	log.Debugf("Recipes: %d", len(db.Recipes))
 
-	// Calculate the amount of each product needed
-	for _, r := range db.Recipes {
-		for _, i := range r.Ingredients {
-			_, ok := counts[i.Name]
-			if !ok {
-				log.Warningf("Recipe %q contains product %q which is not registered", r.Name, i.Name)
-				continue
-			}
-			counts[i.Name] += i.Amount
-		}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	db.UpdatePrices(ctx)
+
+	menu, err := unmarshalFile[menu.Menu](s.menuPath)
+	if err != nil {
+		log.Fatalf("Error: could not parse menu: %v", err)
 	}
 
-	// Create the output
-	products := make([]ProductCount, 0, len(counts))
-	for _, p := range db.Products {
-		products = append(products, ProductCount{
-			product: p,
-			count:   counts[p.Name],
-		})
+	log.Debug("Menu loaded successfully")
+	log.Debugf("Days: %d", len(menu.Days))
+
+	products, err := menu.Compute(&db)
+	if err != nil {
+		log.Fatalf("Error: %v", err)
 	}
 
-	return products, nil
+	if err := formatOutput(out, products, outFmt, s.skipEmpty); err != nil {
+		log.Fatalf("Error: %v", err)
+	}
 }
 
-func formatOutput(w io.Writer, products []ProductCount, f formatter.Formatter) error {
-	if err := f.PrintHead(w, "Product", "Amount"); err != nil {
+type settings struct {
+	verbose   bool
+	format    string
+	skipEmpty bool
+
+	menuPath   string
+	dbPath     string
+	outputPath string
+}
+
+func parseInput() settings {
+	var sett settings
+
+	flag.StringVar(&sett.format, "fmt", "table", "output format (json, csv, tsv, ini)")
+	flag.StringVar(&sett.dbPath, "db", "", "database file path")
+	flag.StringVar(&sett.menuPath, "i", "", "input file path (default: STDIN)")
+	flag.StringVar(&sett.outputPath, "o", "", "output file path (default: STDOUT)")
+	flag.BoolVar(&sett.verbose, "v", false, "verbose mode")
+	flag.BoolVar(&sett.skipEmpty, "skip-empty", false, "skip empty products")
+
+	flag.Parse()
+	return sett
+}
+
+func formatOutput(w io.Writer, products []menu.ProductData, f formatter.Formatter, skipEmpty bool) error {
+	if err := f.PrintHead(w, "Product", "Amount", "Cost"); err != nil {
 		return fmt.Errorf("could not write header to output: %w", err)
 	}
 
 	for _, p := range products {
+		if skipEmpty && p.Amount == 0 {
+			continue
+		}
+
 		if err := f.PrintRow(w, map[string]any{
-			"Product": p.product.Name,
-			"Amount":  p.count,
+			"Product": p.Name,
+			"Amount":  p.Amount,
+			"Cost":    formatter.Euro(p.Cost),
 		}); err != nil {
 			return fmt.Errorf("could not write results to output: %w", err)
 		}
@@ -156,4 +122,19 @@ func formatOutput(w io.Writer, products []ProductCount, f formatter.Formatter) e
 	}
 
 	return nil
+}
+
+func unmarshalFile[T any](path string) (T, error) {
+	var t T
+
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return t, err
+	}
+
+	if err := json.Unmarshal(b, &t); err != nil {
+		return t, err
+	}
+
+	return t, nil
 }

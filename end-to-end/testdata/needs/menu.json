@@ -1,0 +1,51 @@
+[
+    {
+        "name": "Monday",
+        "meals": [
+            {
+                "name": "Esmorzar", 
+                "recipes": [
+                    {"name": "Torrada i suc de taronja", "amount": 1},
+                    {"name": "Flocs de civada", "amount": 1}
+                ]
+            },{
+                "name": "Dinar", 
+                "recipes": [
+                    {"name": "Macarrons amb sofregit", "amount": 1},
+                    {"name": "Fruita", "amount": 1},
+                    {"name": "Cafè", "amount": 1}
+                ]
+            },{
+                "name": "Sopar", 
+                "recipes": [
+                    {"name": "Truita francesa", "amount": 1},
+                    {"name": "Iogurt", "amount": 1}
+                ]
+            }
+        ]
+    }, {
+        "name": "Tuesday",
+        "meals": [
+            {
+                "name": "Esmorzar", 
+                "meals": [
+                    {"name": "Torrada i suc de taronja", "amount": 1},
+                    {"name": "Flocs de civada", "amount": 1}
+                ]
+            },{
+                "name": "Dinar", 
+                "meals": [
+                    {"name": "Llenties amb xoriço", "amount": 1},
+                    {"name": "Pollastre amb acompanyament", "amount": 1},
+                    {"name": "Fruita", "amount": 1},
+                    {"name": "Cafè", "amount": 1}
+                ]
+            },{
+                "name": "Sopar", 
+                "meals": [
+                    {"name": "Ravioli", "amount": 1}
+                ]
+            }
+        ]
+    }
+]
