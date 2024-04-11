@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/cmd/compra/formatter"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/formatter"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/product"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/provider"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/providers/bonpreu"
@@ -25,7 +25,7 @@ func main() {
 		log.SetLevel(log.DebugLevel)
 	}
 
-	outFmt, err := formatter.Get(s.format)
+	outFmt, err := formatter.New(s.format)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
@@ -131,12 +131,15 @@ func run(r io.Reader) ([]*product.Product, error) {
 }
 
 func formatOutput(w io.Writer, products []*product.Product, f formatter.Formatter) error {
-	if err := f.PrintHead(w); err != nil {
+	if err := f.PrintHead(w, "Product", "Price"); err != nil {
 		return fmt.Errorf("could not write header to output: %w", err)
 	}
 
 	for _, p := range products {
-		if err := f.Println(w, p); err != nil {
+		if err := f.PrintRow(w, map[string]any{
+			"Product": p.Name,
+			"Price":   formatter.Euro(p.Price),
+		}); err != nil {
 			return fmt.Errorf("could not write results to output: %w", err)
 		}
 	}
