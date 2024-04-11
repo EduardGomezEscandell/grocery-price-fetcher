@@ -6,7 +6,6 @@ linters:
     - durationcheck
     - errname
     - errorlint
-    - forbidigo
     - forcetypeassert
     - gci
     - gocheckcompilerdirectives
@@ -34,10 +33,6 @@ issues:
 
 
 linters-settings:
-  forbidigo:
-    forbid:
-      - ioutil\.
-      - ^print.*$
   nakedret:
     max-func-lines: 1
   nolintlint:

@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"slices"
 	"sync"
 
@@ -39,9 +40,24 @@ func (db *DB) LookupRecipe(name string) (*recipe.Recipe, bool) {
 	return &db.Recipes[i], true
 }
 
+func (db DB) Validate() error {
+	for _, r := range db.Recipes {
+		for _, i := range r.Ingredients {
+			if _, ok := db.LookupProduct(i.Name); !ok {
+				return fmt.Errorf("invalid database: recipe %s: ingredient %q is not registered", r.Name, i.Name)
+			}
+		}
+	}
+
+	return nil
+}
+
 func (db *DB) UpdatePrices(ctx context.Context) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
+
+	log.Debug("Database: fetching prices")
+	defer log.Debug("Database: prices fetch complete")
 
 	var wg sync.WaitGroup
 	for i := range db.Products {

@@ -1,8 +1,10 @@
 package formatter
 
 import (
+	"fmt"
 	"io"
 	"slices"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 )
@@ -17,18 +19,22 @@ func (f *CharSV) PrintHead(w io.Writer, fields ...string) error {
 
 	for i, k := range fields {
 		if i > 0 {
-			if _, err := fmter.Fprint(w, f.Separator); err != nil {
+			if _, err := localePrinter().Fprint(w, f.Separator); err != nil {
 				return err
 			}
 		}
 
-		_, err := fmter.Fprint(w, k)
+		if strings.Contains(k, f.Separator) {
+			k = fmt.Sprintf("%q", k)
+		}
+
+		_, err := localePrinter().Fprint(w, k)
 		if err != nil {
 			return err
 		}
 	}
 
-	if _, err := fmter.Fprintln(w); err != nil {
+	if _, err := localePrinter().Fprintln(w); err != nil {
 		return err
 	}
 
@@ -39,7 +45,7 @@ func (f *CharSV) PrintRow(w io.Writer, data map[string]interface{}) error {
 	count := 0
 	for i, k := range f.fields {
 		if i > 0 {
-			if _, err := fmter.Fprintf(w, f.Separator); err != nil {
+			if _, err := localePrinter().Fprintf(w, f.Separator); err != nil {
 				return err
 			}
 		}
@@ -49,15 +55,19 @@ func (f *CharSV) PrintRow(w io.Writer, data map[string]interface{}) error {
 			continue // Default value: empty
 		}
 
-		out := format(v).IfFloat32("%.2f").IfEuro("%.2f").IfString("%s").OrElse("%v")
-		_, err := fmter.Fprint(w, out)
+		out := format(v, true).IfFloat32("%.2f").IfEuro("%.2f").IfString("%s").OrElse("%v").String()
+		if strings.Contains(out, f.Separator) {
+			out = fmt.Sprintf("%q", out)
+		}
+
+		_, err := fmt.Fprint(w, out)
 		if err != nil {
 			return err
 		}
 		count++
 	}
 
-	if _, err := fmter.Fprintln(w); err != nil {
+	if _, err := localePrinter().Fprintln(w); err != nil {
 		return err
 	}
 

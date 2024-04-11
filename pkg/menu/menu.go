@@ -5,7 +5,6 @@ import (
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/recipe"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -37,12 +36,7 @@ type ProductData struct {
 }
 
 func (menu Menu) Compute(db *database.DB) ([]ProductData, error) {
-	counts := make(map[string]float32)
-	for _, r := range db.Products {
-		counts[r.Name] = 0
-	}
-
-	// Calculate the amount of each recipe consumed
+	// Compute the amount of each recipe needed
 	recipes := make(map[*recipe.Recipe]float32)
 	for _, day := range menu.Days {
 		for _, meal := range day.Meals {
@@ -50,33 +44,34 @@ func (menu Menu) Compute(db *database.DB) ([]ProductData, error) {
 				rpe, ok := db.LookupRecipe(recipe.Name)
 				if !ok {
 					log.Warningf("%s: %s: Recipe %q is not registered", day.Name, meal.Name, recipe.Name)
+					continue
 				}
 				recipes[rpe] = recipes[rpe] + recipe.Amount
 			}
 		}
 	}
 
-	// Calculate the amount of each product needed
+	// Compute the amount of each product needed
+	products := make(map[string]float32)
 	for rec, amount := range recipes {
 		for _, i := range rec.Ingredients {
-			_, ok := counts[i.Name]
+			_, ok := products[i.Name]
 			if !ok {
-				log.Warningf("Recipe %q contains product %q which is not registered", rec.Name, i.Name)
-				continue
+				products[i.Name] = 0
 			}
-			counts[i.Name] += amount * i.Amount
+			products[i.Name] += amount * i.Amount
 		}
 	}
 
-	// Create the output
-	products := make([]ProductData, 0, len(counts))
+	// Asseble the output
+	table := make([]ProductData, 0, len(products))
 	for _, p := range db.Products {
-		products = append(products, ProductData{
+		table = append(table, ProductData{
 			Name:   p.Name,
-			Amount: counts[p.Name],
-			Cost:   counts[p.Name] * p.Price,
+			Amount: products[p.Name],
+			Cost:   products[p.Name] * p.Price,
 		})
 	}
 
-	return products, nil
+	return table, nil
 }

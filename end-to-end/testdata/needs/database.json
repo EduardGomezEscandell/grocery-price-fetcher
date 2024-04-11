@@ -18,7 +18,7 @@
     },{
         "name": "Pastanaga",
         "providers": {
-            "Bonpreu": { "batch_size": "1", "id": "015297"}
+            "Bonpreu": { "batch_size": "1", "id": "15297"}
         }
     },{
         "name": "Pebrot verd",
@@ -238,7 +238,7 @@
     },{
         "name": "Cafè",
         "providers": {
-            "Bonpreu": { "batch_size": "3", "id": "032238"}
+            "Bonpreu": { "batch_size": "30", "id": "32238"}
         }
     },{
         "name": "Avellanes",
@@ -369,7 +369,7 @@
                 {"name": "Bolets", "amount": 0.2}
             ]
         },{
-            "name": "Prteïna amb acompanyament",
+            "name": "Proteïna amb acompanyament",
             "ingredients": [
                 {"name": "Proteïna vegana", "amount": 1},
                 {"name": "Espàrrecs", "amount": 0.2},

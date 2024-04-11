@@ -15,13 +15,13 @@ func (f *Table) PrintHead(w io.Writer, fields ...string) error {
 	f.fields = fields
 
 	for _, k := range fields {
-		_, err := fmter.Fprintf(w, "%-20s", k)
+		_, err := localePrinter().Fprintf(w, "%-20s", k)
 		if err != nil {
 			return err
 		}
 	}
 
-	if _, err := fmter.Fprintln(w); err != nil {
+	if _, err := localePrinter().Fprintln(w); err != nil {
 		return err
 	}
 
@@ -33,19 +33,18 @@ func (f *Table) PrintRow(w io.Writer, data map[string]interface{}) error {
 	for _, k := range f.fields {
 		v, ok := data[k]
 		if !ok {
-			fmter.Fprintf(w, "%-20s", "")
+			localePrinter().Fprintf(w, "%-20s", "")
 			continue // Default value: empty
 		}
 
-		out := format(v).IfFloat32("%.2f").IfEuro("%.2f €").String()
-		_, err := fmter.Fprintf(w, "%-20s", out)
+		err := format(v, true).IfString("%-20s").IfFloat32("%20.2f").IfEuro("%10.2f €").Fprint(w)
 		if err != nil {
 			return err
 		}
 		count++
 	}
 
-	if _, err := fmter.Fprintln(w); err != nil {
+	if _, err := localePrinter().Fprintln(w); err != nil {
 		return err
 	}
 

@@ -1,6 +1,7 @@
 package formatter
 
 import (
+	"fmt"
 	"io"
 	"slices"
 	"strings"
@@ -13,20 +14,20 @@ type JSON struct {
 }
 
 func (f *JSON) PrintHead(w io.Writer, _ ...string) error {
-	_, err := fmter.Fprintf(w, "[")
+	_, err := fmt.Fprintf(w, "[")
 	f.isFirstRow = true
 	return err
 }
 
 func (f *JSON) PrintRow(w io.Writer, data map[string]interface{}) error {
 	if f.isFirstRow {
-		if _, err := fmter.Fprintf(w, "\n\t{"); err != nil {
+		if _, err := fmt.Fprintf(w, "\n\t{"); err != nil {
 			return err
 		}
 		f.isFirstRow = false
 	} else {
 		// Print comma only if it's not the first row
-		if _, err := fmter.Fprintf(w, ",\n\t{"); err != nil {
+		if _, err := fmt.Fprintf(w, ",\n\t{"); err != nil {
 			return err
 		}
 	}
@@ -38,21 +39,20 @@ func (f *JSON) PrintRow(w io.Writer, data map[string]interface{}) error {
 	for _, k := range keys {
 		if !first {
 			// Print comma if it's not the first pair
-			if _, err := fmter.Fprintf(w, ", "); err != nil {
+			if _, err := fmt.Fprintf(w, ", "); err != nil {
 				return err
 			}
 		}
 		first = false
 
-		out := format(data[k]).IfFloat32("%.2f").IfEuro("%.2f").IfString("%q").OrElse("%q")
-
-		_, err := fmter.Fprintf(w, "%q: %s", strings.ToLower(k), out)
+		out := format(data[k], false).IfFloat32("%.2f").IfEuro("%.2f").IfString("%q").OrElse("%q").String()
+		_, err := fmt.Fprintf(w, "%q: %s", strings.ToLower(k), out)
 		if err != nil {
 			return err
 		}
 	}
 
-	if _, err := fmter.Fprint(w, "}"); err != nil {
+	if _, err := fmt.Fprint(w, "}"); err != nil {
 		return err
 	}
 
@@ -60,6 +60,6 @@ func (f *JSON) PrintRow(w io.Writer, data map[string]interface{}) error {
 }
 
 func (f *JSON) PrintTail(w io.Writer) error {
-	_, err := fmter.Fprintln(w, "\n]")
+	_, err := fmt.Fprintln(w, "\n]")
 	return err
 }

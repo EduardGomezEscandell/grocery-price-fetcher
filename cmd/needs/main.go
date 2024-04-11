@@ -48,6 +48,10 @@ func main() {
 		log.Fatalf("Error: could not parse database: %v", err)
 	}
 
+	if err := db.Validate(); err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+
 	log.Debug("Database loaded successfully")
 	log.Debugf("Products: %d", len(db.Products))
 	log.Debugf("Recipes: %d", len(db.Recipes))
@@ -103,6 +107,7 @@ func formatOutput(w io.Writer, products []menu.ProductData, f formatter.Formatte
 		return fmt.Errorf("could not write header to output: %w", err)
 	}
 
+	var total float32
 	for _, p := range products {
 		if skipEmpty && p.Amount == 0 {
 			continue
@@ -115,6 +120,16 @@ func formatOutput(w io.Writer, products []menu.ProductData, f formatter.Formatte
 		}); err != nil {
 			return fmt.Errorf("could not write results to output: %w", err)
 		}
+
+		total += p.Cost
+	}
+
+	if err := f.PrintRow(w, map[string]any{
+		"Product": "Total",
+		"Amount":  "",
+		"Cost":    formatter.Euro(total),
+	}); err != nil {
+		return fmt.Errorf("could not write total to output: %w", err)
 	}
 
 	if err := f.PrintTail(w); err != nil {
