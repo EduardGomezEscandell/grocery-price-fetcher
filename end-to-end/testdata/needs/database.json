@@ -18,7 +18,7 @@
     },{
         "name": "Pastanaga",
         "providers": {
-            "Bonpreu": { "batch_size": "1", "id": "15297"}
+            "Bonpreu": { "batch_size": "10", "id": "15297"}
         }
     },{
         "name": "Pebrot verd",
@@ -193,12 +193,12 @@
     },{
         "name": "Proteïna vegana",
         "providers": {
-            "Bonpreu": { "batch_size": "1", "id": "78516"}
+            "Bonpreu": { "batch_size": "2", "id": "78516"}
         }
     },{
         "name": "Hamburguesa vegana",
         "providers": {
-            "Bonpreu": { "batch_size": "1", "id": "09493"}
+            "Bonpreu": { "batch_size": "2", "id": "09493"}
         }
     },{
         "name": "Hamburguesa",
@@ -308,11 +308,11 @@
             "ingredients": [
                 {"name": "Arròs", "amount": 0.2},
                 {"name": "Pebrot vermell", "amount": 0.25},
-                {"name": "Pastanaga", "amount": 1},
+                {"name": "Pastanaga", "amount": 0.5},
                 {"name": "Ceba", "amount": 0.5},
                 {"name": "All", "amount": 0.2},
                 {"name": "Tomàquet triturat", "amount": 0.5},
-                {"name": "Carn picada", "amount": 1},
+                {"name": "Carn picada", "amount": 0.5},
                 {"name": "Ous", "amount": 1}
             ]
         },{
@@ -404,7 +404,7 @@
                 {"name": "Ceba", "amount": 0.5},
                 {"name": "All", "amount": 0.1},
                 {"name": "Tomàquet triturat", "amount": 0.5},
-                {"name": "Carn picada", "amount": 1}
+                {"name": "Carn picada", "amount": 0.5}
             ]
         },{
             "name": "Macarrons amb sofregit vegà",

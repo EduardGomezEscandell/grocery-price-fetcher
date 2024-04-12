@@ -18,7 +18,7 @@
             },{
                 "name": "Sopar", 
                 "recipes": [
-                    {"name": "Truita francesa", "amount": 1},
+                    {"name": "Ravioli", "amount": 1},
                     {"name": "Iogurt", "amount": 1}
                 ]
             }
@@ -43,7 +43,8 @@
             },{
                 "name": "Sopar", 
                 "recipes": [
-                    {"name": "Ravioli", "amount": 1}
+                    {"name": "Macarrons amb sofregit", "amount": 1},
+                    {"name": "Iogurt", "amount": 1}
                 ]
             }
         ]
@@ -85,6 +86,7 @@
                 "name": "Dinar",
                 "recipes": [
                     {"name": "Amanida de llenties", "amount": 1},
+                    {"name": "Llom amb acompanyament", "amount": 1},
                     {"name": "Fruita", "amount": 1},
                     {"name": "Cafè", "amount": 1}
                 ]
@@ -109,6 +111,7 @@
                 "name": "Dinar",
                 "recipes": [
                     {"name": "Amanida de cigrons", "amount": 1},
+                    {"name": "Pollastre amb acompanyament", "amount": 1},
                     {"name": "Fruita", "amount": 1},
                     {"name": "Cafè", "amount": 1}
                 ]
@@ -127,13 +130,6 @@
                 "name": "Esmorzar",
                 "recipes": [
                     {"name": "Torrada i suc de taronja", "amount": 1}
-                ]
-            },{
-                "name": "Dinar",
-                "recipes": [
-                    {"name": "Macarrons amb sofregit", "amount": 1},
-                    {"name": "Fruita", "amount": 1},
-                    {"name": "Cafè", "amount": 1}
                 ]
             },{
                 "name": "Sopar",
@@ -165,6 +161,7 @@
                 "name": "Sopar",
                 "recipes": [
                     {"name": "Sopa de galets", "amount": 2},
+                    {"name": "Proteïna amb acompanyament", "amount": 2},
                     {"name": "Iogurt", "amount": 1},
                     {"name": "Iogurt vegà", "amount": 1}
                 ]
