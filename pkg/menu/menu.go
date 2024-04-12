@@ -35,7 +35,7 @@ type ProductData struct {
 	Cost   float32
 }
 
-func (menu Menu) Compute(db *database.DB) ([]ProductData, error) {
+func (menu Menu) Compute(db *database.DB, pantry []ProductData) ([]ProductData, error) {
 	// Compute the amount of each recipe needed
 	recipes := make(map[*recipe.Recipe]float32)
 	for _, day := range menu.Days {
@@ -61,6 +61,15 @@ func (menu Menu) Compute(db *database.DB) ([]ProductData, error) {
 			}
 			products[i.Name] += amount * i.Amount
 		}
+	}
+
+	// Subtract the amount of products in the pantry
+	for _, p := range pantry {
+		_, ok := products[p.Name]
+		if !ok {
+			continue
+		}
+		products[p.Name] = max(0, products[p.Name]-p.Amount)
 	}
 
 	// Asseble the output

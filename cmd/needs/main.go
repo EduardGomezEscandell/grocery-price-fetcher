@@ -60,6 +60,16 @@ func main() {
 	defer cancel()
 	db.UpdatePrices(ctx)
 
+	pantry, err := func() ([]menu.ProductData, error) {
+		if s.pantryPath == "" {
+			return nil, nil
+		}
+		return unmarshalFile[[]menu.ProductData](s.pantryPath)
+	}()
+	if err != nil {
+		log.Fatalf("Error: could not parse pantry: %v", err)
+	}
+
 	menu, err := unmarshalFile[menu.Menu](s.menuPath)
 	if err != nil {
 		log.Fatalf("Error: could not parse menu: %v", err)
@@ -68,7 +78,7 @@ func main() {
 	log.Debug("Menu loaded successfully")
 	log.Debugf("Days: %d", len(menu.Days))
 
-	products, err := menu.Compute(&db)
+	products, err := menu.Compute(&db, pantry)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
@@ -84,6 +94,7 @@ type settings struct {
 	skipEmpty bool
 
 	menuPath   string
+	pantryPath string
 	dbPath     string
 	outputPath string
 }
@@ -93,6 +104,7 @@ func parseInput() settings {
 
 	flag.StringVar(&sett.format, "fmt", "table", "output format (json, csv, tsv, ini)")
 	flag.StringVar(&sett.dbPath, "db", "", "database file path")
+	flag.StringVar(&sett.pantryPath, "p", "", "pantry file path")
 	flag.StringVar(&sett.menuPath, "i", "", "input file path (default: STDIN)")
 	flag.StringVar(&sett.outputPath, "o", "", "output file path (default: STDOUT)")
 	flag.BoolVar(&sett.verbose, "v", false, "verbose mode")
