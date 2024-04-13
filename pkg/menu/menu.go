@@ -8,31 +8,37 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type Day struct {
-	Name  string
-	Meals []Meal
+type Recipe struct {
+	Name   string
+	Amount float32
 }
 
 type Meal struct {
 	Name    string
-	Recipes []struct {
-		Name   string
-		Amount float32
-	}
+	Recipes []Recipe `json:",omitempty"`
+}
+
+type Day struct {
+	Name  string
+	Meals []Meal `json:",omitempty"`
 }
 
 type Menu struct {
-	Days []Day
+	Days []Day `json:",omitempty"`
 }
 
 func (menu *Menu) UnmarshalJSON(b []byte) error {
 	return json.Unmarshal(b, &menu.Days)
 }
 
+func (menu Menu) MarshalJSON() ([]byte, error) {
+	return json.Marshal(menu.Days)
+}
+
 type ProductData struct {
 	Name   string
-	Amount float32
-	Cost   float32
+	Amount float32 `json:",omitempty"`
+	Cost   float32 `json:",omitempty"`
 }
 
 func (menu Menu) Compute(db *database.DB, pantry []ProductData) ([]ProductData, error) {
