@@ -6,20 +6,69 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"strconv"
 
-	"github.com/ubuntu/decorate"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/provider"
 )
 
 var regex = regexp.MustCompile(`<span class="[^"]*price__StyledText[^"]*">([0-9]+,[0-9]{2}).€</span>`)
 
-func Get(ctx context.Context, name string, args ...string) (price float32, err error) {
-	defer decorate.OnError(&err, "could not get price for %s", name)
+type Provider struct {
+	id        string
+	batchSize float32
+}
 
-	if len(args) != 1 {
-		return 0, fmt.Errorf("expected 1 argument, got %d", len(args))
+func New() provider.Provider {
+	return &Provider{}
+}
+
+func (p *Provider) UnmarshalTSV(cols ...string) error {
+	if len(cols) != 2 {
+		return fmt.Errorf("expected 2 arguments (batch_size, id), got %d", len(cols))
 	}
 
-	url := fmt.Sprintf("https://www.compraonline.bonpreuesclat.cat/products/%s/details", args[0])
+	c, err := strconv.ParseFloat(cols[0], 32)
+	if err != nil {
+		return fmt.Errorf("could not parse batch_size (%s): %w", cols[0], err)
+	}
+	if c <= 0 {
+		return fmt.Errorf("invalid batch_size: %f", c)
+	}
+
+	p.batchSize = float32(c)
+	p.id = cols[1]
+	return nil
+}
+
+func (p *Provider) UnmarshalMap(argv map[string]string) (err error) {
+	if len(argv) != 2 {
+		return fmt.Errorf("expected 2 arguments (batch_size, id), got %d", len(argv))
+	}
+
+	bs, ok := argv["batch_size"]
+	if !ok {
+		return fmt.Errorf("missing batch_size")
+	}
+
+	p.id, ok = argv["id"]
+	if !ok {
+		return fmt.Errorf("missing id")
+	}
+
+	batchSize, err := strconv.ParseFloat(bs, 32)
+	if err != nil {
+		return fmt.Errorf("could not parse batch_size (%s): %w", argv["batch_size"], err)
+	}
+	if batchSize <= 0 {
+		return fmt.Errorf("invalid batch_size: %f", batchSize)
+	}
+	p.batchSize = float32(batchSize)
+
+	return nil
+}
+
+func (p *Provider) FetchPrice(ctx context.Context) (float32, error) {
+	url := fmt.Sprintf("https://www.compraonline.bonpreuesclat.cat/products/%s/details", p.id)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return 0, err
@@ -64,5 +113,7 @@ func Get(ctx context.Context, name string, args ...string) (price float32, err e
 		return 0, fmt.Errorf("invalid price: %s", m)
 	}
 
-	return float32(euro) + float32(cent)/100, nil
+	batchPrice := float32(euro) + float32(cent)/100
+
+	return batchPrice / p.batchSize, nil
 }

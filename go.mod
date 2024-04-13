@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.9.0
-	github.com/ubuntu/decorate v0.0.0-20240301153420-5015d6dbc8e5
+	golang.org/x/exp v0.0.0-20240409090435-93d18d7e34b8
 	golang.org/x/text v0.14.0
 )
 

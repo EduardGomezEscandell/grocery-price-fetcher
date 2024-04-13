@@ -7,11 +7,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/formatter"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/product"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/provider"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/providers/bonpreu"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/providers/mercadona"
 	log "github.com/sirupsen/logrus"
@@ -23,7 +25,7 @@ func main() {
 		log.SetLevel(log.DebugLevel)
 	}
 
-	outFmt, err := formatter.Get(s.format)
+	outFmt, err := formatter.New(s.format)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
@@ -51,11 +53,10 @@ func main() {
 		defer out.Close()
 	}
 
-	var registry product.Registry
-	registry.Register("Bonpreu", bonpreu.Get)
-	registry.Register("Mercadona", mercadona.Get)
+	provider.Register("Bonpreu", bonpreu.New)
+	provider.Register("Mercadona", mercadona.New)
 
-	products, err := run(in, registry)
+	products, err := run(in)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
@@ -84,7 +85,7 @@ func parseInput() settings {
 	return sett
 }
 
-func run(r io.Reader, reg product.Registry) ([]*product.Product, error) {
+func run(r io.Reader) ([]*product.Product, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -101,7 +102,9 @@ func run(r io.Reader, reg product.Registry) ([]*product.Product, error) {
 		go func() {
 			defer wg.Done()
 
-			if err := p.Parse(row); err != nil {
+			fields := strings.Split(row, "\t")
+
+			if err := p.UnmarshalTSV(fields); err != nil {
 				log.Warningf("could not parse row %q: %v", row, err)
 				return
 			}
@@ -109,7 +112,7 @@ func run(r io.Reader, reg product.Registry) ([]*product.Product, error) {
 			ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 
-			err := p.Get(ctx, &reg)
+			err := p.FetchPrice(ctx)
 			if err != nil {
 				log.Warningf("Get: %v", err)
 				return
@@ -128,12 +131,15 @@ func run(r io.Reader, reg product.Registry) ([]*product.Product, error) {
 }
 
 func formatOutput(w io.Writer, products []*product.Product, f formatter.Formatter) error {
-	if err := f.PrintHead(w); err != nil {
+	if err := f.PrintHead(w, "Product", "Price"); err != nil {
 		return fmt.Errorf("could not write header to output: %w", err)
 	}
 
 	for _, p := range products {
-		if err := f.Println(w, p); err != nil {
+		if err := f.PrintRow(w, map[string]any{
+			"Product": p.Name,
+			"Price":   formatter.Euro(p.Price),
+		}); err != nil {
 			return fmt.Errorf("could not write results to output: %w", err)
 		}
 	}
