@@ -1,0 +1,22 @@
+[
+	{"amount": 4.00, "cost": 1.96, "product": "Fruita"},
+	{"amount": 1.00, "cost": 0.17, "product": "Pastanaga"},
+	{"amount": 0.50, "cost": 0.25, "product": "Pebrot verd"},
+	{"amount": 0.95, "cost": 1.04, "product": "Pebrot vermell"},
+	{"amount": 1.80, "cost": 3.58, "product": "Espàrrecs"},
+	{"amount": 3.00, "cost": 2.16, "product": "Ceba"},
+	{"amount": 2.30, "cost": 4.35, "product": "Bolets"},
+	{"amount": 0.50, "cost": 0.44, "product": "Llenties"},
+	{"amount": 0.30, "cost": 0.75, "product": "Pa de motlle"},
+	{"amount": 0.50, "cost": 1.12, "product": "Ravioli"},
+	{"amount": 2.00, "cost": 4.40, "product": "Caldo"},
+	{"amount": 7.00, "cost": 1.75, "product": "Iogurt"},
+	{"amount": 2.00, "cost": 5.12, "product": "Iogurt vegà"},
+	{"amount": 1.00, "cost": 1.10, "product": "Tomàquet triturat"},
+	{"amount": 1.00, "cost": 1.99, "product": "Olives"},
+	{"amount": 0.10, "cost": 0.41, "product": "Embotit"},
+	{"amount": 4.00, "cost": 4.70, "product": "Proteïna vegana"},
+	{"amount": 1.00, "cost": 0.82, "product": "Pollastre"},
+	{"amount": 1.00, "cost": 2.20, "product": "Formatge"},
+	{"amount": 0.45, "cost": 0.99, "product": "Atmetlles"}
+]

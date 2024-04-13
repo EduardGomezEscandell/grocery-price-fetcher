@@ -1,0 +1,3 @@
+verbosity: 2
+database: 'testdata/needs/database.json'
+address: localhost:8080
