@@ -1,0 +1,74 @@
+package e2e_test
+
+import (
+	"bufio"
+	"context"
+	"io"
+	"net/http"
+	"os"
+	"os/exec"
+	"strings"
+	"testing"
+	"time"
+
+	e2e "github.com/EduardGomezEscandell/grocery-price-fetcher/end-to-end"
+	"github.com/stretchr/testify/require"
+)
+
+func TestServer(t *testing.T) {
+	const (
+		manifest = "testdata/server/manifest.yaml"
+		payload  = "testdata/server/payload.json"
+		golden   = "testdata/server/result.json"
+	)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "../bin/server", manifest)
+	r, w := io.Pipe()
+	cmd.Stdout = w
+	cmd.Stderr = w
+
+	started := make(chan struct{})
+	go func() {
+		sc := bufio.NewScanner(r)
+		for sc.Scan() {
+			logLine := sc.Text()
+			if strings.Contains(logLine, "Listening on ") {
+				close(started)
+			}
+			t.Log(logLine)
+		}
+		if err := sc.Err(); err != nil {
+			t.Logf("Error sanning server output: %v", err)
+		}
+	}()
+
+	err := cmd.Start()
+	require.NoError(t, err)
+	defer cmd.Process.Kill() //nolint:errcheck // We don't really care if Kill fails
+
+	select {
+	case <-time.After(time.Minute):
+		require.Fail(t, "Server did not start serving")
+	case <-started:
+	}
+
+	f, err := os.Open(payload)
+	require.NoError(t, err)
+	defer f.Close()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080/menu", f)
+	require.NoError(t, err)
+
+	client := http.Client{}
+	resp, err := client.Do(req)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code %s", http.StatusText(resp.StatusCode))
+
+	rB, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+
+	e2e.CompareToGolden(t, golden, string(rB))
+}

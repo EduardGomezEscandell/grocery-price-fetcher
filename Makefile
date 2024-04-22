@@ -7,6 +7,7 @@ build: tidy
 	mkdir -p bin
 	go build -o bin/compra cmd/compra/main.go
 	go build -o bin/needs cmd/needs/main.go
+	go build -o bin/server cmd/server/main.go
 
 test: build
 	go test ./...

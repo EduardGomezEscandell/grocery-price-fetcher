@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	e2e "github.com/EduardGomezEscandell/grocery-price-fetcher/end-to-end"
 	"github.com/stretchr/testify/require"
 )
 
@@ -30,7 +31,7 @@ func TestCompra(t *testing.T) {
 	require.NoError(t, err, "Could not read output file")
 	got := string(out)
 
-	compareToGolden(t, golden, got)
+	e2e.CompareToGolden(t, golden, got)
 }
 
 func TestNeeds(t *testing.T) {
@@ -61,19 +62,5 @@ func TestNeeds(t *testing.T) {
 	require.NoError(t, err, "Could not read output file")
 	got := string(out)
 
-	compareToGolden(t, golden, got)
-}
-
-func compareToGolden(t *testing.T, goldenPath string, got string) {
-	t.Helper()
-
-	out, err := os.ReadFile(goldenPath)
-	require.NoError(t, err, "Could not read golden")
-
-	if os.Getenv("UPDATE_GOLDEN") != "" {
-		require.NoError(t, os.WriteFile(goldenPath, []byte(got), 0600), "Could not update golden")
-	}
-
-	want := string(out)
-	require.Equal(t, want, got, "Generated file does not match golden")
+	e2e.CompareToGolden(t, golden, got)
 }
