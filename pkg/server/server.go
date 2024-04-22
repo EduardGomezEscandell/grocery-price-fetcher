@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -11,7 +12,6 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/formatter"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/menu"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/server/httputils"
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -26,6 +26,7 @@ func New(db *database.DB) Server {
 func (s *Server) Serve(lis net.Listener) (err error) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/menu", httputils.HandleRequest(s.handleMenu))
+	mux.HandleFunc("/hello-world", httputils.HandleRequest(s.helloWorld))
 
 	log.Infof("Server: serving on %s", lis.Addr())
 
@@ -49,7 +50,7 @@ type MenuRequestData struct {
 	Format string             `json:",omitempty"`
 }
 
-func (s *Server) handleMenu(log *logrus.Entry, w http.ResponseWriter, r *http.Request) error {
+func (s *Server) handleMenu(log *log.Entry, w http.ResponseWriter, r *http.Request) error {
 	if r.Method != http.MethodGet {
 		return httputils.Errorf(http.StatusMethodNotAllowed, "method %s not allowed", r.Method)
 	}
@@ -110,5 +111,14 @@ func (s *Server) handleMenu(log *logrus.Entry, w http.ResponseWriter, r *http.Re
 		return httputils.Errorf(http.StatusInternalServerError, "could not write footer to output: %w", err)
 	}
 
+	return nil
+}
+
+func (s *Server) helloWorld(_ *log.Entry, w http.ResponseWriter, r *http.Request) error {
+	if r.Method != http.MethodGet {
+		return httputils.Errorf(http.StatusMethodNotAllowed, "method %s not allowed", r.Method)
+	}
+
+	fmt.Fprintln(w, "Hello, world!")
 	return nil
 }
