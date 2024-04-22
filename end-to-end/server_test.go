@@ -22,15 +22,19 @@ func TestServer(t *testing.T) {
 		golden   = "testdata/server/result.json"
 	)
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, "../bin/server", manifest)
+	defer requireMake(t, ctx, "stop")
+	cmd := exec.CommandContext(ctx, "make", "run")
+	cmd.Dir = ".."
 	r, w := io.Pipe()
 	cmd.Stdout = w
 	cmd.Stderr = w
 
 	started := make(chan struct{})
+	exited := make(chan struct{})
+
 	go func() {
 		sc := bufio.NewScanner(r)
 		for sc.Scan() {
@@ -49,9 +53,19 @@ func TestServer(t *testing.T) {
 	require.NoError(t, err)
 	defer cmd.Process.Kill() //nolint:errcheck // We don't really care if Kill fails
 
+	go func() {
+		err := cmd.Wait()
+		if err != nil {
+			t.Logf("Server exited with error: %v", err)
+		}
+		close(exited)
+	}()
+
 	select {
 	case <-time.After(time.Minute):
 		require.Fail(t, "Server did not start serving")
+	case <-exited:
+		require.Fail(t, "Server exited before serving")
 	case <-started:
 	}
 
@@ -71,4 +85,16 @@ func TestServer(t *testing.T) {
 	require.NoError(t, err)
 
 	e2e.CompareToGolden(t, golden, string(rB))
+
+	requireMake(t, ctx, "stop")
+	<-exited
+}
+
+//nolint:revive // Context goes after t
+func requireMake(t *testing.T, ctx context.Context, verb string) {
+	t.Helper()
+	cmd := exec.CommandContext(ctx, "make", verb)
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	require.NoError(t, err, "Failed to 'make %s' (%v): %s", verb, err, out)
 }
