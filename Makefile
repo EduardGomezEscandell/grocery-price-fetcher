@@ -8,10 +8,10 @@ build: tidy
 	go build -o bin/compra cmd/compra/main.go
 	go build -o bin/needs cmd/needs/main.go
 	go build -o bin/grocery-server cmd/server/main.go
+	cd frontend && npm install && npm run build
 
 containerize: build
-	mkdir -p deploy/bin
-	cp bin/grocery-server deploy/bin
+	cd deploy && ./filesystem.sh build
 	cd deploy && sudo docker build . -t grocery-server
 
 run: stop containerize
@@ -35,4 +35,4 @@ quality: build lint test
 
 clean: stop
 	rm -r bin
-	rm -r deploy/bin
+	cd deploy && ./filesystem.sh clean
