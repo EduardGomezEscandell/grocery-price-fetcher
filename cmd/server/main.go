@@ -44,7 +44,7 @@ func main() {
 
 	log.Info("Listening on ", lis.Addr().String())
 
-	sv := server.New(db)
+	sv := server.New(db, server.WithStatic("/", s.FrontEnd))
 	if err := sv.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
 	}
@@ -55,6 +55,7 @@ func main() {
 type Settings struct {
 	Verbosity int
 	Database  string
+	FrontEnd  string
 	Address   string
 }
 

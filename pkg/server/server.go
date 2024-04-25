@@ -16,17 +16,37 @@ import (
 )
 
 type Server struct {
-	db *database.DB
+	db     *database.DB
+	static map[string]string
 }
 
-func New(db *database.DB) Server {
-	return Server{db: db}
+type staticEntry struct {
+	url     string
+	content string
+}
+
+func WithStatic(urlPath, contentPath string) staticEntry {
+	return staticEntry{url: urlPath, content: contentPath}
+}
+
+func New(db *database.DB, e ...staticEntry) Server {
+	s := Server{db: db}
+	s.static = make(map[string]string)
+	for _, e := range e {
+		s.static[e.url] = e.content
+	}
+	return s
 }
 
 func (s *Server) Serve(lis net.Listener) (err error) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/menu", httputils.HandleRequest(s.handleMenu))
 	mux.HandleFunc("/hello-world", httputils.HandleRequest(s.helloWorld))
+
+	for path, content := range s.static {
+		fs := http.FileServer(http.Dir(content))
+		mux.Handle(path, fs)
+	}
 
 	log.Infof("Server: serving on %s", lis.Addr())
 
