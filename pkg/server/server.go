@@ -40,8 +40,9 @@ func New(db *database.DB, e ...staticEntry) Server {
 
 func (s *Server) Serve(lis net.Listener) (err error) {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/menu", httputils.HandleRequest(s.handleMenu))
-	mux.HandleFunc("/hello-world", httputils.HandleRequest(s.helloWorld))
+	mux.HandleFunc("/api/hello-world", httputils.HandleRequest(s.helloWorld))
+	mux.HandleFunc("/api/recipes", httputils.HandleRequest(s.handleRecipes))
+	mux.HandleFunc("/api/menu", httputils.HandleRequest(s.handleMenu))
 
 	for path, content := range s.static {
 		fs := http.FileServer(http.Dir(content))
@@ -61,6 +62,23 @@ func (s *Server) Serve(lis net.Listener) (err error) {
 	}
 
 	log.Infof("Server: stopped serving")
+	return nil
+}
+
+func (s *Server) handleRecipes(log *log.Entry, w http.ResponseWriter, r *http.Request) error {
+	if r.Method != http.MethodGet {
+		return httputils.Errorf(http.StatusMethodNotAllowed, "method %s not allowed", r.Method)
+	}
+
+	var names []string
+	for _, r := range s.db.Recipes {
+		names = append(names, r.Name)
+	}
+
+	if err := json.NewEncoder(w).Encode(names); err != nil {
+		return httputils.Errorf(http.StatusInternalServerError, "failed to encode recipes: %v", err)
+	}
+
 	return nil
 }
 
