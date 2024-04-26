@@ -5,5 +5,5 @@ RUN apt install -y ca-certificates
 
 COPY root/ /
 
-EXPOSE 8080
+EXPOSE 3000
 ENTRYPOINT ["/usr/bin/grocery-server", "/etc/grocery-server/config.yaml"]

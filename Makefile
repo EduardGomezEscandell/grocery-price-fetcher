@@ -15,7 +15,7 @@ containerize: build
 	cd deploy && sudo docker build . -t grocery-server
 
 run: stop containerize
-	sudo docker run --name grocery-server -p 8080:8080 docker.io/library/grocery-server
+	sudo docker run --name grocery-server -p 80:3000 docker.io/library/grocery-server
 
 stop:
 	sudo docker container rm -f `sudo docker container ls -a | grep grocery-server | cut -c-12` || true
