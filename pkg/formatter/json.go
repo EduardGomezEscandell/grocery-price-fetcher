@@ -45,8 +45,9 @@ func (f *JSON) PrintRow(w io.Writer, data map[string]interface{}) error {
 		}
 		first = false
 
-		out := format(data[k], false).IfFloat32("%.2f").IfEuro("%.2f").IfString("%q").OrElse("%q").String()
-		_, err := fmt.Fprintf(w, "%q: %s", strings.ToLower(k), out)
+		key := strings.ReplaceAll(strings.ToLower(k), " ", "_")
+		value := format(data[k], false).IfFloat32("%.2f").IfEuro("%.2f").IfString("%q").OrElse("%q").String()
+		_, err := fmt.Fprintf(w, "%q: %s", key, value)
 		if err != nil {
 			return err
 		}
