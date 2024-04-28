@@ -1,0 +1,34 @@
+name: Host service
+
+on:
+  workflow_dispatch:
+
+jobs:
+  host:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v4
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: go.mod
+        check-latest: true
+        cache: false
+    - name: Install dependencies
+      run: |
+        export DEBIAN_NONINTERACTIVE=1
+        sudo apt update
+        sudo apt install -y make npm
+    - name: Find IP
+      run: curl -s ifconfig.me
+    - name: Deploy
+      run: |
+        # Run the service for ten minutes
+        make deploy
+        
+        # Run for ten minutes
+        sleep 600
+
+        # Stop the service
+        exit 0
