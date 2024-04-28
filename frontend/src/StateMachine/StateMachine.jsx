@@ -44,6 +44,21 @@ class MenuState extends BaseState {
     }
 
     transition(recipes) {
+        return new PantryState(this.backend, recipes)
+    }
+}
+
+class PantryState extends BaseState {
+    constructor(backend, recipes) {
+        super("PantryState", backend);
+        this.recipes = recipes;
+    }
+
+    getComponent(setState) {
+        return <Pantry backend={this.backend} recipes={this.recipes}/>
+    }
+
+    transition() {
         throw Error("Not implemented")
     }
 }
