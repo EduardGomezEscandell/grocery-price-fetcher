@@ -1,44 +1,62 @@
-import React, { useState } from 'react'
-import MealPicker from '../MealPicker/MealPicker.jsx'
+import React, { useState, useEffect } from 'react'
+import MealPicker from './MealPicker.jsx'
 
 function Menu(pp) {
+    const [loading, setLoading] = useState(true)
+    const [recipes, setRecipes] = useState([""])
+
+    useEffect(() => {
+        pp.backend.fetchDishes()
+            .then(response => response.json())
+            .then(data => setRecipes(data))
+            .finally(() => setLoading(false))
+    }, [pp.backend])
+
     const [dishes, setDishes] = useState(new Map())
     const [dishComp, setDishComp] = useState("")
 
-    const updateMeal = (id, name, amount) => {
-        const newDishes = dishes.set(id, {name: name, amount: amount})
+    if (loading) {
+        return <p>Loading...</p>
+    }
+
+    const updateDish = (id, name, amount) => {
+        const newDishes = (() => {
+            if (amount === 0) {
+                dishes.delete(id.toString())
+                return dishes
+            }
+            return dishes.set(id.toString(), { mealID: id, name: name, amount: amount }) 
+        })()
         setDishes(newDishes)
 
         let m = new Map()
         Array
             .from(newDishes.values())
-            .forEach(dish => {m[dish.name] = (m[dish.name] || 0) + dish.amount})
-        
+            .forEach(dish => { m[dish.name] = (m[dish.name] || 0) + dish.amount })
+
         const newComp = Object
             .keys(m)
             .filter(key => key !== undefined && key !== "")
             .filter(key => m[key] > 0)
             .sort()
             .map(key => <li key={key}>{key}: {m[key]}</li>)
-        
-        console.log(m)
+
         setDishComp(newComp)
     }
 
     const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     const eatings = ["Breakfast", "Lunch", "Snack", "Dinner"]
 
-    const newRow = (eating) => {
+    const newRow = (meal) => {
         return (<tr>
-            <td>{eating}</td>
+            <td>{meal}</td>
             {days.map(day => {
+                const id = new MealID(day, meal, 0)
                 return (
-                    <td>
+                    <td key={id.toString()} >
                         <MealPicker
-                            recipes={pp.recipes}
-                            onChange={(name, amount) => updateMeal(
-                                new MealID(day, eating, 0).toString(), name, amount)
-                            }
+                            recipes={recipes}
+                            onChange={(name, amount) => updateDish(id, name, amount)}
                         />
                     </td>
                 )
@@ -61,6 +79,9 @@ function Menu(pp) {
             <div>
                 {dishComp}
             </div>
+            <div>
+            <button onClick={() => pp.onComplete(dishes)}>Finish</button>
+            </div>
         </>
     )
 }
@@ -68,12 +89,12 @@ function Menu(pp) {
 class MealID {
     constructor(day, eating, pos) {
         this.day = day
-        this.eating = eating
+        this.meal = eating
         this.pos = pos
     }
 
     toString() {
-        return `${this.day}-${this.eating}-${this.pos}`
+        return `${this.day}-${this.meal}-${this.pos}`
     }
 }
 

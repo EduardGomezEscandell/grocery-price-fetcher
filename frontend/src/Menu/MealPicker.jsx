@@ -42,7 +42,6 @@ function MealPicker(pp) {
                         }}
                         defaultValue={{ value: "", label: "" }}
                         options={options}
-                        style={{ width: "1000px" }}
                         isClearable
                     />
                 </td>
@@ -52,7 +51,6 @@ function MealPicker(pp) {
                         min="1"
                         value={amount}
                         onChange={s => onMealChange(rec, s.target.value)}
-                        style={{ width: "50px" }}
                         contentEditable={rec !== undefined && rec !== ""}
                     />
                 </td>
@@ -60,7 +58,6 @@ function MealPicker(pp) {
             </tbody>
         </table>
     )
-
 }
 
 function parseNum(num) {
