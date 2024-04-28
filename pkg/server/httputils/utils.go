@@ -9,13 +9,15 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func HandleRequest(f func(*logrus.Entry, http.ResponseWriter, *http.Request) error) func(w http.ResponseWriter, r *http.Request) {
+type Handler func(*logrus.Entry, http.ResponseWriter, *http.Request) error
+
+func HandleRequest(handle Handler) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := uuid.New()
 		log := logrus.WithField("request_id", id.String())
 
 		log.Infof("Server: handling request %s %s", r.Method, r.URL.Path)
-		err := f(log, w, r)
+		err := handle(log, w, r)
 		if e := (RequestError{}); errors.As(err, &e) {
 			log.Infof("Server: request error: %v", err)
 			http.Error(w, e.Error(), e.Code)

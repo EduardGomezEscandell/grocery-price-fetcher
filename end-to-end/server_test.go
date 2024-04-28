@@ -73,7 +73,7 @@ func TestServer(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080/menu", f)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://localhost/api/menu", f)
 	require.NoError(t, err)
 
 	client := http.Client{}

@@ -8,14 +8,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type Recipe struct {
+type Dish struct {
 	Name   string
 	Amount float32
 }
 
 type Meal struct {
-	Name    string
-	Recipes []Recipe `json:",omitempty"`
+	Name   string
+	Dishes []Dish `json:",omitempty"`
 }
 
 type Day struct {
@@ -36,9 +36,9 @@ func (menu Menu) MarshalJSON() ([]byte, error) {
 }
 
 type ProductData struct {
-	Name   string
-	Amount float32 `json:",omitempty"`
-	Cost   float32 `json:",omitempty"`
+	Name     string
+	Amount   float32 `json:",omitempty"`
+	UnitCost float32 `json:"unit_cost,omitempty"`
 }
 
 func (menu Menu) Compute(db *database.DB, pantry []ProductData) ([]ProductData, error) {
@@ -46,7 +46,7 @@ func (menu Menu) Compute(db *database.DB, pantry []ProductData) ([]ProductData, 
 	recipes := make(map[*recipe.Recipe]float32)
 	for _, day := range menu.Days {
 		for _, meal := range day.Meals {
-			for _, recipe := range meal.Recipes {
+			for _, recipe := range meal.Dishes {
 				rpe, ok := db.LookupRecipe(recipe.Name)
 				if !ok {
 					log.Warningf("%s: %s: Recipe %q is not registered", day.Name, meal.Name, recipe.Name)
@@ -82,9 +82,9 @@ func (menu Menu) Compute(db *database.DB, pantry []ProductData) ([]ProductData, 
 	table := make([]ProductData, 0, len(products))
 	for _, p := range db.Products {
 		table = append(table, ProductData{
-			Name:   p.Name,
-			Amount: products[p.Name],
-			Cost:   products[p.Name] * p.Price,
+			Name:     p.Name,
+			Amount:   products[p.Name],
+			UnitCost: p.Price,
 		})
 	}
 

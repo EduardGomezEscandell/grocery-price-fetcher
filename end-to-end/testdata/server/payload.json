@@ -1,25 +1,25 @@
 {
-    "Format": "json",
-    "Menu": [
+    "format": "json",
+    "menu": [
         {
             "name": "Dilluns",
             "meals": [
                 {
                     "name": "Esmorzar", 
-                    "recipes": [
+                    "dishes": [
                         {"name": "Torrada i suc de taronja", "amount": 1},
                         {"name": "Flocs de civada", "amount": 1}
                     ]
                 },{
                     "name": "Dinar", 
-                    "recipes": [
+                    "dishes": [
                         {"name": "Macarrons amb sofregit", "amount": 1},
                         {"name": "Fruita", "amount": 1},
                         {"name": "Cafè", "amount": 1}
                     ]
                 },{
                     "name": "Sopar", 
-                    "recipes": [
+                    "dishes": [
                         {"name": "Ravioli", "amount": 1},
                         {"name": "Iogurt", "amount": 1}
                     ]
@@ -30,13 +30,13 @@
             "meals": [
                 {
                     "name": "Esmorzar", 
-                    "recipes": [
+                    "dishes": [
                         {"name": "Torrada i suc de taronja", "amount": 1},
                         {"name": "Flocs de civada", "amount": 1}
                     ]
                 },{
                     "name": "Dinar", 
-                    "recipes": [
+                    "dishes": [
                         {"name": "Llenties amb xoriço", "amount": 1},
                         {"name": "Pollastre amb acompanyament", "amount": 1},
                         {"name": "Fruita", "amount": 1},
@@ -44,7 +44,7 @@
                     ]
                 },{
                     "name": "Sopar", 
-                    "recipes": [
+                    "dishes": [
                         {"name": "Macarrons amb sofregit", "amount": 1},
                         {"name": "Iogurt", "amount": 1}
                     ]
@@ -55,19 +55,19 @@
             "meals": [
                 {
                     "name": "Esmorzar", 
-                    "recipes": [
+                    "dishes": [
                         {"name": "Torrada i suc de taronja", "amount": 1}
                     ]
                 },{
                     "name": "Dinar", 
-                    "recipes": [
+                    "dishes": [
                         {"name": "Arròs amb sofregit", "amount": 1},
                         {"name": "Fruita", "amount": 1},
                         {"name": "Cafè", "amount": 1}
                     ]
                 },{
                     "name": "Sopar", 
-                    "recipes": [
+                    "dishes": [
                         {"name": "Sopa de galets", "amount": 2},
                         {"name": "Proteïna amb acompanyament", "amount": 2},
                         {"name": "Iogurt", "amount": 1},
@@ -80,13 +80,13 @@
             "meals": [
                 {
                     "name": "Esmorzar",
-                    "recipes": [
+                    "dishes": [
                         {"name": "Torrada i suc de taronja", "amount": 1},
                         {"name": "Flocs de civada", "amount": 1}
                     ]
                 },{
                     "name": "Dinar",
-                    "recipes": [
+                    "dishes": [
                         {"name": "Amanida de llenties", "amount": 1},
                         {"name": "Llom amb acompanyament", "amount": 1},
                         {"name": "Fruita", "amount": 1},
@@ -94,7 +94,7 @@
                     ]
                 },{
                     "name": "Sopar",
-                    "recipes": [
+                    "dishes": [
                         {"name": "Arròs amb sofregit", "amount": 1},
                         {"name": "Iogurt", "amount": 1}
                     ]
@@ -105,13 +105,13 @@
             "meals": [
                 {
                     "name": "Esmorzar",
-                    "recipes": [
+                    "dishes": [
                         {"name": "Torrada i suc de taronja", "amount": 1}
                     ]
                 },
                 {
                     "name": "Dinar",
-                    "recipes": [
+                    "dishes": [
                         {"name": "Amanida de cigrons", "amount": 1},
                         {"name": "Pollastre amb acompanyament", "amount": 1},
                         {"name": "Fruita", "amount": 1},
@@ -119,7 +119,7 @@
                     ]
                 },{
                     "name": "Sopar",
-                    "recipes": [
+                    "dishes": [
                         {"name": "Ravioli", "amount": 1},
                         {"name": "Iogurt", "amount": 1}
                     ]
@@ -130,12 +130,12 @@
             "meals": [
                 {
                     "name": "Esmorzar",
-                    "recipes": [
+                    "dishes": [
                         {"name": "Torrada i suc de taronja", "amount": 1}
                     ]
                 },{
                     "name": "Sopar",
-                    "recipes": [
+                    "dishes": [
                         {"name": "Ramen", "amount": 2},
                         {"name": "Iogurt", "amount": 1},
                         {"name": "Iogurt vegà", "amount": 1}
@@ -147,12 +147,12 @@
             "meals": [
                 {
                     "name": "Esmorzar",
-                    "recipes": [
+                    "dishes": [
                         {"name": "Cereals amb llet", "amount": 2}
                     ]
                 },{
                     "name": "Dinar",
-                    "recipes": [
+                    "dishes": [
                         {"name": "Pica-pica", "amount": 2},
                         {"name": "Puré de patata", "amount": 2},
                         {"name": "Proteïna amb acompanyament", "amount": 2},
@@ -161,7 +161,7 @@
                     ]
                 },{
                     "name": "Sopar",
-                    "recipes": [
+                    "dishes": [
                         {"name": "Sopa de galets", "amount": 2},
                         {"name": "Proteïna amb acompanyament", "amount": 2},
                         {"name": "Iogurt", "amount": 1},

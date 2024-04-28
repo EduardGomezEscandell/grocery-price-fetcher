@@ -1,0 +1,4 @@
+verbosity: 2
+database: '/usr/share/grocery-server/database.json'
+frontend: '/usr/share/grocery-server/frontend'
+address: 0.0.0.0:3000

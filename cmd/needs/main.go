@@ -126,20 +126,22 @@ func formatOutput(w io.Writer, products []menu.ProductData, f formatter.Formatte
 		}
 
 		if err := f.PrintRow(w, map[string]any{
-			"Product": p.Name,
-			"Amount":  p.Amount,
-			"Cost":    formatter.Euro(p.Cost),
+			"Product":   p.Name,
+			"Amount":    p.Amount,
+			"Unit Cost": formatter.Euro(p.UnitCost),
+			"Cost":      formatter.Euro(p.UnitCost * p.Amount),
 		}); err != nil {
 			return fmt.Errorf("could not write results to output: %w", err)
 		}
 
-		total += p.Cost
+		total += p.UnitCost * p.Amount
 	}
 
 	if err := f.PrintRow(w, map[string]any{
-		"Product": "Total",
-		"Amount":  "",
-		"Cost":    formatter.Euro(total),
+		"Product":   "Total",
+		"Amount":    "",
+		"Unit Cost": "",
+		"Cost":      formatter.Euro(total),
 	}); err != nil {
 		return fmt.Errorf("could not write total to output: %w", err)
 	}
