@@ -1,0 +1,234 @@
+[
+    {
+        "name": "Amanida de cigrons",
+        "ingredients": [
+            {"name": "Canonges", "amount": 0.25},
+            {"name": "Cigrons", "amount": 0.5},
+            {"name": "Olives", "amount": 0.25},
+            {"name": "Barretes de cranc", "amount": 1},
+            {"name": "Formatge", "amount": 0.5},
+            {"name": "Avellanes", "amount": 0.15},
+            {"name": "Nous", "amount": 0.15}
+        ]
+    },{
+        "name": "Amanida de llenties",
+        "ingredients": [
+            {"name": "Canonges", "amount": 0.25},
+            {"name": "Llenties", "amount": 0.5},
+            {"name": "Olives", "amount": 0.25},
+            {"name": "Barretes de cranc", "amount": 1},
+            {"name": "Formatge", "amount": 0.5},
+            {"name": "Avellanes", "amount": 0.15},
+            {"name": "Nous", "amount": 0.15}
+        ]
+    },{
+        "name": "Cigrons amb xoriço",
+        "ingredients": [
+            {"name": "Cigrons", "amount": 1},
+            {"name": "Xoriço", "amount": 0.2}
+        ]
+    },{
+        "name": "Llenties amb xoriço",
+        "ingredients": [
+            {"name": "Llenties", "amount": 1},
+            {"name": "Xoriço", "amount": 0.2}
+        ]
+    },{
+        "name": "Arròs amb ou",
+        "ingredients": [
+            {"name": "Arròs", "amount": 0.2},
+            {"name": "Salsa de tomàquet", "amount": 0.25},
+            {"name": "Ous", "amount": 1}
+        ]
+    },{
+        "name": "Arròs amb sofregit",
+        "ingredients": [
+            {"name": "Arròs", "amount": 0.2},
+            {"name": "Pebrot vermell", "amount": 0.25},
+            {"name": "Pastanaga", "amount": 0.5},
+            {"name": "Ceba", "amount": 0.5},
+            {"name": "All", "amount": 0.2},
+            {"name": "Tomàquet triturat", "amount": 0.5},
+            {"name": "Carn picada", "amount": 0.5},
+            {"name": "Ous", "amount": 1}
+        ]
+    },{
+        "name": "Cereals amb llet",
+        "ingredients": [
+            {"name": "Cereals", "amount": 0.2},
+            {"name": "Llet d'avena", "amount": 0.2}
+        ]
+    },{
+        "name": "Flocs de civada",
+        "ingredients": [
+            {"name": "Civada", "amount": 0.05},
+            {"name": "Llet d'avena", "amount": 0.1},
+            {"name": "Atmetlles", "amount": 0.15}
+        ]
+    },{
+        "name": "Flocs de civada",
+        "ingredients": [
+            {"name": "Civada", "amount": 0.05},
+            {"name": "Llet d'avena", "amount": 0.1}
+        ]
+    },{
+        "name": "Torrada i suc de taronja",
+        "ingredients": [
+            {"name": "Pa de motlle", "amount": 0.05},
+            {"name": "Embotit", "amount": 0.1},
+            {"name": "Suc de taronja", "amount": 0.2}
+        ]
+    },{
+        "name": "Cafè",
+        "ingredients": [
+            {"name": "Cafè", "amount": 1}
+        ]
+    },{
+        "name": "Fajita",
+        "ingredients": [
+            {"name": "Canonges", "amount": 0.2},
+            {"name": "Ceba", "amount": 0.5},
+            {"name": "Pebrot verd", "amount": 0.25},
+            {"name": "Cigrons", "amount": 0.25},
+            {"name": "Fajita", "amount": 1},
+            {"name": "Arròs", "amount": 0.1}
+        ]
+    },{
+        "name": "Fruita",
+        "ingredients": [
+            {"name": "Fruita", "amount": 1}
+        ]
+    },{
+        "name": "Hamburguesa",
+        "ingredients": [
+            {"name": "Hamburguesa", "amount": 1},
+            {"name": "Espàrrecs", "amount": 0.2},
+            {"name": "Bolets", "amount": 0.2}
+        ]
+    },{
+        "name": "Proteïna amb acompanyament",
+        "ingredients": [
+            {"name": "Proteïna vegana", "amount": 1},
+            {"name": "Espàrrecs", "amount": 0.2},
+            {"name": "Bolets", "amount": 0.2}
+        ]
+    },{
+        "name": "Vurguer",
+        "ingredients": [
+            {"name": "Hamburguesa vegana", "amount": 1},
+            {"name": "Pa d'hamburguesa", "amount": 1},
+            {"name": "Bolets", "amount": 0.2},
+            {"name": "Ceba", "amount": 0.5},
+            {"name": "Pipes", "amount": 0.05},
+            {"name": "Hummus", "amount": 0.1}
+        ]
+    },{
+        "name": "Iogurt",
+        "ingredients": [
+            {"name": "Iogurt", "amount": 1}
+        ]
+    },{
+        "name": "Iogurt vegà",
+        "ingredients": [
+            {"name": "Iogurt vegà", "amount": 1}
+        ]
+    },{
+        "name": "Macarrons amb sofregit",
+        "ingredients": [
+            {"name": "Macarrons", "amount": 0.2},
+            {"name": "Pebrot vermell", "amount": 0.125},
+            {"name": "Pastanaga", "amount": 0.5},
+            {"name": "Ceba", "amount": 0.5},
+            {"name": "All", "amount": 0.1},
+            {"name": "Tomàquet triturat", "amount": 0.5},
+            {"name": "Carn picada", "amount": 0.5}
+        ]
+    },{
+        "name": "Macarrons amb sofregit vegà",
+        "ingredients": [
+            {"name": "Macarrons", "amount": 0.2},
+            {"name": "Pebrot vermell", "amount": 0.125},
+            {"name": "Pastanaga", "amount": 0.5},
+            {"name": "Ceba", "amount": 0.5},
+            {"name": "All", "amount": 0.1},
+            {"name": "Tomàquet triturat", "amount": 0.5},
+            {"name": "Tofu", "amount": 0.25}
+        ]
+    },{
+        "name": "Bastonets i hummus",
+        "ingredients": [
+            {"name": "Bastonets de pa", "amount": 0.25},
+            {"name": "Hummus", "amount": 0.25}
+        ]
+    },{
+        "name": "Pica-pica",
+        "ingredients": [
+            {"name": "Olives", "amount": 0.25},
+            {"name": "Patates fregides", "amount": 0.25}
+        ]
+    },{
+        "name": "Puré de patata",
+        "ingredients": [
+            {"name": "Patata", "amount": 1},
+            {"name": "Llet d'avena", "amount": 0.1}
+        ]
+    },{
+        "name": "Sopa de galets",
+        "ingredients": [
+            {"name": "Caldo", "amount": 0.5},
+            {"name": "Galets", "amount": 0.1}
+        ]
+    },{
+        "name": "Torrada d'alvocat",
+        "ingredients": [
+            {"name": "Pa de motlle", "amount": 0.1},
+            {"name": "Alvocat", "amount": 0.5},
+            {"name": "Canonges", "amount": 0.1},
+            {"name": "Llenties", "amount": 0.25}
+        ]
+    },{
+        "name": "Ramen",
+        "ingredients": [
+            {"name": "Pastanaga", "amount": 1},
+            {"name": "Pebrot verd", "amount": 0.25},
+            {"name": "Pebrot vermell", "amount": 0.1},
+            {"name": "Ceba", "amount": 0.5},
+            {"name": "All", "amount": 0.2},
+            {"name": "Bolets", "amount": 0.25},
+            {"name": "Fideus", "amount": 0.25},
+            {"name": "Caldo", "amount": 0.5},
+            {"name": "Tofu", "amount": 0.25}
+        ]
+    }, {
+        "name": "Truita francesa",
+        "ingredients": [
+            {"name": "Ous", "amount": 2}
+        ]
+    },{
+        "name": "Llom amb acompanyament",
+        "ingredients": [
+            {"name": "Llom", "amount": 1},
+            {"name": "Espàrrecs", "amount": 0.2},
+            {"name": "Bolets", "amount": 0.2}
+        ]
+    },{
+        "name": "Pollastre amb acompanyament",
+        "ingredients": [
+            {"name": "Pollastre", "amount": 1},
+            {"name": "Espàrrecs", "amount": 0.2},
+            {"name": "Bolets", "amount": 0.2}
+        ]
+    },{
+        "name": "Peix amb acompanyament",
+        "ingredients": [
+            {"name": "Peix", "amount": 1},
+            {"name": "Espàrrecs", "amount": 0.2},
+            {"name": "Bolets", "amount": 0.2}
+        ]
+    },{
+        "name": "Ravioli",
+        "ingredients": [
+            {"name": "Ravioli", "amount": 0.5}
+        ]
+    }
+]

@@ -13,11 +13,11 @@ build-js:
 	cd frontend && npm install && npm run build
 
 containerize: build-go build-js
-	cd deploy && ./filesystem.sh build
-	cd deploy && sudo docker build . -t grocery-server
+	cd deploy/container && ./filesystem.sh build
+	cd deploy/container && sudo docker build . -t grocery-server
 
 run: stop containerize
-	sudo docker run --name grocery-server -p 80:3000 docker.io/library/grocery-server
+	cd deploy && sudo docker-compose up
 
 stop:
 	sudo docker container rm -f `sudo docker container ls -a | grep grocery-server | cut -c-12` || true
