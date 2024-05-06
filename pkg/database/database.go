@@ -7,7 +7,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/database/jsonDB"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/product"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/recipe"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/types"
 )
 
 type DB interface {
@@ -15,8 +15,11 @@ type DB interface {
 	LookupProduct(name string) (product.Product, bool)
 	SetProduct(p product.Product) error
 
-	Recipes() []recipe.Recipe
-	LookupRecipe(name string) (recipe.Recipe, bool)
+	Recipes() []types.Recipe
+	LookupRecipe(name string) (types.Recipe, bool)
+
+	Menus() []types.Menu
+	LookupMenu(name string) (types.Menu, bool)
 
 	Close() error
 }

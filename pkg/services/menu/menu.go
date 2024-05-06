@@ -11,12 +11,19 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/formatter"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/logger"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/recipe"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/types"
 )
 
-// RequestData is the data structure that the API expects to receive.
-type RequestData struct {
-	Menu   Menu          `json:",omitempty"`
+// ProductData represents a the need for a product and its unit cost.
+type ProductData struct {
+	Name     string
+	Amount   float32 `json:",omitempty"`
+	UnitCost float32 `json:"unit_cost,omitempty"`
+}
+
+// PostData is the data structure that the API expects to receive.
+type PostData struct {
+	Menu   []types.Day   `json:",omitempty"`
 	Pantry []ProductData `json:",omitempty"`
 	Format string        `json:",omitempty"`
 }
@@ -25,9 +32,9 @@ type Service struct {
 	db database.DB
 }
 
-func OneShot(log logger.Logger, db database.DB, menu Menu, pantry []ProductData) ([]ProductData, error) {
+func OneShot(log logger.Logger, db database.DB, menu types.Menu, pantry []ProductData) ([]ProductData, error) {
 	s := New(db)
-	return s.ComputeShoppingList(log, menu, pantry)
+	return s.ComputeShoppingList(log, menu.Menu, pantry)
 }
 
 func New(db database.DB) *Service {
@@ -37,6 +44,21 @@ func New(db database.DB) *Service {
 }
 
 func (s *Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Request) error {
+	switch r.Method {
+	case http.MethodGet:
+		return s.handleGet(log, w, r)
+	case http.MethodPost:
+		return s.handlePost(log, w, r)
+	default:
+		return httputils.Errorf(http.StatusMethodNotAllowed, "method %s not allowed", r.Method)
+	}
+}
+
+func (s *Service) handleGet(log logger.Logger, w http.ResponseWriter, r *http.Request) error {
+	return httputils.Error(http.StatusNotImplemented, "GET method not implemented")
+}
+
+func (s *Service) handlePost(log logger.Logger, w http.ResponseWriter, r *http.Request) error {
 	if r.Method != http.MethodPost {
 		return httputils.Errorf(http.StatusMethodNotAllowed, "method %s not allowed", r.Method)
 	}
@@ -47,12 +69,12 @@ func (s *Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Reque
 	}
 	r.Body.Close()
 
-	var data RequestData
+	var data PostData
 	if err := json.Unmarshal(out, &data); err != nil {
 		return httputils.Errorf(http.StatusBadRequest, "failed to unmarshal request: %v:\n%s", err, string(out))
 	}
 
-	log.Debugf("Received request with %d days and %d items in the pantry: ", len(data.Menu.Days), len(data.Pantry))
+	log.Debugf("Received request with %d days and %d items in the pantry: ", len(data.Menu), len(data.Pantry))
 
 	if data.Format == "" {
 		data.Format = "table"
@@ -100,16 +122,16 @@ func (s *Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Reque
 	return nil
 }
 
-func (s Service) ComputeShoppingList(log logger.Logger, menu Menu, pantry []ProductData) ([]ProductData, error) {
+func (s Service) ComputeShoppingList(log logger.Logger, menu []types.Day, pantry []ProductData) ([]ProductData, error) {
 	type recipeAmount struct {
-		recipe *recipe.Recipe
+		recipe *types.Recipe
 		amount float32
 	}
 
 	// Compute the amount of each recipe needed
 	recipes := make(map[string]recipeAmount)
 
-	for _, day := range menu.Days {
+	for _, day := range menu {
 		for _, meal := range day.Meals {
 			for _, dish := range meal.Dishes {
 				rpe, ok := s.db.LookupRecipe(dish.Name)

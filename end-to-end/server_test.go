@@ -45,7 +45,7 @@ func TestServer(t *testing.T) {
 			t.Log(logLine)
 		}
 		if err := sc.Err(); err != nil {
-			t.Logf("Error sanning server output: %v", err)
+			t.Logf("Error scanning server output: %v", err)
 		}
 	}()
 

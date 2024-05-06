@@ -11,63 +11,51 @@ import (
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/product"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/recipe"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/types"
 )
 
 type JSON struct {
-	Prods []product.Product `json:"products"`
-	Recs  []recipe.Recipe   `json:"recipes"`
+	products []product.Product
+	recipes  []types.Recipe
+	menus    []types.Menu
 
-	path string
-	log  logger.Logger
-	mu   sync.RWMutex
+	productsPath string
+	recipesPath  string
+	menusPath    string
+
+	log logger.Logger
+	mu  sync.RWMutex
 }
 
 func New(ctx context.Context, log logger.Logger, options map[string]interface{}) (*JSON, error) {
-	var path string
+	prods, errP := getStringOption(options, "products")
+	recs, errR := getStringOption(options, "recipes")
+	menus, errM := getStringOption(options, "menus")
 
-	if p, ok := options["path"]; !ok {
-		return nil, errors.New("missing path option")
-	} else if path, ok = p.(string); !ok {
-		return nil, errors.New("path option must be a string")
-	}
-
-	out, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
+	if err := errors.Join(errP, errR, errM); err != nil {
+		return nil, fmt.Errorf("JSON database: %v", err)
 	}
 
 	db := &JSON{
-		path: path,
-		log:  log,
+		log: log,
+
+		productsPath: prods,
+		recipesPath:  recs,
+		menusPath:    menus,
 	}
 
-	if err := json.Unmarshal(out, db); err != nil {
-		return nil, err
-	}
-
-	return db, nil
+	return db, errors.Join(
+		load(db.productsPath, &db.products),
+		load(db.recipesPath, &db.recipes),
+		load(db.menusPath, &db.menus),
+	)
 }
 
 func (db *JSON) Close() error {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
 	if err := db.save(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (db *JSON) save() error {
-	if err := os.Rename(db.path, db.path+".bak"); err != nil {
-		db.log.Warnf("could not create backup of database: %v", err)
-	}
-
-	out, err := json.Marshal(db)
-	if err != nil {
-		return err
-	}
-
-	if err := os.WriteFile(db.path, out, 0600); err != nil {
 		return err
 	}
 
@@ -78,8 +66,8 @@ func (db *JSON) Products() []product.Product {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	out := make([]product.Product, len(db.Prods))
-	copy(out, db.Prods)
+	out := make([]product.Product, len(db.products))
+	copy(out, db.products)
 	return out
 }
 
@@ -87,7 +75,7 @@ func (db *JSON) LookupProduct(name string) (product.Product, bool) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	i := slices.IndexFunc(db.Prods, func(p product.Product) bool {
+	i := slices.IndexFunc(db.products, func(p product.Product) bool {
 		return p.Name == name
 	})
 
@@ -95,33 +83,21 @@ func (db *JSON) LookupProduct(name string) (product.Product, bool) {
 		return product.Product{}, false
 	}
 
-	return db.Prods[i], true
-}
-
-func (db *JSON) Validate() error {
-	for _, r := range db.Recs {
-		for _, i := range r.Ingredients {
-			if _, ok := db.LookupProduct(i.Name); !ok {
-				return fmt.Errorf("invalid database: recipe %s: ingredient %q is not registered", r.Name, i.Name)
-			}
-		}
-	}
-
-	return nil
+	return db.products[i], true
 }
 
 func (db *JSON) SetProduct(p product.Product) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	i := slices.IndexFunc(db.Prods, func(entry product.Product) bool {
+	i := slices.IndexFunc(db.products, func(entry product.Product) bool {
 		return entry.Name == p.Name
 	})
 
 	if i == -1 {
-		db.Prods = append(db.Prods, p)
+		db.products = append(db.products, p)
 	} else {
-		db.Prods[i] = p
+		db.products[i] = p
 	}
 
 	if err := db.save(); err != nil {
@@ -131,26 +107,140 @@ func (db *JSON) SetProduct(p product.Product) error {
 	return nil
 }
 
-func (db *JSON) Recipes() []recipe.Recipe {
+func (db *JSON) Recipes() []types.Recipe {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	out := make([]recipe.Recipe, len(db.Recs))
-	copy(out, db.Recs)
+	out := make([]types.Recipe, len(db.recipes))
+	copy(out, db.recipes)
 	return out
 }
 
-func (db *JSON) LookupRecipe(name string) (recipe.Recipe, bool) {
+func (db *JSON) LookupRecipe(name string) (types.Recipe, bool) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	i := slices.IndexFunc(db.Recs, func(p recipe.Recipe) bool {
+	i := slices.IndexFunc(db.recipes, func(p types.Recipe) bool {
 		return p.Name == name
 	})
 
 	if i == -1 {
-		return recipe.Recipe{}, false
+		return types.Recipe{}, false
 	}
 
-	return db.Recs[i], true
+	return db.recipes[i], true
+}
+
+func (db *JSON) Menus() []types.Menu {
+	db.mu.RLock()
+	defer db.mu.RUnlock()
+
+	out := make([]types.Menu, len(db.menus))
+	copy(out, db.menus)
+	return out
+}
+
+func (db *JSON) LookupMenu(name string) (types.Menu, bool) {
+	db.mu.RLock()
+	defer db.mu.RUnlock()
+
+	i := slices.IndexFunc(db.menus, func(p types.Menu) bool {
+		return p.Name == name
+	})
+
+	if i == -1 {
+		return types.Menu{}, false
+	}
+
+	return db.menus[i], true
+}
+
+func getStringOption(options map[string]any, key string) (string, error) {
+	p, ok := options[key]
+	if !ok {
+		return "", fmt.Errorf("missing option %q", key)
+	}
+
+	path, ok := p.(string)
+	if !ok {
+		return "", fmt.Errorf("option %q is not a string", key)
+	}
+
+	return path, nil
+}
+
+func load(path string, ptr interface{}) error {
+	out, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("JSON database: %v", err)
+	}
+	if err := json.Unmarshal(out, ptr); err != nil {
+		return fmt.Errorf("JSON database: could not unmarshal file %q: %v", path, err)
+	}
+	return nil
+}
+
+func (db *JSON) save() error {
+	return errors.Join(
+		save(db.log, db.productsPath, db.products),
+		save(db.log, db.recipesPath, db.recipes),
+		save(db.log, db.menusPath, db.menus),
+	)
+}
+
+func save(log logger.Logger, path string, structure interface{}) (err error) {
+	b, err := newBackup(path)
+	if err != nil {
+		return err
+	}
+	defer b.onExit(&err, log)
+
+	out, err := json.Marshal(structure)
+	if err != nil {
+		return err
+	}
+
+	if err := os.WriteFile(path, out, 0600); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type backup struct {
+	path string
+	tmp  string
+}
+
+func newBackup(path string) (backup, error) {
+	b := backup{
+		path: path,
+		tmp:  path + ".bak",
+	}
+
+	if err := os.Rename(b.path, b.tmp); err != nil {
+		return b, fmt.Errorf("could not create backup: %v", err)
+	}
+
+	return b, nil
+}
+
+func (b backup) onExit(err *error, log logger.Logger) {
+	if *err != nil {
+		b.restore(log)
+	} else {
+		b.remove(log)
+	}
+}
+
+func (b backup) restore(log logger.Logger) {
+	if err := os.Rename(b.tmp, b.path); err != nil {
+		log.Warnf("Could not restore backup: %v", b.path, err)
+	}
+}
+
+func (b backup) remove(log logger.Logger) {
+	if err := os.RemoveAll(b.tmp); err != nil {
+		log.Warnf("Could not remove backup: %v", err)
+	}
 }

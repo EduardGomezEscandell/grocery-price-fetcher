@@ -2,6 +2,7 @@ package bonpreu
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -119,4 +120,17 @@ func (p *Provider) FetchPrice(ctx context.Context, log logger.Logger) (float32, 
 	batchPrice := float32(euro) + float32(cent)/100
 
 	return batchPrice / p.batchSize, nil
+}
+
+func (p *Provider) MarshalJSON() ([]byte, error) {
+	helper := struct {
+		Bonpreu map[string]string
+	}{
+		Bonpreu: map[string]string{
+			"batch_size": fmt.Sprint(p.batchSize),
+			"id":         p.id,
+		},
+	}
+
+	return json.Marshal(helper)
 }

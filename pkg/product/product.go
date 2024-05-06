@@ -50,7 +50,7 @@ func (p *Product) UnmarshalJSON(b []byte) (err error) {
 
 	p.Name = helper.Name
 	if len(helper.Providers) != 1 {
-		return fmt.Errorf("expected 1 provider, got %d", len(helper.Providers))
+		return fmt.Errorf("%q: expected 1 provider, got %d", helper.Name, len(helper.Providers))
 	}
 
 	pName := maps.Keys(helper.Providers)[0]
@@ -62,6 +62,18 @@ func (p *Product) UnmarshalJSON(b []byte) (err error) {
 	}
 
 	return nil
+}
+
+func (p *Product) MarshalJSON() (b []byte, err error) {
+	helper := struct {
+		Name      string
+		Providers *providers.Provider
+	}{
+		Name:      p.Name,
+		Providers: &p.Provider,
+	}
+
+	return json.Marshal(helper)
 }
 
 func (p *Product) FetchPrice(ctx context.Context, log logger.Logger) error {

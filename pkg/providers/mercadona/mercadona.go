@@ -115,3 +115,17 @@ func (p *Provider) FetchPrice(ctx context.Context, log logger.Logger) (float32, 
 
 	return float32(batchPrice) / p.batchSize, nil
 }
+
+func (p *Provider) MarshalJSON() ([]byte, error) {
+	helper := struct {
+		Mercadona map[string]string
+	}{
+		Mercadona: map[string]string{
+			"batch_size": fmt.Sprint(p.batchSize),
+			"id":         p.id,
+			"zone_code":  p.zoneCode,
+		},
+	}
+
+	return json.Marshal(helper)
+}

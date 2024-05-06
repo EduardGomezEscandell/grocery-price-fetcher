@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -18,6 +19,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/services/menu"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/services/pricing"
 	"github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v3"
 )
 
 func main() {
@@ -46,10 +48,11 @@ func main() {
 	providers.Register("Bonpreu", bonpreu.New)
 	providers.Register("Mercadona", mercadona.New)
 
-	db, err := unmarshalFile[database.DB](s.dbPath)
+	db, err := loadDB(context.Background(), log, s.dbPath)
 	if err != nil {
-		log.Fatalf("Error: could not parse database: %v", err)
+		log.Fatalf("Error: %v", err)
 	}
+	defer db.Close()
 
 	log.Debug("Database loaded successfully")
 	log.Debugf("Products: %d", len(db.Products()))
@@ -70,15 +73,17 @@ func main() {
 		log.Fatalf("Error: could not parse pantry: %v", err)
 	}
 
-	m, err := unmarshalFile[menu.Menu](s.menuPath)
-	if err != nil {
-		log.Fatalf("Error: could not parse menu: %v", err)
+	m := db.Menus()
+	switch len(m) {
+	case 0:
+		log.Fatalf("Error: no menus found in database")
+	case 1:
+		break
+	default:
+		log.Fatalf("Error: more than one menu found in database")
 	}
 
-	log.Debug("Menu loaded successfully")
-	log.Debugf("Days: %d", len(m.Days))
-
-	products, err := menu.OneShot(log, db, m, pantry)
+	products, err := menu.OneShot(log, db, m[0], pantry)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
@@ -93,7 +98,6 @@ type settings struct {
 	format    string
 	skipEmpty bool
 
-	menuPath   string
 	pantryPath string
 	dbPath     string
 	outputPath string
@@ -103,9 +107,8 @@ func parseInput() settings {
 	var sett settings
 
 	flag.StringVar(&sett.format, "fmt", "table", "output format (json, csv, tsv, ini)")
-	flag.StringVar(&sett.dbPath, "db", "", "database file path")
+	flag.StringVar(&sett.dbPath, "db", "", "database manifest path")
 	flag.StringVar(&sett.pantryPath, "p", "", "pantry file path")
-	flag.StringVar(&sett.menuPath, "i", "", "input file path (default: STDIN)")
 	flag.StringVar(&sett.outputPath, "o", "", "output file path (default: STDOUT)")
 	flag.BoolVar(&sett.verbose, "v", false, "verbose mode")
 	flag.BoolVar(&sett.skipEmpty, "skip-empty", false, "skip empty products")
@@ -166,4 +169,27 @@ func unmarshalFile[T any](path string) (T, error) {
 	}
 
 	return t, nil
+}
+
+func loadDB(ctx context.Context, log logger.Logger, path string) (database.DB, error) {
+	if path == "" {
+		return nil, errors.New("database path is required")
+	}
+
+	out, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("could not read database manifest: %v", err)
+	}
+
+	var conf database.Settings
+	if err := yaml.Unmarshal(out, &conf); err != nil {
+		return nil, fmt.Errorf("could not parse database manifest: %v", err)
+	}
+
+	db, err := database.New(ctx, log, conf)
+	if err != nil {
+		return nil, fmt.Errorf("could not load database: %v", err)
+	}
+
+	return db, nil
 }
