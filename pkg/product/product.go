@@ -5,15 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/provider"
-	log "github.com/sirupsen/logrus"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/logger"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/providers"
 	"golang.org/x/exp/maps"
 )
 
 type Product struct {
 	Name     string
 	Price    float32
-	Provider provider.Provider
+	Provider providers.Provider
 }
 
 func (p *Product) UnmarshalTSV(args []string) (err error) {
@@ -30,7 +30,7 @@ func (p *Product) UnmarshalTSV(args []string) (err error) {
 
 	p.Name = args[flieldName]
 
-	p.Provider, err = provider.ParseTSV(args[fieldProvider], args[fieldArgv:])
+	p.Provider, err = providers.ParseTSV(args[fieldProvider], args[fieldArgv:])
 	if err != nil {
 		return fmt.Errorf("could not parse provider for %s: %w", p.Name, err)
 	}
@@ -56,7 +56,7 @@ func (p *Product) UnmarshalJSON(b []byte) (err error) {
 	pName := maps.Keys(helper.Providers)[0]
 	pArgv := maps.Values(helper.Providers)[0]
 
-	p.Provider, err = provider.ParseMap(pName, pArgv)
+	p.Provider, err = providers.ParseMap(pName, pArgv)
 	if err != nil {
 		return fmt.Errorf("could not parse provider for %s: %w", p.Name, err)
 	}
@@ -64,9 +64,9 @@ func (p *Product) UnmarshalJSON(b []byte) (err error) {
 	return nil
 }
 
-func (p *Product) FetchPrice(ctx context.Context) error {
+func (p *Product) FetchPrice(ctx context.Context, log logger.Logger) error {
 	log.Tracef("Fetching price for %s", p.Name)
-	price, err := p.Provider.FetchPrice(ctx)
+	price, err := p.Provider.FetchPrice(ctx, log)
 	if err != nil {
 		return fmt.Errorf("could not get price for %s: %w", p.Name, err)
 	}

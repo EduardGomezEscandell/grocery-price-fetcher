@@ -12,17 +12,20 @@ import (
 	"time"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/formatter"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/product"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/provider"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/providers/bonpreu"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/providers/mercadona"
-	log "github.com/sirupsen/logrus"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/providers"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/providers/bonpreu"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/providers/mercadona"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
 	s := parseInput()
+
+	log := logger.New()
 	if s.verbose {
-		log.SetLevel(log.DebugLevel)
+		log.SetLevel(int(logrus.DebugLevel))
 	}
 
 	outFmt, err := formatter.New(s.format)
@@ -53,10 +56,10 @@ func main() {
 		defer out.Close()
 	}
 
-	provider.Register("Bonpreu", bonpreu.New)
-	provider.Register("Mercadona", mercadona.New)
+	providers.Register("Bonpreu", bonpreu.New)
+	providers.Register("Mercadona", mercadona.New)
 
-	products, err := run(in)
+	products, err := run(in, log)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
@@ -85,7 +88,7 @@ func parseInput() settings {
 	return sett
 }
 
-func run(r io.Reader) ([]*product.Product, error) {
+func run(r io.Reader, log logger.Logger) ([]*product.Product, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -112,7 +115,7 @@ func run(r io.Reader) ([]*product.Product, error) {
 			ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 
-			err := p.FetchPrice(ctx)
+			err := p.FetchPrice(ctx, log)
 			if err != nil {
 				log.Warningf("Get: %v", err)
 				return

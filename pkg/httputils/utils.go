@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/logger"
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 )
 
-type Handler func(*logrus.Entry, http.ResponseWriter, *http.Request) error
+type Handler func(logger.Logger, http.ResponseWriter, *http.Request) error
 
-func HandleRequest(handle Handler) func(w http.ResponseWriter, r *http.Request) {
+func HandleRequest(log logger.Logger, handle Handler) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := uuid.New()
-		log := logrus.WithField("request_id", id.String())
+		log := log.WithField("request_id", id.String())
 
 		log.Infof("Server: handling request %s %s", r.Method, r.URL.Path)
 		err := handle(log, w, r)

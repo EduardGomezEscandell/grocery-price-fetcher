@@ -113,7 +113,7 @@
     },{
         "name": "Fideus",
         "providers": {
-            "Mercadona": { "batch_size": "1", "id": "8713", "zone_code": "bcn1" }
+            "Mercadona": { "batch_size": "1", "id": "8713", "zone_code": "mad1" }
         }
     },{
         "name": "Ravioli",

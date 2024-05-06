@@ -11,17 +11,20 @@ import (
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/formatter"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/menu"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/provider"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/providers/bonpreu"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/providers/mercadona"
-	log "github.com/sirupsen/logrus"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/logger"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/providers"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/providers/bonpreu"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/providers/mercadona"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/services/menu"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/services/pricing"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
 	s := parseInput()
+	log := logger.New()
 	if s.verbose {
-		log.SetLevel(log.DebugLevel)
+		log.SetLevel(int(logrus.DebugLevel))
 	}
 
 	outFmt, err := formatter.New(s.format)
@@ -40,25 +43,22 @@ func main() {
 		defer out.Close()
 	}
 
-	provider.Register("Bonpreu", bonpreu.New)
-	provider.Register("Mercadona", mercadona.New)
+	providers.Register("Bonpreu", bonpreu.New)
+	providers.Register("Mercadona", mercadona.New)
 
 	db, err := unmarshalFile[database.DB](s.dbPath)
 	if err != nil {
 		log.Fatalf("Error: could not parse database: %v", err)
 	}
 
-	if err := db.Validate(); err != nil {
-		log.Fatalf("Error: %v", err)
-	}
-
 	log.Debug("Database loaded successfully")
-	log.Debugf("Products: %d", len(db.Products))
-	log.Debugf("Recipes: %d", len(db.Recipes))
+	log.Debugf("Products: %d", len(db.Products()))
+	log.Debugf("Recipes: %d", len(db.Recipes()))
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	db.UpdatePrices(ctx)
+
+	pricing.OneShot(ctx, log, db)
 
 	pantry, err := func() ([]menu.ProductData, error) {
 		if s.pantryPath == "" {
@@ -70,15 +70,15 @@ func main() {
 		log.Fatalf("Error: could not parse pantry: %v", err)
 	}
 
-	menu, err := unmarshalFile[menu.Menu](s.menuPath)
+	m, err := unmarshalFile[menu.Menu](s.menuPath)
 	if err != nil {
 		log.Fatalf("Error: could not parse menu: %v", err)
 	}
 
 	log.Debug("Menu loaded successfully")
-	log.Debugf("Days: %d", len(menu.Days))
+	log.Debugf("Days: %d", len(m.Days))
 
-	products, err := menu.Compute(&db, pantry)
+	products, err := menu.OneShot(log, db, m, pantry)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}

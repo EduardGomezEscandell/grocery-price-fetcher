@@ -1,16 +1,18 @@
-package provider
+package providers
 
 import (
 	"context"
 	"errors"
 	"strings"
+
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/logger"
 )
 
 // Provider is an interface that represents a grocery store provider for a single product.
 type Provider interface {
 	UnmarshalTSV(cols ...string) error
 	UnmarshalMap(argv map[string]string) error
-	FetchPrice(ctx context.Context) (float32, error)
+	FetchPrice(ctx context.Context, log logger.Logger) (float32, error)
 }
 
 // Factory is a function that creates a new Provider.

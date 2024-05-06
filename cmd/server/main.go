@@ -2,50 +2,49 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"net"
 	"os"
 
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/daemon"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/database"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/provider"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/server"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/providers/bonpreu"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/providers/mercadona"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/logger"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/services"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
 
 func main() {
-	s := loadSettings()
-	setVerbosity(s)
+	sett := loadSettings()
+	log := newLogger(sett)
 
-	log.Debugf("Settings loaded: %#v", s)
-
-	provider.Register("Bonpreu", bonpreu.New)
-	provider.Register("Mercadona", mercadona.New)
-
-	db, err := loadDatabase(s)
-	if err != nil {
-		log.Fatalf("Failed to load database: %v", err)
-	}
+	log.Debugf("Settings loaded: %#v", sett)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	db.UpdatePrices(ctx)
-
-	lis, err := net.Listen("tcp", s.Address)
+	s, err := services.New(ctx, log, sett.Database)
 	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
+		log.Fatalf("Could not initialize service: %v", err)
+	}
+
+	s.Run()
+	defer s.Stop()
+
+	lis, err := net.Listen("tcp", sett.Address)
+	if err != nil {
+		log.Fatalf("Could not listen: %v", err)
 	}
 	defer lis.Close()
 
 	log.Info("Listening on ", lis.Addr().String())
 
-	sv := server.New(db, server.WithStatic("/", s.FrontEnd))
-	if err := sv.Serve(lis); err != nil {
+	daemon := daemon.New(log)
+
+	daemon.RegisterStaticEndpoint("/", sett.FrontEnd)
+	s.Register(daemon.RegisterDynamicEndpoint)
+
+	if err := daemon.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
 	}
 
@@ -54,7 +53,7 @@ func main() {
 
 type Settings struct {
 	Verbosity int
-	Database  string
+	Database  database.Settings
 	FrontEnd  string
 	Address   string
 }
@@ -86,33 +85,18 @@ func loadSettings() Settings {
 	return s
 }
 
-func setVerbosity(s Settings) {
+func newLogger(s Settings) logger.Logger {
+	logger := logger.New()
+
 	switch s.Verbosity {
 	case 0:
-		log.SetLevel(log.InfoLevel)
+		logger.SetLevel(int(log.InfoLevel))
 	case 1:
-		log.SetLevel(log.DebugLevel)
+		logger.SetLevel(int(log.DebugLevel))
 	case 2:
-		log.SetLevel(log.TraceLevel)
+		logger.SetLevel(int(log.TraceLevel))
 	}
 
-	log.Debug("DEBUG mode enabled")
-}
-
-func loadDatabase(s Settings) (*database.DB, error) {
-	if s.Database == "" {
-		return nil, errors.New("database path is empty")
-	}
-
-	out, err := os.ReadFile(s.Database)
-	if err != nil {
-		return nil, err
-	}
-
-	var db database.DB
-	if err := json.Unmarshal(out, &db); err != nil {
-		return nil, err
-	}
-
-	return &db, nil
+	logger.Debug("DEBUG mode enabled")
+	return logger
 }

@@ -4,7 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/providers/bonpreu"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/logger"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/providers/bonpreu"
 	"github.com/stretchr/testify/require"
 )
 
@@ -26,7 +27,7 @@ func TestBonpreuBadID(t *testing.T) {
 	err := p.UnmarshalTSV("1", "0")
 	require.NoError(t, err, "expected no error when unmarshalling")
 
-	_, err = p.FetchPrice(ctx)
+	_, err = p.FetchPrice(ctx, logger.New())
 	require.Error(t, err, "Product with ID 0 should not be found")
 }
 
@@ -39,8 +40,8 @@ func TestBonpreuGoodID(t *testing.T) {
 	err := p.UnmarshalTSV("1", "90041")
 	require.NoError(t, err, "expected no error when unmarshalling")
 
-	price, err := p.FetchPrice(ctx)
-	require.NoError(t, err, "Product with ID 8713 should be found")
+	price, err := p.FetchPrice(ctx, logger.New())
+	require.NoError(t, err, "Product with ID 90041 should be found")
 	require.Greater(t, price, float32(0), "expected price to be greater than 0")
 }
 
@@ -56,7 +57,7 @@ func TestBonpreuMap(t *testing.T) {
 	})
 	require.NoError(t, err, "expected no error when unmarshalling")
 
-	price, err := p.FetchPrice(ctx)
-	require.NoError(t, err, "Product with ID 8713 should be found")
+	price, err := p.FetchPrice(ctx, logger.New())
+	require.NoError(t, err, "Product with ID 90041 should be found")
 	require.Greater(t, price, float32(0), "expected price to be greater than 0")
 }

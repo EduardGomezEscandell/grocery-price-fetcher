@@ -2,74 +2,39 @@ package database
 
 import (
 	"context"
-	"fmt"
-	"slices"
-	"sync"
+	"errors"
 
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/database/jsonDB"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/product"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/recipe"
-	log "github.com/sirupsen/logrus"
 )
 
-type DB struct {
-	Products []product.Product
-	Recipes  []recipe.Recipe
+type DB interface {
+	Products() []product.Product
+	LookupProduct(name string) (product.Product, bool)
+	SetProduct(p product.Product) error
+
+	Recipes() []recipe.Recipe
+	LookupRecipe(name string) (recipe.Recipe, bool)
+
+	Close() error
 }
 
-func (db *DB) LookupProduct(name string) (*product.Product, bool) {
-	i := slices.IndexFunc(db.Products, func(p product.Product) bool {
-		return p.Name == name
-	})
-
-	if i == -1 {
-		return nil, false
-	}
-
-	return &db.Products[i], true
+type Settings struct {
+	Type    string
+	Options map[string]interface{}
 }
 
-func (db *DB) LookupRecipe(name string) (*recipe.Recipe, bool) {
-	i := slices.IndexFunc(db.Recipes, func(p recipe.Recipe) bool {
-		return p.Name == name
-	})
-
-	if i == -1 {
-		return nil, false
-	}
-
-	return &db.Recipes[i], true
-}
-
-func (db DB) Validate() error {
-	for _, r := range db.Recipes {
-		for _, i := range r.Ingredients {
-			if _, ok := db.LookupProduct(i.Name); !ok {
-				return fmt.Errorf("invalid database: recipe %s: ingredient %q is not registered", r.Name, i.Name)
-			}
+func New(ctx context.Context, logger logger.Logger, s Settings) (DB, error) {
+	switch s.Type {
+	case "json":
+		db, err := jsonDB.New(ctx, logger, s.Options)
+		if err != nil {
+			return nil, err
 		}
+		return db, nil
+	default:
+		return nil, errors.New("unknown database type")
 	}
-
-	return nil
-}
-
-func (db *DB) UpdatePrices(ctx context.Context) {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	log.Debug("Database: fetching prices")
-	defer log.Debug("Database: prices fetch complete")
-
-	var wg sync.WaitGroup
-	for i := range db.Products {
-		wg.Add(1)
-		go func(i int) {
-			defer wg.Done()
-			err := db.Products[i].FetchPrice(ctx)
-			if err != nil {
-				log.Warningf("Database price update: %v", err)
-			}
-		}(i)
-	}
-
-	wg.Wait()
 }

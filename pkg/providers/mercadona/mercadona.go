@@ -1,30 +1,30 @@
-package bonpreu
+package mercadona
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"regexp"
 	"strconv"
 
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/provider"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/logger"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/providers"
 )
 
-var regex = regexp.MustCompile(`<span class="[^"]*price__StyledText[^"]*">([0-9]+,[0-9]{2}).€</span>`)
-
 type Provider struct {
-	id        string
 	batchSize float32
+	zoneCode  string
+	id        string
 }
 
-func New() provider.Provider {
+func New() providers.Provider {
 	return &Provider{}
 }
 
 func (p *Provider) UnmarshalTSV(cols ...string) error {
-	if len(cols) != 2 {
-		return fmt.Errorf("expected 2 arguments (batch_size, id), got %d", len(cols))
+	if len(cols) != 3 {
+		return fmt.Errorf("expected 3 arguments (batch_size, zone_code, id), got %d", len(cols))
 	}
 
 	c, err := strconv.ParseFloat(cols[0], 32)
@@ -37,12 +37,14 @@ func (p *Provider) UnmarshalTSV(cols ...string) error {
 
 	p.batchSize = float32(c)
 	p.id = cols[1]
+	p.zoneCode = cols[2]
+
 	return nil
 }
 
 func (p *Provider) UnmarshalMap(argv map[string]string) (err error) {
-	if len(argv) != 2 {
-		return fmt.Errorf("expected 2 arguments (batch_size, id), got %d", len(argv))
+	if len(argv) != 3 {
+		return fmt.Errorf("expected 3 arguments (batch_size, zone_code, id), got %d", len(argv))
 	}
 
 	bs, ok := argv["batch_size"]
@@ -53,6 +55,11 @@ func (p *Provider) UnmarshalMap(argv map[string]string) (err error) {
 	p.id, ok = argv["id"]
 	if !ok {
 		return fmt.Errorf("missing id")
+	}
+
+	p.zoneCode, ok = argv["zone_code"]
+	if !ok {
+		return fmt.Errorf("missing zone_code")
 	}
 
 	batchSize, err := strconv.ParseFloat(bs, 32)
@@ -67,8 +74,10 @@ func (p *Provider) UnmarshalMap(argv map[string]string) (err error) {
 	return nil
 }
 
-func (p *Provider) FetchPrice(ctx context.Context) (float32, error) {
-	url := fmt.Sprintf("https://www.compraonline.bonpreuesclat.cat/products/%s/details", p.id)
+func (p *Provider) FetchPrice(ctx context.Context, log logger.Logger) (float32, error) {
+	url := fmt.Sprintf("https://tienda.mercadona.es/api/products/%s/?lang=es&wh=%s", p.id, p.zoneCode)
+	log.Trace("Fetching price from ", url)
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return 0, err
@@ -89,31 +98,20 @@ func (p *Provider) FetchPrice(ctx context.Context) (float32, error) {
 		return 0, fmt.Errorf("could not read response: %w", err)
 	}
 
-	matches := regex.FindAllSubmatch(content, -1)
-
-	switch len(matches) {
-	case 0:
-		return 0, fmt.Errorf("could not find price in response")
-	case 1:
-		break
-	default:
-		return 0, fmt.Errorf("found multiple prices in response")
+	var data struct {
+		PriceInstructions struct {
+			UnitPrice string `json:"unit_price"`
+		} `json:"price_instructions"`
 	}
 
-	var euro uint
-	var cent uint
+	if err := json.Unmarshal(content, &data); err != nil {
+		return 0, fmt.Errorf("could not unmarshal response: %w", err)
+	}
 
-	m := string(matches[0][1])
-	_, err = fmt.Sscanf(m, "%d,%d", &euro, &cent)
+	batchPrice, err := strconv.ParseFloat(data.PriceInstructions.UnitPrice, 32)
 	if err != nil {
-		return 0, fmt.Errorf("could not parse price %q: %w", m, err)
+		return 0, fmt.Errorf("could not parse price: %w", err)
 	}
 
-	if cent > 99 {
-		return 0, fmt.Errorf("invalid price: %s", m)
-	}
-
-	batchPrice := float32(euro) + float32(cent)/100
-
-	return batchPrice / p.batchSize, nil
+	return float32(batchPrice) / p.batchSize, nil
 }
