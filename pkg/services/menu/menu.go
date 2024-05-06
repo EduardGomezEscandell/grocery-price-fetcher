@@ -54,15 +54,15 @@ func (s *Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Reque
 	}
 }
 
-func (s *Service) handleGet(log logger.Logger, w http.ResponseWriter, r *http.Request) error {
-	return httputils.Error(http.StatusNotImplemented, "GET method not implemented")
+func (s *Service) handleGet(_ logger.Logger, w http.ResponseWriter, _ *http.Request) error {
+	if err := json.NewEncoder(w).Encode(s.db.Menus()); err != nil {
+		return httputils.Errorf(http.StatusInternalServerError, "could not write menus to output: %w", err)
+	}
+
+	return nil
 }
 
 func (s *Service) handlePost(log logger.Logger, w http.ResponseWriter, r *http.Request) error {
-	if r.Method != http.MethodPost {
-		return httputils.Errorf(http.StatusMethodNotAllowed, "method %s not allowed", r.Method)
-	}
-
 	out, err := io.ReadAll(r.Body)
 	if err != nil {
 		return httputils.Error(http.StatusBadRequest, "failed to read request")

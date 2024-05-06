@@ -1,12 +1,25 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Select from 'react-select'
 
 
 function MealPicker(pp) { 
     const options = pp.recipes.map(recipe => ({ value: recipe, label: recipe }))
 
-    const [rec, setRec] = useState(undefined)
+    const [rec, setRec] = useState("")
     const [amount, setAmount] = useState("")
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        try {
+            setRec(pp.default.name)
+            setAmount(pp.default.amount)
+            console.log(pp.default.name, pp.default.amount)
+            setLoading(false)
+        } catch {
+            setRec("")
+            setAmount("")
+        }
+    }, [pp.default])
 
     const onMealChange = (newRec, newAmount) => {
         switch (newRec) {
@@ -27,7 +40,7 @@ function MealPicker(pp) {
                 return
         }
     }
-
+   
     return (
         <table>
             <tbody>
@@ -41,7 +54,7 @@ function MealPicker(pp) {
                             }
                             onMealChange(selected.value, 0)
                         }}
-                        defaultValue={{ value: "", label: "" }}
+                        value={{ value: rec, label: rec }}
                         options={options}
                         isClearable
                     />

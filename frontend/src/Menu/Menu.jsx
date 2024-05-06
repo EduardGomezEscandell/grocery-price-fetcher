@@ -1,25 +1,35 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import MealPicker from './MealPicker.jsx'
 
 function Menu(pp) {
-    const [loading, setLoading] = useState(true)
+    const [loadingRecipes, setLoadingRecipes] = useState(true)
+    const [loadingMenu, setLoadingMenu] = useState(true)
+
     const [recipes, setRecipes] = useState([""])
+    const [menu, setMenu] = useState({ name: "loading", menu: []})
+
+    const days = ["Dilluns", "Dimarts", "Dimecres", "Dijous", "Divendres", "Dissabte", "Diumenge"]
+    const eatings = ["Esmorzar", "Dinar", "Berenar", "Sopar"]
 
     useEffect(() => {
-        pp.backend.fetchDishes()
+        pp.backend.GetDishes()
             .then(response => response.json())
             .then(data => setRecipes(data))
-            .finally(() => setLoading(false))
+            .finally(() => setLoadingRecipes(false))
+    }, [pp.backend])
+
+    useEffect(() => {
+        pp.backend.GetMenu()
+            .then(response => response.json())
+            .then(data => setMenu(data[0]))
+            .finally(() => setLoadingMenu(false))
     }, [pp.backend])
 
     const [dishes, setDishes] = useState(new Map())
     const [dishComp, setDishComp] = useState("")
 
-    if (loading) {
-        return <p>Loading...</p>
-    }
 
-    const updateDish = (id, name, amount) => {
+    const updateDish = useCallback((id, name, amount) => {
         const newDishes = (() => {
             if (amount === 0) {
                 dishes.delete(id.toString())
@@ -42,25 +52,53 @@ function Menu(pp) {
             .map(key => <li key={key}>{key}: {m[key]}</li>)
 
         setDishComp(newComp)
+    }, [dishes])
+
+    useEffect(() => {
+        console.log(menu)
+        for (let day of menu.menu) {
+            for (let meal of day.meals) {
+                for (let i = 0; i < meal.dishes.length; i++) {
+                    const id = new MealID(day.name, meal.name, i)
+                    updateDish(id, meal.dishes[i].name, meal.dishes[i].amount)
+                }
+            }
+        }
+    }, [updateDish, menu])
+
+    if (loadingRecipes || loadingMenu) {
+        return <p>Loading...</p>
     }
 
-    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-    const eatings = ["Breakfast", "Lunch", "Snack", "Dinner"]
+    const newPlate = (day, meal, pos) => {
+        const id = new MealID(day, meal, pos)
+        return (
+            <tr key={id.toString()} >
+                <MealPicker
+                    recipes={recipes}
+                    default={dishes.get(id.toString())}
+                    onChange={(name, amount) => updateDish(id, name, amount)}
+                />
+            </tr>
+        )
+    }
+
+    const newMeal = (day, meal) => {
+        return (
+            <td>
+            <table>
+            <tbody>
+            {[0,1,2,3].map(i => newPlate(day, meal, i))}
+            </tbody>
+            </table>
+            </td>
+        )
+    }
 
     const newRow = (meal) => {
         return (<tr>
             <td>{meal}</td>
-            {days.map(day => {
-                const id = new MealID(day, meal, 0)
-                return (
-                    <td key={id.toString()} >
-                        <MealPicker
-                            recipes={recipes}
-                            onChange={(name, amount) => updateDish(id, name, amount)}
-                        />
-                    </td>
-                )
-            })}
+            {days.map(day => newMeal(day, meal))}
         </tr>
         )
     }

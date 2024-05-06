@@ -36,7 +36,7 @@ function Pantry(pp) {
             })
 
         pp.backend
-            .postMenu(reqBody)
+            .PostMenu(reqBody)
             .then(response => response.json())
             .then(data => data.reduce((map, x) => map.set(x.product, new ShoppingItem(x)), new Map()))
             .then(ingredients => {
