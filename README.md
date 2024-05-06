@@ -18,7 +18,7 @@ El primer cop que l'utilitzes l'hauràs de compilar
    - Windows i altres: Descarrega Go de la [web](https://go.dev/dl/).
 2. Compila
    - Linux: `make build-go`
-   - Windows: `New-Item -Path bin/compra -Type Directory ; go build -o ./bin/compra.exe build/cmd/compra`
+   - Windows: `New-Item -Path bin -Type Directory ; go build -o ./bin/compra.exe build/cmd/compra`
 
 ## Entrada de dades
 Per poder buscar els productes, es necessita que entris les dades. Crea un arxiu anomenat `data.tsv`.
