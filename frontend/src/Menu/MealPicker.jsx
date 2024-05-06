@@ -34,6 +34,7 @@ function MealPicker(pp) {
             <tr>
                 <td>
                     <Select
+                        styles={{ control: (base) => ({ ...base, width: '200px' }) }}
                         onChange={selected => {
                             if (selected == null) {
                                 return onMealChange("", 0)
@@ -52,6 +53,7 @@ function MealPicker(pp) {
                         value={amount}
                         onChange={s => onMealChange(rec, s.target.value)}
                         contentEditable={rec !== undefined && rec !== ""}
+                        style={{ width: '50px', height: '25px' }}
                     />
                 </td>
             </tr>

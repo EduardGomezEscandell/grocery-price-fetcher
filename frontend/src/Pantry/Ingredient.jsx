@@ -29,6 +29,7 @@ function Ingredient(pp) {
                 value={have}
                 onChange={updateHave}
                 datatype='number'
+                style={{width: '40px'}}
             /> </td>
             <td> {item.need} </td>
             <td> {deficit} </td>
