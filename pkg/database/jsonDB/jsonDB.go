@@ -155,6 +155,26 @@ func (db *JSON) LookupMenu(name string) (types.Menu, bool) {
 	return db.menus[i], true
 }
 
+func (db *JSON) SetMenu(m types.Menu) error {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	i := slices.IndexFunc(db.menus, func(entry types.Menu) bool {
+		return entry.Name == m.Name
+	})
+
+	if i == -1 {
+		db.menus = append(db.menus, m)
+	} else {
+		db.menus[i] = m
+	}
+
+	if err := db.save(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func getStringOption(options map[string]any, key string) (string, error) {
 	p, ok := options[key]
 	if !ok {

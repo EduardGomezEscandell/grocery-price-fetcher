@@ -20,6 +20,7 @@ type DB interface {
 
 	Menus() []types.Menu
 	LookupMenu(name string) (types.Menu, bool)
+	SetMenu(m types.Menu) error
 
 	Close() error
 }

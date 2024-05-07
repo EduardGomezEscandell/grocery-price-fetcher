@@ -124,27 +124,27 @@ func formatOutput(w io.Writer, products []menu.ProductData, f formatter.Formatte
 
 	var total float32
 	for _, p := range products {
-		if skipEmpty && p.Amount == 0 {
+		if skipEmpty && p.Need <= p.Have {
+			fmt.Printf("%+v\n", p)
 			continue
 		}
 
+		need := max(p.Need-p.Have, 0)
 		if err := f.PrintRow(w, map[string]any{
-			"Product":   p.Name,
-			"Amount":    p.Amount,
-			"Unit Cost": formatter.Euro(p.UnitCost),
-			"Cost":      formatter.Euro(p.UnitCost * p.Amount),
+			"Product": p.Name,
+			"Amount":  need,
+			"Cost":    formatter.Euro(p.UnitCost * need),
 		}); err != nil {
 			return fmt.Errorf("could not write results to output: %w", err)
 		}
 
-		total += p.UnitCost * p.Amount
+		total += p.UnitCost * need
 	}
 
 	if err := f.PrintRow(w, map[string]any{
-		"Product":   "Total",
-		"Amount":    "",
-		"Unit Cost": "",
-		"Cost":      formatter.Euro(total),
+		"Product": "Total",
+		"Amount":  "",
+		"Cost":    formatter.Euro(total),
 	}); err != nil {
 		return fmt.Errorf("could not write total to output: %w", err)
 	}

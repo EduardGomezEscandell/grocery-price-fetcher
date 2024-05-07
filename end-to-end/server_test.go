@@ -76,6 +76,9 @@ func TestServer(t *testing.T) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://localhost/api/menu", f)
 	require.NoError(t, err)
 
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
 	client := http.Client{}
 	resp, err := client.Do(req)
 	require.NoError(t, err)

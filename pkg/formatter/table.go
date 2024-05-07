@@ -68,6 +68,6 @@ func (f *Table) warnUnknownField(data map[string]interface{}) {
 		if slices.Contains(f.fields, k) {
 			continue
 		}
-		logrus.Warningf("Formatter: field %q used in was not registered in PrintHead", k)
+		logrus.Warningf("Formatter: field %q was not registered in PrintHead", k)
 	}
 }

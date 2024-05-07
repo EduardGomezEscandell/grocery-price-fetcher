@@ -1,229 +1,173 @@
 {
-    "format": "json",
-    "menu": [
-        {
-            "name": "Dilluns",
-            "meals": [
-                {
-                    "name": "Esmorzar", 
-                    "dishes": [
-                        {"name": "Torrada i suc de taronja", "amount": 1},
-                        {"name": "Flocs de civada", "amount": 1}
-                    ]
-                },{
-                    "name": "Dinar", 
-                    "dishes": [
-                        {"name": "Macarrons amb sofregit", "amount": 1},
-                        {"name": "Fruita", "amount": 1},
-                        {"name": "Cafè", "amount": 1}
-                    ]
-                },{
-                    "name": "Sopar", 
-                    "dishes": [
-                        {"name": "Ravioli", "amount": 1},
-                        {"name": "Iogurt", "amount": 1}
-                    ]
-                }
-            ]
-        },{
-            "name": "Dimarts",
-            "meals": [
-                {
-                    "name": "Esmorzar", 
-                    "dishes": [
-                        {"name": "Torrada i suc de taronja", "amount": 1},
-                        {"name": "Flocs de civada", "amount": 1}
-                    ]
-                },{
-                    "name": "Dinar", 
-                    "dishes": [
-                        {"name": "Llenties amb xoriço", "amount": 1},
-                        {"name": "Pollastre amb acompanyament", "amount": 1},
-                        {"name": "Fruita", "amount": 1},
-                        {"name": "Cafè", "amount": 1}
-                    ]
-                },{
-                    "name": "Sopar", 
-                    "dishes": [
-                        {"name": "Macarrons amb sofregit", "amount": 1},
-                        {"name": "Iogurt", "amount": 1}
-                    ]
-                }
-            ]
-        },{
-            "name": "Dimecres",
-            "meals": [
-                {
-                    "name": "Esmorzar", 
-                    "dishes": [
-                        {"name": "Torrada i suc de taronja", "amount": 1}
-                    ]
-                },{
-                    "name": "Dinar", 
-                    "dishes": [
-                        {"name": "Arròs amb sofregit", "amount": 1},
-                        {"name": "Fruita", "amount": 1},
-                        {"name": "Cafè", "amount": 1}
-                    ]
-                },{
-                    "name": "Sopar", 
-                    "dishes": [
-                        {"name": "Sopa de galets", "amount": 2},
-                        {"name": "Proteïna amb acompanyament", "amount": 2},
-                        {"name": "Iogurt", "amount": 1},
-                        {"name": "Iogurt vegà", "amount": 1}
-                    ]
-                }
-            ]
-        },{
-            "name": "Dijous",
-            "meals": [
-                {
-                    "name": "Esmorzar",
-                    "dishes": [
-                        {"name": "Torrada i suc de taronja", "amount": 1},
-                        {"name": "Flocs de civada", "amount": 1}
-                    ]
-                },{
-                    "name": "Dinar",
-                    "dishes": [
-                        {"name": "Amanida de llenties", "amount": 1},
-                        {"name": "Llom amb acompanyament", "amount": 1},
-                        {"name": "Fruita", "amount": 1},
-                        {"name": "Cafè", "amount": 1}
-                    ]
-                },{
-                    "name": "Sopar",
-                    "dishes": [
-                        {"name": "Arròs amb sofregit", "amount": 1},
-                        {"name": "Iogurt", "amount": 1}
-                    ]
-                }
-            ]
-        },{
-            "name": "Divendres",
-            "meals": [
-                {
-                    "name": "Esmorzar",
-                    "dishes": [
-                        {"name": "Torrada i suc de taronja", "amount": 1}
-                    ]
-                },
-                {
-                    "name": "Dinar",
-                    "dishes": [
-                        {"name": "Amanida de cigrons", "amount": 1},
-                        {"name": "Pollastre amb acompanyament", "amount": 1},
-                        {"name": "Fruita", "amount": 1},
-                        {"name": "Cafè", "amount": 1}
-                    ]
-                },{
-                    "name": "Sopar",
-                    "dishes": [
-                        {"name": "Ravioli", "amount": 1},
-                        {"name": "Iogurt", "amount": 1}
-                    ]
-                }
-            ]
-        },{
-            "name": "Dissabte",
-            "meals": [
-                {
-                    "name": "Esmorzar",
-                    "dishes": [
-                        {"name": "Torrada i suc de taronja", "amount": 1}
-                    ]
-                },{
-                    "name": "Sopar",
-                    "dishes": [
-                        {"name": "Ramen", "amount": 2},
-                        {"name": "Iogurt", "amount": 1},
-                        {"name": "Iogurt vegà", "amount": 1}
-                    ]
-                }
-            ]
-        }, {
-            "name": "Diumenge",
-            "meals": [
-                {
-                    "name": "Esmorzar",
-                    "dishes": [
-                        {"name": "Cereals amb llet", "amount": 2}
-                    ]
-                },{
-                    "name": "Dinar",
-                    "dishes": [
-                        {"name": "Pica-pica", "amount": 2},
-                        {"name": "Puré de patata", "amount": 2},
-                        {"name": "Proteïna amb acompanyament", "amount": 2},
-                        {"name": "Fruita", "amount": 2},
-                        {"name": "Cafè", "amount": 1}
-                    ]
-                },{
-                    "name": "Sopar",
-                    "dishes": [
-                        {"name": "Sopa de galets", "amount": 2},
-                        {"name": "Proteïna amb acompanyament", "amount": 2},
-                        {"name": "Iogurt", "amount": 1},
-                        {"name": "Iogurt vegà", "amount": 1}
-                    ]
-                }
+    "name": "test",
+    "days": [{
+        "name": "Dilluns",
+        "meals": [
+            {
+                "name": "Esmorzar", 
+                "dishes": [
+                    {"name": "Torrada i suc de taronja", "amount": 1},
+                    {"name": "Flocs de civada", "amount": 1}
+                ]
+            },{
+                "name": "Dinar", 
+                "dishes": [
+                    {"name": "Macarrons amb sofregit", "amount": 1},
+                    {"name": "Fruita", "amount": 1},
+                    {"name": "Cafè", "amount": 1}
+                ]
+            },{
+                "name": "Sopar", 
+                "dishes": [
+                    {"name": "Ravioli", "amount": 1},
+                    {"name": "Iogurt", "amount": 1}
+                ]
+            }
+        ]
+    },{
+        "name": "Dimarts",
+        "meals": [
+            {
+                "name": "Esmorzar", 
+                "dishes": [
+                    {"name": "Torrada i suc de taronja", "amount": 1},
+                    {"name": "Flocs de civada", "amount": 1}
+                ]
+            },{
+                "name": "Dinar", 
+                "dishes": [
+                    {"name": "Llenties amb xoriço", "amount": 1},
+                    {"name": "Pollastre amb acompanyament", "amount": 1},
+                    {"name": "Fruita", "amount": 1},
+                    {"name": "Cafè", "amount": 1}
+                ]
+            },{
+                "name": "Sopar", 
+                "dishes": [
+                    {"name": "Macarrons amb sofregit", "amount": 1},
+                    {"name": "Iogurt", "amount": 1}
+                ]
+            }
+        ]
+    },{
+        "name": "Dimecres",
+        "meals": [
+            {
+                "name": "Esmorzar", 
+                "dishes": [
+                    {"name": "Torrada i suc de taronja", "amount": 1}
+                ]
+            },{
+                "name": "Dinar", 
+                "dishes": [
+                    {"name": "Arròs amb sofregit", "amount": 1},
+                    {"name": "Fruita", "amount": 1},
+                    {"name": "Cafè", "amount": 1}
+                ]
+            },{
+                "name": "Sopar", 
+                "dishes": [
+                    {"name": "Sopa de galets", "amount": 2},
+                    {"name": "Proteïna amb acompanyament", "amount": 2},
+                    {"name": "Iogurt", "amount": 1},
+                    {"name": "Iogurt vegà", "amount": 1}
+                ]
+            }
+        ]
+    },{
+        "name": "Dijous",
+        "meals": [
+            {
+                "name": "Esmorzar",
+                "dishes": [
+                    {"name": "Torrada i suc de taronja", "amount": 1},
+                    {"name": "Flocs de civada", "amount": 1}
+                ]
+            },{
+                "name": "Dinar",
+                "dishes": [
+                    {"name": "Amanida de llenties", "amount": 1},
+                    {"name": "Llom amb acompanyament", "amount": 1},
+                    {"name": "Fruita", "amount": 1},
+                    {"name": "Cafè", "amount": 1}
+                ]
+            },{
+                "name": "Sopar",
+                "dishes": [
+                    {"name": "Arròs amb sofregit", "amount": 1},
+                    {"name": "Iogurt", "amount": 1}
+                ]
+            }
+        ]
+    },{
+        "name": "Divendres",
+        "meals": [
+            {
+                "name": "Esmorzar",
+                "dishes": [
+                    {"name": "Torrada i suc de taronja", "amount": 1}
+                ]
+            },
+            {
+                "name": "Dinar",
+                "dishes": [
+                    {"name": "Amanida de cigrons", "amount": 1},
+                    {"name": "Pollastre amb acompanyament", "amount": 1},
+                    {"name": "Fruita", "amount": 1},
+                    {"name": "Cafè", "amount": 1}
+                ]
+            },{
+                "name": "Sopar",
+                "dishes": [
+                    {"name": "Ravioli", "amount": 1},
+                    {"name": "Iogurt", "amount": 1}
+                ]
+            }
+        ]
+    },{
+        "name": "Dissabte",
+        "meals": [
+            {
+                "name": "Esmorzar",
+                "dishes": [
+                    {"name": "Torrada i suc de taronja", "amount": 1}
+                ]
+            },{
+                "name": "Sopar",
+                "dishes": [
+                    {"name": "Ramen", "amount": 2},
+                    {"name": "Iogurt", "amount": 1},
+                    {"name": "Iogurt vegà", "amount": 1}
+                ]
+            }
+        ]
+    }, {
+        "name": "Diumenge",
+        "meals": [
+            {
+                "name": "Esmorzar",
+                "dishes": [
+                    {"name": "Cereals amb llet", "amount": 2}
+                ]
+            },{
+                "name": "Dinar",
+                "dishes": [
+                    {"name": "Pica-pica", "amount": 2},
+                    {"name": "Puré de patata", "amount": 2},
+                    {"name": "Proteïna amb acompanyament", "amount": 2},
+                    {"name": "Fruita", "amount": 2},
+                    {"name": "Cafè", "amount": 1}
+                ]
+            },{
+                "name": "Sopar",
+                "dishes": [
+                    {"name": "Sopa de galets", "amount": 2},
+                    {"name": "Proteïna amb acompanyament", "amount": 2},
+                    {"name": "Iogurt", "amount": 1},
+                    {"name": "Iogurt vegà", "amount": 1}
+                ]
+            }
 
-            ]
-        }
-    ],
-    "Pantry": [
-        { "name": "Fruita", "amount": 3 },
-        { "name": "Alvocat", "amount": 0 },
-        { "name": "Canonges", "amount": 0.5 },
-        { "name": "Pastanaga", "amount": 3 },
-        { "name": "Pebrot verd", "amount": 0 },
-        { "name": "Pebrot vermell", "amount": 0 },
-        { "name": "Espàrrecs", "amount": 0 },
-        { "name": "Ceba", "amount": 0 },
-        { "name": "All", "amount": 2.8 },
-        { "name": "Bolets", "amount": 0 },
-        { "name": "Llenties", "amount": 1 },
-        { "name": "Cigrons", "amount": 3 },
-        { "name": "Hummus", "amount": 0 },
-        { "name": "Patata", "amount": 2 },
-        { "name": "Arròs", "amount": 0.7 },
-        { "name": "Civada", "amount": 0.9 },
-        { "name": "Cereals", "amount": 0.5 },
-        { "name": "Pa de motlle", "amount": 0 },
-        { "name": "Pa d'hamburguesa", "amount": 0 },
-        { "name": "Bastonets de pa", "amount": 0 },
-        { "name": "Macarrons", "amount": 0.9 },
-        { "name": "Galets", "amount": 0.7 },
-        { "name": "Fideus", "amount": 4 },
-        { "name": "Ravioli", "amount": 0.5 },
-        { "name": "Caldo", "amount": 1 },
-        { "name": "Llet d'avena", "amount": 1 },
-        { "name": "Iogurt", "amount": 0 },
-        { "name": "Iogurt vegà", "amount": 1 },
-        { "name": "Salsa de tomàquet", "amount": 1 },
-        { "name": "Tomàquet triturat", "amount": 1 },
-        { "name": "Fajita", "amount": 0 },
-        { "name": "Suc de taronja", "amount": 1.5 },
-        { "name": "Olives", "amount": 0 },
-        { "name": "Patates fregides", "amount": 1 },
-        { "name": "Ous", "amount": 2 },
-        { "name": "Embotit", "amount": 0.5 },
-        { "name": "Xoriço", "amount": 0.2 },
-        { "name": "Tofu", "amount": 0.5 },
-        { "name": "Proteïna vegana", "amount": 2 },
-        { "name": "Hamburguesa vegana", "amount": 0 },
-        { "name": "Hamburguesa", "amount": 1 },
-        { "name": "Llom", "amount": 1 },
-        { "name": "Pollastre", "amount": 1 },
-        { "name": "Carn picada", "amount": 7 },
-        { "name": "Peix", "amount": 5 },
-        { "name": "Barretes de cranc", "amount": 4 },
-        { "name": "Formatge", "amount": 0 },
-        { "name": "Cafè", "amount": 29 },
-        { "name": "Avellanes", "amount": 0.3 },
-        { "name": "Nous", "amount": 1 },
-        { "name": "Atmetlles", "amount": 0 },
-        { "name": "Pipes", "amount": 0 }
-    ]
+        ]
+    }]
 }

@@ -17,15 +17,9 @@ import (
 // ProductData represents a the need for a product and its unit cost.
 type ProductData struct {
 	Name     string
-	Amount   float32 `json:",omitempty"`
+	Need     float32 `json:",omitempty"`
+	Have     float32 `json:",omitempty"`
 	UnitCost float32 `json:"unit_cost,omitempty"`
-}
-
-// PostData is the data structure that the API expects to receive.
-type PostData struct {
-	Menu   []types.Day   `json:",omitempty"`
-	Pantry []ProductData `json:",omitempty"`
-	Format string        `json:",omitempty"`
 }
 
 type Service struct {
@@ -34,7 +28,7 @@ type Service struct {
 
 func OneShot(log logger.Logger, db database.DB, menu types.Menu, pantry []ProductData) ([]ProductData, error) {
 	s := New(db)
-	return s.ComputeShoppingList(log, menu.Menu, pantry)
+	return s.ComputeShoppingList(log, menu.Days, pantry)
 }
 
 func New(db database.DB) *Service {
@@ -69,44 +63,52 @@ func (s *Service) handlePost(log logger.Logger, w http.ResponseWriter, r *http.R
 	}
 	r.Body.Close()
 
-	var data PostData
-	if err := json.Unmarshal(out, &data); err != nil {
+	var menu types.Menu
+	if err := json.Unmarshal(out, &menu); err != nil {
 		return httputils.Errorf(http.StatusBadRequest, "failed to unmarshal request: %v:\n%s", err, string(out))
 	}
 
-	log.Debugf("Received request with %d days and %d items in the pantry: ", len(data.Menu), len(data.Pantry))
+	log.Debugf("Received request with %d days", len(menu.Days))
 
-	if data.Format == "" {
-		data.Format = "table"
+	format := "table"
+	switch r.Header.Get("Accept") {
+	case "application/json":
+		format = "json"
+	case "text/csv":
+		format = "csv"
 	}
-	f, err := formatter.New(data.Format)
+
+	f, err := formatter.New(format)
 	if err != nil {
 		return httputils.Errorf(http.StatusBadRequest, "failed to create formatter: %v", err)
 	}
 
-	log.Debug("Selected formatter: ", data.Format)
+	log.Debug("Selected formatter: ", format)
 
-	shoppingList, err := s.ComputeShoppingList(log, data.Menu, data.Pantry)
+	s.UpdateMenu(log, menu)
+
+	shoppingList, err := s.ComputeShoppingList(log, menu.Days, nil)
 	if err != nil {
 		return httputils.Errorf(http.StatusBadRequest, "failed to compute shopping list: %v", err)
 	}
 
 	log.Debug("Computed shopping list")
 
-	if err := f.PrintHead(w, "Product", "Amount", "Unit Cost"); err != nil {
+	if err := f.PrintHead(w, "Product", "Need", "Have", "Price"); err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "could not write header to output: %w", err)
 	}
 
 	i := 0
 	for _, p := range shoppingList {
-		if p.Amount == 0 {
+		if p.Need == 0 {
 			continue
 		}
 
 		if err := f.PrintRow(w, map[string]any{
-			"Product":   p.Name,
-			"Amount":    p.Amount,
-			"Unit Cost": formatter.Euro(p.UnitCost),
+			"Product": p.Name,
+			"Need":    p.Need,
+			"Have":    p.Have,
+			"Price":   formatter.Euro(p.UnitCost),
 		}); err != nil {
 			return httputils.Errorf(http.StatusInternalServerError, "could not write results to output: %w", err)
 		}
@@ -120,6 +122,16 @@ func (s *Service) handlePost(log logger.Logger, w http.ResponseWriter, r *http.R
 	}
 
 	return nil
+}
+
+func (s Service) UpdateMenu(log logger.Logger, menu types.Menu) {
+	if menu.Name == "" {
+		menu.Name = "default"
+	}
+
+	if err := s.db.SetMenu(menu); err != nil {
+		log.Warnf("Could not update menu: %v", err)
+	}
 }
 
 func (s Service) ComputeShoppingList(log logger.Logger, menu []types.Day, pantry []ProductData) ([]ProductData, error) {
@@ -148,29 +160,25 @@ func (s Service) ComputeShoppingList(log logger.Logger, menu []types.Day, pantry
 	}
 
 	// Compute the amount of each product needed
-	products := make(map[string]float32)
+	need := make(map[string]float32)
 	for _, rec := range recipes {
 		for _, i := range rec.recipe.Ingredients {
-			_, ok := products[i.Name]
+			_, ok := need[i.Name]
 			if !ok {
-				products[i.Name] = 0
+				need[i.Name] = 0
 			}
-			products[i.Name] += rec.amount * i.Amount
+			need[i.Name] += rec.amount * i.Amount
 		}
 	}
 
-	// Subtract the amount of products in the pantry
+	have := make(map[string]float32)
 	for _, p := range pantry {
-		_, ok := products[p.Name]
-		if !ok {
-			continue
-		}
-		products[p.Name] = max(0, products[p.Name]-p.Amount)
+		have[p.Name] = p.Have
 	}
 
 	// Assemble the output
-	table := make([]ProductData, 0, len(products))
-	for name, amount := range products {
+	table := make([]ProductData, 0, len(need))
+	for name, amount := range need {
 		product, ok := s.db.LookupProduct(name)
 		if !ok {
 			log.Warningf("Product %q is not registered", name)
@@ -179,7 +187,8 @@ func (s Service) ComputeShoppingList(log logger.Logger, menu []types.Day, pantry
 
 		table = append(table, ProductData{
 			Name:     product.Name,
-			Amount:   amount,
+			Need:     amount,
+			Have:     have[product.Name],
 			UnitCost: product.Price,
 		})
 	}
