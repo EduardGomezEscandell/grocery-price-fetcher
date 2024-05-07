@@ -1,8 +1,8 @@
-import React, { useState } from 'react'
+import React from 'react'
 import MealPicker from './MealPicker.tsx'
 import Backend from '../../Backend/Backend.ts';
 import Optional from '../../Optional/Optional.ts';
-import { State, Menu, Dish, Meal } from '../../State/State.tsx';
+import { State, Day, Dish, Meal } from '../../State/State.tsx';
 
 interface Props {
     backend: Backend;
@@ -11,49 +11,26 @@ interface Props {
 }
 
 function RenderMenu(pp: Props) {
-    return new MenuTable(pp.state.menu, pp.state.dishes)
+    return new MenuTable(pp.state)
         .Render(pp.onComplete)
 }
 
 export default RenderMenu
 
-class DishEntry {
-    constructor(id: number, dish: Dish, setter: React.Dispatch<React.SetStateAction<Dish>>) {
-        this.id = id
-        this.value = dish
-        this.setter = setter
-    }
-
-    id: number;
-    value: Dish;
-    setter: React.Dispatch<React.SetStateAction<Dish>>;
-
-    get(): Dish {
-        return this.value
-    }
-
-    set(d: Dish) {
-        this.setter(d)
-    }
-}
-
 class MenuTable {
-    constructor(menu: Menu, allDishes: string[]) {
-        this.menu = menu
-        this.allDishes = allDishes
-        this.days = this.menu.days.map(d => d.name)
+    constructor(state: State) {
+        this.state = state
+        this.days = this.state.menu.days.map(d => d.name)
         this.meals = Array.from(
             new Set<string>(
-                this.menu.days.flatMap(d => d.meals.map(m => m.name))
+                this.state.menu.days.flatMap(d => d.meals.map(m => m.name))
             )
         )
     }
 
-    menu: Menu;
-    allDishes: string[];
+    state: State;
     days: string[];
     meals: string[];
-
 
     Render(onComplete: () => void): JSX.Element {
         return (
@@ -86,25 +63,27 @@ class MenuTable {
                 <td>{mealName}</td>
                 {
                     this.days
-                        .map((dayName: string) => new Optional(this.menu)
-                            .then(menu => menu.days.find(d => d.name === dayName))
-                            .then(day => day.meals.find(m => m.name === mealName))
-                            .then(meal => this.RenderMeal(meal))
-                            .else(<td></td>))
+                        .map((dayName: string) => {
+                            return new Optional(this.state.menu.days.find(d => d.name === dayName))
+                                .then(day => new Optional(day.meals.find(m => m.name === mealName))
+                                    .then(meal => this.RenderMeal(day, meal))
+                                    .else(<td></td>)
+                                )
+                                .else(<td></td>)
+                        })
                 }
             </tr>
         )
     }
 
-    RenderMeal(meal: Meal): JSX.Element {
+    RenderMeal(day: Day, meal: Meal): JSX.Element {
         return (
             <td>
                 <table>
                     <tbody>
                         {
-                            meal.dishes.map((d: Dish, i: number) => {
-                                const [dish, setDish] = useState(d)
-                                return this.RenderDish(new DishEntry(i, dish, setDish))
+                            meal.dishes.map((dish: Dish, i: number) => {
+                                return this.RenderDish(day, meal, i, dish)
                             })
                         }
                     </tbody>
@@ -113,13 +92,21 @@ class MenuTable {
         )
     }
 
-    RenderDish(dish: DishEntry): JSX.Element {
+    RenderDish(day: Day, meal: Meal, id: number, dish: Dish): JSX.Element {
         return (
-            <tr key={dish.id} >
+            <tr key={id} >
                 <MealPicker
-                    recipes={this.allDishes}
-                    default={dish.get()}
-                    onChange={(newDish) => dish.set(newDish)}
+                    recipes={this.state.dishes}
+                    default={dish}
+                    onChange={(newDish) => {
+                        new Optional(this.state.menu)
+                            .then(menu => menu.days.find(d => d.name === day.name))
+                            .elseLog(`Could not find day ${day.name}`)
+                            .then(day => day.meals.find(m => m.name === meal.name))
+                            .elseLog(`Could not find meal ${meal.name}`)
+                            .then(meal => meal.dishes[id] = newDish)
+                            .then(() => this.state.setMenu(this.state.menu))
+                    }}
                 />
             </tr>
         )

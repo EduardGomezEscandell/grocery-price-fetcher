@@ -29,6 +29,20 @@ class Optional<T> {
         }
         return this.value
     }
+
+    elseThrow(e: Error): T {
+        if(this.value === undefined) {
+            throw e
+        }
+        return this.value
+    }
+
+    elseLog(msg: string): Optional<T> {
+        if(this.value === undefined) {
+            console.error(msg)
+        }
+        return this
+    }
 }
 
 export default Optional

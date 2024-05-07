@@ -147,13 +147,20 @@ export class State {
     constructor() {
         this.dishes = []
         this.shoppingList = new ShoppingList()
-        this.menu = new Menu()
         this.pantry = new Pantry()
     }
 
+    attachMenu(menu: Menu, setMenu: (m: Menu) => void): State {
+        this.menu = menu
+        this.setMenu = setMenu
+        return this
+    }
+    
+    menu: Menu;
+    setMenu: (m: Menu) => void;
+
     dishes: Array<string>;
     shoppingList: ShoppingList;
-    menu: Menu;
     pantry: Pantry;
 }
 
