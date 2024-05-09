@@ -2,12 +2,10 @@ package bonpreu
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"regexp"
-	"strconv"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/providers"
@@ -16,62 +14,32 @@ import (
 var regex = regexp.MustCompile(`<span class="[^"]*price__StyledText[^"]*">([0-9]+,[0-9]{2}).€</span>`)
 
 type Provider struct {
-	id        string
-	batchSize float32
+	log logger.Logger
 }
 
-func New() providers.Provider {
-	return &Provider{}
+func New(log logger.Logger) providers.Provider {
+	return Provider{log: log}
 }
 
-func (p *Provider) UnmarshalTSV(cols ...string) error {
-	if len(cols) != 2 {
-		return fmt.Errorf("expected 2 arguments (batch_size, id), got %d", len(cols))
-	}
+const (
+	pidProductCode = iota
+	pidNFields
+)
 
-	c, err := strconv.ParseFloat(cols[0], 32)
-	if err != nil {
-		return fmt.Errorf("could not parse batch_size (%s): %w", cols[0], err)
-	}
-	if c <= 0 {
-		return fmt.Errorf("invalid batch_size: %f", c)
-	}
-
-	p.batchSize = float32(c)
-	p.id = cols[1]
-	return nil
+func (p Provider) Name() string {
+	return "Bonpreu"
 }
 
-func (p *Provider) UnmarshalMap(argv map[string]string) (err error) {
-	if len(argv) != 2 {
-		return fmt.Errorf("expected 2 arguments (batch_size, id), got %d", len(argv))
+func (p Provider) FetchPrice(ctx context.Context, pid providers.ProductID) (float32, error) {
+	if len(pid) != pidNFields {
+		return 0, fmt.Errorf("expected 1 field in product ID, got %d", len(pid))
 	}
 
-	bs, ok := argv["batch_size"]
-	if !ok {
-		return fmt.Errorf("missing batch_size")
-	}
-
-	p.id, ok = argv["id"]
-	if !ok {
-		return fmt.Errorf("missing id")
-	}
-
-	batchSize, err := strconv.ParseFloat(bs, 32)
-	if err != nil {
-		return fmt.Errorf("could not parse batch_size (%s): %w", argv["batch_size"], err)
-	}
-	if batchSize <= 0 {
-		return fmt.Errorf("invalid batch_size: %f", batchSize)
-	}
-	p.batchSize = float32(batchSize)
-
-	return nil
-}
-
-func (p *Provider) FetchPrice(ctx context.Context, log logger.Logger) (float32, error) {
-	url := fmt.Sprintf("https://www.compraonline.bonpreuesclat.cat/products/%s/details", p.id)
-	log.Trace("Fetching price from ", url)
+	url := fmt.Sprintf(
+		"https://www.compraonline.bonpreuesclat.cat/products/%s/details",
+		pid[pidProductCode],
+	)
+	p.log.Trace("Fetching price from ", url)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -119,18 +87,19 @@ func (p *Provider) FetchPrice(ctx context.Context, log logger.Logger) (float32, 
 
 	batchPrice := float32(euro) + float32(cent)/100
 
-	return batchPrice / p.batchSize, nil
+	p.log.Tracef("Got price from %s", url)
+
+	return batchPrice, nil
 }
 
-func (p *Provider) MarshalJSON() ([]byte, error) {
-	helper := struct {
-		Bonpreu map[string]string
-	}{
-		Bonpreu: map[string]string{
-			"batch_size": fmt.Sprint(p.batchSize),
-			"id":         p.id,
-		},
+func (p Provider) ValidateID(pid providers.ProductID) error {
+	if len(pid) != pidNFields {
+		return fmt.Errorf("expected %d fields, got %d", pidNFields, len(pid))
 	}
 
-	return json.Marshal(helper)
+	if pid[pidProductCode] == "" {
+		return fmt.Errorf("product code is empty")
+	}
+
+	return nil
 }

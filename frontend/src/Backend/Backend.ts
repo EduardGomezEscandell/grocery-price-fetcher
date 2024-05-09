@@ -66,10 +66,10 @@ class MockBackend extends Backend {
         console.log(`POST to ${this.menuEndpoint}:`)
         console.log(menu.toJSON()) // Ensure toJSON is called without errors
         return Promise.resolve(ShoppingList.fromJSON([
-            { need: 4.00, price: 0.49, product: "Fruita" },
-            { need: 1.00, price: 0.17, product: "Pastanaga" },
-            { need: 0.50, price: 0.50, product: "Pebrot verd" },
-            { need: 0.95, price: 1.10, product: "Pebrot vermell" },
+            { batch_size: 1, need: 1.00, price: 0.17, product: "Pastanaga" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Pebrot verd" },
+            { batch_size: 1, need: 0.95, price: 1.10, product: "Pebrot vermell" },
+            { batch_size: 4, need: 4.00, price: 1.00, product: "Iogurt" },
         ]))
     }
 }

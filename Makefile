@@ -1,4 +1,4 @@
-.PHONY: tidy build-go build-js test update-golden lint quality clean containerize run stop
+.PHONY: tidy build-go build-js test update-golden lint quality clean containerize run stop run-mock
 
 tidy:
 	go mod tidy
@@ -6,7 +6,6 @@ tidy:
 build-go: tidy
 	mkdir -p bin
 	go build -o bin/compra cmd/compra/main.go
-	go build -o bin/needs cmd/needs/main.go
 	go build -o bin/grocery-server cmd/server/main.go
 
 build-js:
@@ -18,6 +17,11 @@ containerize: build-go build-js
 
 run: stop containerize
 	cd deploy && sudo docker-compose up
+
+run-mock: stop
+# Serves the frontend with a mock back-end
+# Fast to spin up
+	cd frontend && npm run start
 
 stop:
 	sudo docker container rm -f `sudo docker container ls -a | grep grocery-server | cut -c-12` || true

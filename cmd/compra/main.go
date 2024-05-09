@@ -56,8 +56,8 @@ func main() {
 		defer out.Close()
 	}
 
-	providers.Register("Bonpreu", bonpreu.New)
-	providers.Register("Mercadona", mercadona.New)
+	providers.Register(bonpreu.New(log))
+	providers.Register(mercadona.New(log))
 
 	products, err := run(in, log)
 	if err != nil {
@@ -115,7 +115,7 @@ func run(r io.Reader, log logger.Logger) ([]*product.Product, error) {
 			ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 
-			err := p.FetchPrice(ctx, log)
+			err := p.FetchPrice(ctx)
 			if err != nil {
 				log.Warningf("Get: %v", err)
 				return
@@ -141,7 +141,7 @@ func formatOutput(w io.Writer, products []*product.Product, f formatter.Formatte
 	for _, p := range products {
 		if err := f.PrintRow(w, map[string]any{
 			"Product": p.Name,
-			"Price":   formatter.Euro(p.Price),
+			"Price":   formatter.Euro(p.Price / p.BatchSize),
 		}); err != nil {
 			return fmt.Errorf("could not write results to output: %w", err)
 		}

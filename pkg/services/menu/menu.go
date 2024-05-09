@@ -11,15 +11,16 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/formatter"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/logger"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/product"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/types"
 )
 
 // ProductData represents a the need for a product and its unit cost.
 type ProductData struct {
-	Name     string
-	Need     float32 `json:",omitempty"`
-	Have     float32 `json:",omitempty"`
-	UnitCost float32 `json:"unit_cost,omitempty"`
+	product.Product
+
+	Need float32 `json:",omitempty"`
+	Have float32 `json:",omitempty"`
 }
 
 type Service struct {
@@ -105,10 +106,11 @@ func (s *Service) handlePost(log logger.Logger, w http.ResponseWriter, r *http.R
 		}
 
 		if err := f.PrintRow(w, map[string]any{
-			"Product": p.Name,
-			"Need":    p.Need,
-			"Have":    p.Have,
-			"Price":   formatter.Euro(p.UnitCost),
+			"Product":    p.Name,
+			"Need":       p.Need,
+			"Have":       p.Have,
+			"Batch size": p.BatchSize,
+			"Price":      formatter.Euro(p.Price),
 		}); err != nil {
 			return httputils.Errorf(http.StatusInternalServerError, "could not write results to output: %w", err)
 		}
@@ -186,10 +188,9 @@ func (s Service) ComputeShoppingList(log logger.Logger, menu []types.Day, pantry
 		}
 
 		table = append(table, ProductData{
-			Name:     product.Name,
-			Need:     amount,
-			Have:     have[product.Name],
-			UnitCost: product.Price,
+			Product: product,
+			Need:    amount,
+			Have:    have[product.Name],
 		})
 	}
 

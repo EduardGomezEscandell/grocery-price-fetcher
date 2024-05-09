@@ -31,8 +31,8 @@ type Manager struct {
 func New(ctx context.Context, logger logger.Logger, DBsettings database.Settings) (*Manager, error) {
 	ctx, cancel := context.WithCancel(ctx)
 
-	providers.Register("Bonpreu", bonpreu.New)
-	providers.Register("Mercadona", mercadona.New)
+	providers.Register(bonpreu.New(logger))
+	providers.Register(mercadona.New(logger))
 
 	db, err := database.New(ctx, logger, DBsettings)
 	if err != nil {

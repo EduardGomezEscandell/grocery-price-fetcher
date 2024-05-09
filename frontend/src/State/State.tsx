@@ -1,7 +1,14 @@
 export class Ingredient {
-    constructor(name: string, price: number, have: number, need: number) {
+    constructor(
+        name: string,
+        price: number,
+        batch_size: number,
+        have: number,
+        need: number
+    ) {
         this.name = name
         this.price = price
+        this.batch_size = batch_size
         this.have = have
         this.need = need
     }
@@ -9,6 +16,7 @@ export class Ingredient {
     name: string;
     price: number;
 
+    batch_size: number;
     have: number;
     need: number;
 }
@@ -58,6 +66,7 @@ export class ShoppingList {
             return new Ingredient(
                 either(ingredient, 'product', 'Unnamed ingredient'),
                 either(ingredient, 'price', 0),
+                either(ingredient, 'batch_size', 1),
                 either(ingredient, 'have', 0),
                 either(ingredient, 'need', 0),
             )
@@ -147,7 +156,6 @@ export class State {
     constructor() {
         this.dishes = []
         this.shoppingList = new ShoppingList()
-        this.pantry = new Pantry()
     }
 
     attachMenu(menu: Menu, setMenu: (m: Menu) => void): State {
@@ -161,6 +169,5 @@ export class State {
 
     dishes: Array<string>;
     shoppingList: ShoppingList;
-    pantry: Pantry;
 }
 

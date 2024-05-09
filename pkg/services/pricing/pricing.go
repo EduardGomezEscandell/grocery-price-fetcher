@@ -58,15 +58,15 @@ func (s *Service) Run() {
 }
 
 func (s *Service) update() {
-	s.log.Debug("Database: fetching prices")
-	defer s.log.Debug("Database: prices fetch complete")
+	s.log.Debug("Pricing service: fetching prices")
+	defer s.log.Debug("Pricing service: prices fetch complete")
 
 	var wg sync.WaitGroup
 	for _, prod := range s.db.Products() {
 		wg.Add(1)
 		go func(i product.Product) {
 			defer wg.Done()
-			if err := prod.FetchPrice(s.ctx, s.log); err != nil {
+			if err := prod.FetchPrice(s.ctx); err != nil {
 				s.log.Warningf("Database price update: %v", err)
 				return
 			}

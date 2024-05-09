@@ -1,5 +1,0 @@
-type: json
-options:
-  products: ./testdata/needs/database/products.json
-  recipes:  ./testdata/needs/database/recipes.json
-  menus:    ./testdata/needs/database/menus.json

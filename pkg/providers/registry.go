@@ -2,87 +2,42 @@ package providers
 
 import (
 	"context"
-	"errors"
-	"strings"
-
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/logger"
 )
 
 // Provider is an interface that represents a grocery store provider for a single product.
 type Provider interface {
-	UnmarshalTSV(cols ...string) error
-	UnmarshalMap(argv map[string]string) error
-	FetchPrice(ctx context.Context, log logger.Logger) (float32, error)
+	Name() string
+	FetchPrice(ctx context.Context, pid ProductID) (float32, error)
+	ValidateID(pid ProductID) error
 }
-
-// Factory is a function that creates a new Provider.
-type Factory func() Provider
+type ProductID []string
 
 var Default = &Registry{}
 
 type Registry struct {
-	data map[string]Factory
+	data map[string]Provider
 }
 
-func (r *Registry) Register(name string, prov Factory) {
+func (r *Registry) Register(prov Provider) {
 	if r.data == nil {
-		r.data = make(map[string]Factory)
+		r.data = make(map[string]Provider)
 	}
 
-	r.data[name] = prov
+	r.data[prov.Name()] = prov
 }
 
-func (r *Registry) ParseTSV(providerName string, cols []string) (Provider, error) {
-	factory, ok := r.data[providerName]
-	if !ok {
-		return nil, errors.New("provider not found")
+func (r *Registry) Lookup(name string) (Provider, bool) {
+	if f, ok := r.data[name]; ok {
+		return f, true
 	}
 
-	g := factory()
-
-	if err := g.UnmarshalTSV(trim(cols)...); err != nil {
-		return nil, err
-	}
-
-	return g, nil
+	return nil, false
 }
 
-func (r *Registry) ParseMap(providerName string, argv map[string]string) (Provider, error) {
-	factory, ok := r.data[providerName]
-	if !ok {
-		return nil, errors.New("provider not found")
-	}
-
-	g := factory()
-
-	if err := g.UnmarshalMap(argv); err != nil {
-		return nil, err
-	}
-
-	return g, nil
+func Register(p Provider) {
+	Default.Register(p)
 }
 
-func Register(name string, g Factory) {
-	Default.Register(name, g)
-}
-
-func ParseTSV(providerName string, cols []string) (Provider, error) {
-	return Default.ParseTSV(providerName, cols)
-}
-
-func ParseMap(providerName string, argv map[string]string) (Provider, error) {
-	return Default.ParseMap(providerName, argv)
-}
-
-func trim(arg []string) []string {
-	for i, a := range arg {
-		arg[i] = strings.TrimSpace(a)
-	}
-
-	// Remove trailing empty arguments
-	for i := len(arg); i > 0 && arg[i-1] == ""; i = len(arg) {
-		arg = arg[:i-1]
-	}
-
-	return arg
+func Lookup(name string) (Provider, bool) {
+	return Default.Lookup(name)
 }

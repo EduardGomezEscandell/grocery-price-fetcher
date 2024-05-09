@@ -3,6 +3,7 @@ package mercadona
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,70 +14,35 @@ import (
 )
 
 type Provider struct {
-	batchSize float32
-	zoneCode  string
-	id        string
+	log logger.Logger
 }
 
-func New() providers.Provider {
-	return &Provider{}
+const (
+	pidProductCode = iota
+	pidZoneCode
+	pidNFields
+)
+
+func New(log logger.Logger) providers.Provider {
+	return Provider{log: log}
 }
 
-func (p *Provider) UnmarshalTSV(cols ...string) error {
-	if len(cols) != 3 {
-		return fmt.Errorf("expected 3 arguments (batch_size, zone_code, id), got %d", len(cols))
-	}
-
-	c, err := strconv.ParseFloat(cols[0], 32)
-	if err != nil {
-		return fmt.Errorf("could not parse batch_size (%s): %w", cols[0], err)
-	}
-	if c <= 0 {
-		return fmt.Errorf("invalid batch_size: %f", c)
-	}
-
-	p.batchSize = float32(c)
-	p.id = cols[1]
-	p.zoneCode = cols[2]
-
-	return nil
+func (p Provider) Name() string {
+	return "Mercadona"
 }
 
-func (p *Provider) UnmarshalMap(argv map[string]string) (err error) {
-	if len(argv) != 3 {
-		return fmt.Errorf("expected 3 arguments (batch_size, zone_code, id), got %d", len(argv))
+func (p Provider) FetchPrice(ctx context.Context, pid providers.ProductID) (float32, error) {
+	if len(pid) != pidNFields {
+		return 0, fmt.Errorf("expected 1 field in product ID, got %d", len(pid))
 	}
 
-	bs, ok := argv["batch_size"]
-	if !ok {
-		return fmt.Errorf("missing batch_size")
-	}
+	url := fmt.Sprintf(
+		"https://tienda.mercadona.es/api/products/%s/?lang=es&wh=%s",
+		pid[pidProductCode],
+		pid[pidZoneCode],
+	)
 
-	p.id, ok = argv["id"]
-	if !ok {
-		return fmt.Errorf("missing id")
-	}
-
-	p.zoneCode, ok = argv["zone_code"]
-	if !ok {
-		return fmt.Errorf("missing zone_code")
-	}
-
-	batchSize, err := strconv.ParseFloat(bs, 32)
-	if err != nil {
-		return fmt.Errorf("could not parse batch_size (%s): %w", argv["batch_size"], err)
-	}
-	if batchSize <= 0 {
-		return fmt.Errorf("invalid batch_size: %f", batchSize)
-	}
-	p.batchSize = float32(batchSize)
-
-	return nil
-}
-
-func (p *Provider) FetchPrice(ctx context.Context, log logger.Logger) (float32, error) {
-	url := fmt.Sprintf("https://tienda.mercadona.es/api/products/%s/?lang=es&wh=%s", p.id, p.zoneCode)
-	log.Trace("Fetching price from ", url)
+	p.log.Trace("Fetching price from ", url)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -113,19 +79,23 @@ func (p *Provider) FetchPrice(ctx context.Context, log logger.Logger) (float32, 
 		return 0, fmt.Errorf("could not parse price: %w", err)
 	}
 
-	return float32(batchPrice) / p.batchSize, nil
+	p.log.Tracef("Got price from %s", url)
+
+	return float32(batchPrice), nil
 }
 
-func (p *Provider) MarshalJSON() ([]byte, error) {
-	helper := struct {
-		Mercadona map[string]string
-	}{
-		Mercadona: map[string]string{
-			"batch_size": fmt.Sprint(p.batchSize),
-			"id":         p.id,
-			"zone_code":  p.zoneCode,
-		},
+func (p Provider) ValidateID(pid providers.ProductID) error {
+	if len(pid) != pidNFields {
+		return fmt.Errorf("expected %d fields, got %d", pidNFields, len(pid))
 	}
 
-	return json.Marshal(helper)
+	if pid[pidProductCode] == "" {
+		return errors.New("product code is empty")
+	}
+
+	if pid[pidZoneCode] == "" {
+		return errors.New("zone code is empty")
+	}
+
+	return nil
 }
