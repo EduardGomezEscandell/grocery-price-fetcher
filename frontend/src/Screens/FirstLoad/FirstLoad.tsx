@@ -14,14 +14,16 @@ function FirstLoad(props: Props) {
     
     useEffect(() => {
         props.backend
-            .GetDishes()
+            .Dishes()
+            .GET()
             .then((d: string[]) => {props.state.dishes = d})
             .finally(() => setDishesReady(true))
     })
 
     useEffect(() => {
         props.backend
-            .GetMenu()
+            .Menu()
+            .GET()
             .then((m: Menu[]) => m[0])
             .then((m: Menu) => props.state.menu = m)
             .finally(() => setMenuReady(true))

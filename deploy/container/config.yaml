@@ -5,5 +5,6 @@ database:
     products: '/mnt/grocery-server/data/products.json'
     recipes:  '/mnt/grocery-server/data/recipes.json'
     menus:    '/mnt/grocery-server/data/menus.json'
+    pantries:   '/mnt/grocery-server/data/pantries.json'
 frontend: '/usr/share/grocery-server/frontend'
 address: 0.0.0.0:3000

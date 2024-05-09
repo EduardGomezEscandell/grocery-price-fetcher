@@ -12,6 +12,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/providers/mercadona"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/services/helloworld"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/services/menu"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/services/pantry"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/services/pricing"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/services/recipes"
 )
@@ -26,6 +27,7 @@ type Manager struct {
 	menu    *menu.Service
 	recipes *recipes.Service
 	pricing *pricing.Service
+	pantry  *pantry.Service
 }
 
 func New(ctx context.Context, logger logger.Logger, DBsettings database.Settings) (*Manager, error) {
@@ -48,14 +50,16 @@ func New(ctx context.Context, logger logger.Logger, DBsettings database.Settings
 		log: logger,
 
 		menu:    menu.New(db),
-		recipes: recipes.New(db),
+		pantry:  pantry.New(db),
 		pricing: pricing.New(ctx, logger, db),
+		recipes: recipes.New(db),
 	}, nil
 }
 
 func (s *Manager) Register(registerer func(endpoint string, handler httputils.Handler)) {
 	registerer("/api/helloworld", helloworld.Service{}.Handle)
 	registerer("/api/menu", s.menu.Handle)
+	registerer("/api/pantry", s.pantry.Handle)
 	registerer("/api/recipes", s.recipes.Handle)
 }
 

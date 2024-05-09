@@ -22,6 +22,10 @@ type DB interface {
 	LookupMenu(name string) (types.Menu, bool)
 	SetMenu(m types.Menu) error
 
+	Pantries() []types.Pantry
+	LookupPantry(name string) (types.Pantry, bool)
+	SetPantry(p types.Pantry) error
+
 	Close() error
 }
 

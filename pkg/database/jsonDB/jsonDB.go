@@ -18,10 +18,12 @@ type JSON struct {
 	products []product.Product
 	recipes  []types.Recipe
 	menus    []types.Menu
+	pantries []types.Pantry
 
 	productsPath string
 	recipesPath  string
 	menusPath    string
+	pantriesPath string
 
 	log logger.Logger
 	mu  sync.RWMutex
@@ -31,8 +33,9 @@ func New(ctx context.Context, log logger.Logger, options map[string]interface{})
 	prods, errP := getStringOption(options, "products")
 	recs, errR := getStringOption(options, "recipes")
 	menus, errM := getStringOption(options, "menus")
+	pants, errX := getStringOption(options, "pantries")
 
-	if err := errors.Join(errP, errR, errM); err != nil {
+	if err := errors.Join(errP, errR, errM, errX); err != nil {
 		return nil, fmt.Errorf("JSON database: %v", err)
 	}
 
@@ -42,12 +45,14 @@ func New(ctx context.Context, log logger.Logger, options map[string]interface{})
 		productsPath: prods,
 		recipesPath:  recs,
 		menusPath:    menus,
+		pantriesPath: pants,
 	}
 
 	return db, errors.Join(
 		load(db.productsPath, &db.products),
 		load(db.recipesPath, &db.recipes),
 		load(db.menusPath, &db.menus),
+		load(db.pantriesPath, &db.pantries),
 	)
 }
 
@@ -175,6 +180,55 @@ func (db *JSON) SetMenu(m types.Menu) error {
 	return nil
 }
 
+func (db *JSON) Pantries() []types.Pantry {
+	db.mu.RLock()
+	defer db.mu.RUnlock()
+
+	out := make([]types.Pantry, len(db.pantries))
+	copy(out, db.pantries)
+	return out
+}
+
+func (db *JSON) LookupPantry(name string) (types.Pantry, bool) {
+	db.mu.RLock()
+	defer db.mu.RUnlock()
+
+	i := slices.IndexFunc(db.pantries, func(p types.Pantry) bool {
+		return p.Name == name
+	})
+
+	if i == -1 {
+		return types.Pantry{}, false
+	}
+
+	return db.pantries[i], true
+
+}
+
+func (db *JSON) SetPantry(p types.Pantry) error {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	if p.Name == "" {
+		p.Name = "default"
+	}
+
+	i := slices.IndexFunc(db.pantries, func(entry types.Pantry) bool {
+		return entry.Name == p.Name
+	})
+
+	if i == -1 {
+		db.pantries = append(db.pantries, p)
+	} else {
+		db.pantries[i] = p
+	}
+
+	if err := db.save(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func getStringOption(options map[string]any, key string) (string, error) {
 	p, ok := options[key]
 	if !ok {
@@ -191,9 +245,12 @@ func getStringOption(options map[string]any, key string) (string, error) {
 
 func load(path string, ptr interface{}) error {
 	out, err := os.ReadFile(path)
-	if err != nil {
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	} else if err != nil {
 		return fmt.Errorf("JSON database: %v", err)
 	}
+
 	if err := json.Unmarshal(out, ptr); err != nil {
 		return fmt.Errorf("JSON database: could not unmarshal file %q: %v", path, err)
 	}
@@ -205,6 +262,7 @@ func (db *JSON) save() error {
 		save(db.log, db.productsPath, db.products),
 		save(db.log, db.recipesPath, db.recipes),
 		save(db.log, db.menusPath, db.menus),
+		save(db.log, db.pantriesPath, db.pantries),
 	)
 }
 

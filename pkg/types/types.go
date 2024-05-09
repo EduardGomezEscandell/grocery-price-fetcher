@@ -2,8 +2,8 @@ package types
 
 // Ingredient represents a single ingredient that is part of a recipe.
 type Ingredient struct {
-	Name   string
-	Amount float32
+	Name   string  `json:"name"`
+	Amount float32 `json:"amount"`
 }
 
 // Recipe represents a recipe that can be used to prepare a dish.
@@ -34,4 +34,9 @@ type Day struct {
 type Menu struct {
 	Name string `json:"name"`
 	Days []Day  `json:"days,omitempty"`
+}
+
+type Pantry struct {
+	Name     string       `json:"name"`
+	Contents []Ingredient `json:"contents"`
 }

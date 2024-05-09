@@ -55,10 +55,6 @@ export class Day {
     meals: Array<Meal>;
 }
 
-export class Pantry {
-    ingredients: Array<Ingredient>;
-}
-
 export class ShoppingList {
     static fromJSON(json: any): ShoppingList {
         let shoppingList = new ShoppingList()
@@ -74,49 +70,54 @@ export class ShoppingList {
         return shoppingList
     }
 
-    ingredients: Array<Ingredient>;
+    ingredients: Array<Ingredient> = [];
 }
 
 export class Menu {
     days: Array<Day>;
     name: string;
 
-    static fromJson(json: any): Menu {
+    static fromJSON(json: any): Menu {
         let menu = new Menu()
-        menu.name = either(json, 'name', 'Unnamed menu')
-        menu.days = either(json, 'days', []).map((day: any) => {
-            let d = new Day()
-            d.name = day.name
-            d.meals = either(day, 'meals', []).map((meal: any) => {
-                let m = new Meal()
-                m.name = either(meal, 'name', 'Unnamed meal')
-                m.dishes = either(meal, 'dishes', []).map((dish: any) => {
-                    return new Dish(dish.name, dish.amount)
-                })
-                return m
-            })
-            return d
-        })
 
-        // Padding missing meals
-        const meals = Array.from(new Set(menu.days.flatMap(day => day.meals)))
-        menu.days.forEach(day => {
-            meals.forEach(meal => {
-                if (!day.meals.find(m => m.name === meal.name)) {
-                    day.meals.push(new Meal(meal.name))
-                }
+        try {
+            menu.name = either(json, 'name', 'Unnamed menu')
+            menu.days = either(json, 'days', []).map((day: any) => {
+                let d = new Day()
+                d.name = day.name
+                d.meals = either(day, 'meals', []).map((meal: any) => {
+                    let m = new Meal()
+                    m.name = either(meal, 'name', 'Unnamed meal')
+                    m.dishes = either(meal, 'dishes', []).map((dish: any) => {
+                        return new Dish(dish.name, dish.amount)
+                    })
+                    return m
+                })
+                return d
             })
-        })
-    
-        // Padding small meals
-        const maxDishesPerMeal = Math.max(...menu.days.map(day => Math.max(...day.meals.map(meal => meal.dishes.length))))
-        menu.days.forEach(day => {
-            day.meals.forEach(meal => {
-                while (meal.dishes.length < maxDishesPerMeal) {
-                    meal.dishes.push(new Dish("", 0))
-                }
+
+            // Padding missing meals
+            const meals = Array.from(new Set(menu.days.flatMap(day => day.meals)))
+            menu.days.forEach(day => {
+                meals.forEach(meal => {
+                    if (!day.meals.find(m => m.name === meal.name)) {
+                        day.meals.push(new Meal(meal.name))
+                    }
+                })
             })
-        })
+
+            // Padding small meals
+            const maxDishesPerMeal = Math.max(...menu.days.map(day => Math.max(...day.meals.map(meal => meal.dishes.length))))
+            menu.days.forEach(day => {
+                day.meals.forEach(meal => {
+                    while (meal.dishes.length < maxDishesPerMeal) {
+                        meal.dishes.push(new Dish("", 0))
+                    }
+                })
+            })
+        } catch (e) {
+            console.error(e)
+        }
 
         return menu
     }
@@ -148,6 +149,31 @@ export class Menu {
     }
 }
 
+export class Pantry {
+    name: string = ''
+    contents: Array<Ingredient> = []
+
+    static fromJSON(json: any) {
+        try {
+            let pantry = new Pantry()
+            pantry.name = either(json, 'name', 'Default')
+            pantry.contents = either(json, 'contents', []).map((content: any): Ingredient => {
+                return new Ingredient(
+                    /* name: */ either(content, 'name', 'Unnamed ingredient'),
+                    /* price */ 0,
+                    /* batch size */ 0,
+                    /* have: */ either(content, 'amount', 0),
+                    /* need */ 0
+                )
+            })
+            return pantry
+        } catch (e) {
+            console.error(e)
+            return new Pantry()
+        }
+    }
+}
+
 function either<T>(struct: any, key: string, val: T): T {
     return struct[key] || val
 }
@@ -163,7 +189,7 @@ export class State {
         this.setMenu = setMenu
         return this
     }
-    
+
     menu: Menu;
     setMenu: (m: Menu) => void;
 
