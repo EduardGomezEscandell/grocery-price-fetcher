@@ -4,7 +4,7 @@ import { Ingredient } from '../../State/State.js'
 interface Props {
     style: React.CSSProperties;
     ingredient: Ingredient;
-    onChange: () => void;
+    onChange: (newHave: number) => void;
 }
 
 export default function RenderIngredient(pp: Props): JSX.Element {
@@ -56,7 +56,7 @@ export default function RenderIngredient(pp: Props): JSX.Element {
                     setDeficit(newDeficit)
                     setMustBuy(newPackCount)
                     setCost(newPackCount * pp.ingredient.price)
-                    pp.onChange()
+                    pp.onChange(newStorage)
                 }}
                 
                 datatype='number'

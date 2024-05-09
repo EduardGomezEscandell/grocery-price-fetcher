@@ -9,29 +9,17 @@ interface Props {
     onComplete: () => void;
 }
 
-class Total {
-    consumed: number;
-    purchased: number;
-
-    static compute(i: Ingredient[]): Total {
-        var t = new Total()
-        t.consumed = i
-            .map(i => Numbers.positive(i.need - i.have) / i.batch_size * i.price)
-            .reduce((acc, x) => acc + x, 0)
-        t.purchased = i
-            .map(i => Math.ceil(Numbers.positive(i.need - i.have) / i.batch_size) * i.price)
-            .reduce((acc, x) => acc + x, 0)
-
-        return t
-    }
-}
-
 export default function Pantry(pp: Props) {
-    const pt = new PantryTable(pp.state.shoppingList)
-    const [total, setTotal] = useState(Total.compute(pp.state.shoppingList.ingredients))
-    return pt
-        .attach(total, setTotal)
-        .Render(pp.onComplete)
+    const total = new Total().compute(pp.state.shoppingList.ingredients)
+    
+    const [available, setAvailable] = useState(total.available)
+    const [remaining, setRemaining] = useState(total.remaining)
+
+    total
+        .withAvailable(available, setAvailable)
+        .withRemaining(remaining, setRemaining)
+   
+    return new PantryTable(pp.state.shoppingList, total).Render(pp.onComplete)
 }
 
 class PantryTable {
@@ -39,8 +27,9 @@ class PantryTable {
     total: Total;
     setTotal: (x: Total) => void;
 
-    constructor(shop: ShoppingList) {
+    constructor(shop: ShoppingList, total: Total) {
         this.shop = shop
+        this.total = total
     }
 
     attach(total: Total, setTotal: (x: Total) => void): PantryTable {
@@ -112,7 +101,13 @@ class PantryTable {
                                 <RenderIngredient
                                     style={rowStyle(idx)}
                                     ingredient={i}
-                                    onChange={() => this.setTotal(Total.compute(this.shop.ingredients))} />
+                                    onChange={(value: number) => {
+                                        i.have = value
+                                        this.total
+                                            .compute(this.shop.ingredients)
+                                            .commit()
+                                    }}
+                                />
                             ))
                         }
                     </tbody>
@@ -133,13 +128,28 @@ class PantryTable {
                             }}>{Numbers.asEuro(this.total.purchased)}</td>
                         </tr>
                         <tr style={{ fontSize: '20px', }}>
-                            <td colSpan={7} style={{ paddingLeft: '20px' }}>
-                                Menjar que quedarà al rebost
+                            <td colSpan={6} style={{ paddingLeft: '20px' }}>
+                                Menjar que tens rebost
+                            </td>
+                            <td style={{ textAlign: 'right'}}>
+                                +
                             </td>
                             <td style={{
                                 textAlign: 'right',
                                 paddingRight: '20px'
-                            }}>{Numbers.asEuro(this.total.consumed - this.total.purchased)}</td>
+                            }}>{Numbers.asEuro(this.total.available)}</td>
+                        </tr>
+                        <tr style={{ fontSize: '20px', }}>
+                            <td colSpan={6} style={{ paddingLeft: '20px' }}>
+                                Menjar que quedarà al rebost
+                            </td>
+                            <td style={{ textAlign: 'right'}}>
+                                -
+                            </td>
+                            <td style={{
+                                textAlign: 'right',
+                                paddingRight: '20px'
+                            }}>{Numbers.asEuro(this.total.remaining)}</td>
                         </tr>
                         <tr style={{
                             fontSize: '20px',
@@ -164,3 +174,50 @@ class PantryTable {
 
 }
 
+
+class Total {
+    purchased: number;
+    setPurchased: (x :number) => void
+
+    available: number;
+    setAvailable: (x :number) => void
+
+    consumed: number;
+    setConsumed: (x :number) => void
+
+    remaining: number;
+    setRemaining: (x :number) => void
+
+    withAvailable(a: number, update: (x: number) => void): Total {
+        this.available = a
+        this.setAvailable = update
+        return this
+    }
+
+    withRemaining(r: number, update: (x: number) => void): Total {
+        this.remaining = r
+        this.setRemaining = update
+        return this
+    }
+
+    compute(i: Ingredient[]): Total {
+        this.consumed = i
+            .map(i => Numbers.positive(i.need - i.have) * i.price / i.batch_size )
+            .reduce((acc, x) => acc + x, 0)
+        this.available = i
+            .map(i => Numbers.positive(i.have) * i.price)
+            .reduce((acc, x) => acc + x, 0)
+        this.purchased = i
+            .map(i => Math.ceil(Numbers.positive(i.need - i.have) / i.batch_size) * i.price)
+            .reduce((acc, x) => acc + x, 0)
+        this.remaining = this.purchased + this.available - this.consumed
+
+        return this
+    }
+
+    commit(): Total {
+        this.setAvailable(this.available)
+        this.setRemaining(this.remaining)
+        return this
+    }
+}
