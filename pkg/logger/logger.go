@@ -61,6 +61,6 @@ func (en *e) WithField(key string, value interface{}) Logger {
 	return &e{*entry}
 }
 
-func (e *e) SetLevel(level int) {
-	e.Logger.SetLevel(logrus.Level(level))
+func (en *e) SetLevel(level int) {
+	en.Logger.SetLevel(logrus.Level(level))
 }

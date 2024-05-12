@@ -1,4 +1,4 @@
-package jsonDB
+package jsondb
 
 import (
 	"context"
@@ -202,7 +202,6 @@ func (db *JSON) LookupPantry(name string) (types.Pantry, bool) {
 	}
 
 	return db.pantries[i], true
-
 }
 
 func (db *JSON) SetPantry(p types.Pantry) error {

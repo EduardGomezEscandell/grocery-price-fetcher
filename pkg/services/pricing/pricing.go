@@ -7,7 +7,6 @@ import (
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/logger"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/product"
 )
 
 type Service struct {
@@ -64,7 +63,7 @@ func (s *Service) update() {
 	var wg sync.WaitGroup
 	for _, prod := range s.db.Products() {
 		wg.Add(1)
-		go func(i product.Product) {
+		go func() {
 			defer wg.Done()
 			if err := prod.FetchPrice(s.ctx); err != nil {
 				s.log.Warningf("Database price update: %v", err)
@@ -74,7 +73,7 @@ func (s *Service) update() {
 			if err := s.db.SetProduct(prod); err != nil {
 				s.log.Warningf("Database price update: %v", err)
 			}
-		}(prod)
+		}()
 	}
 
 	wg.Wait()

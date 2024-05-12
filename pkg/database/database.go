@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/database/jsonDB"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/database/jsondb"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/product"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/types"
@@ -37,7 +37,7 @@ type Settings struct {
 func New(ctx context.Context, logger logger.Logger, s Settings) (DB, error) {
 	switch s.Type {
 	case "json":
-		db, err := jsonDB.New(ctx, logger, s.Options)
+		db, err := jsondb.New(ctx, logger, s.Options)
 		if err != nil {
 			return nil, err
 		}

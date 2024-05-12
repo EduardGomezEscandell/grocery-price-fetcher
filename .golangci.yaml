@@ -30,7 +30,10 @@ linters:
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
-
+  exclude:
+    - non-wrapping format verb for fmt.Errorf. Use `%w` to format errors
+    - unused-parameter
+    - indent-error-flow
 
 linters-settings:
   nakedret:
