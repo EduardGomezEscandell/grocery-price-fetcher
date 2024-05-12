@@ -4,35 +4,23 @@ import { State, Menu } from '../../State/State.tsx';
 
 interface Props {
     backend: Backend;
-    state: State;
+    globalState: State;
     onComplete: () => void
 }
 
 function FirstLoad(props: Props) {
-    const [dishesReady, setDishesReady] = useState(false)
-    const [menuReady, setMenuReady] = useState(false)
-    
     useEffect(() => {
+        Promise.all([
         props.backend
             .Dishes()
             .GET()
-            .then((d: string[]) => {props.state.dishes = d})
-            .finally(() => setDishesReady(true))
-    })
-
-    useEffect(() => {
+            .then((d: string[]) => {props.globalState.dishes = d}),
         props.backend
             .Menu()
             .GET()
             .then((m: Menu[]) => m[0])
-            .then((m: Menu) => props.state.menu = m)
-            .finally(() => setMenuReady(true))
-    })
-
-    useEffect(() => {
-        if (dishesReady && menuReady) {
-            props.onComplete()
-        }
+            .then((m: Menu) => props.globalState.menu = m)
+        ]).finally(props.onComplete)
     })
     
     return (

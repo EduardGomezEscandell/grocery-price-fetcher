@@ -6,33 +6,29 @@ import { State, Day, Dish, Meal } from '../../State/State.tsx';
 
 interface Props {
     backend: Backend;
-    state: State;
+    globalState: State;
     onComplete: () => void
 }
 
-function RenderMenu(pp: Props) {
-    return new MenuTable(pp.state)
-        .Render(pp.onComplete)
-}
-
-export default RenderMenu
-
-class MenuTable {
-    constructor(state: State) {
-        this.state = state
-        this.days = this.state.menu.days.map(d => d.name)
+export default class MenuTable extends React.Component<Props> {
+    constructor(props: Props) {
+        super(props)
+        this.globalState = props.globalState
+        this.days = this.globalState.menu.days.map(d => d.name)
         this.meals = Array.from(
             new Set<string>(
-                this.state.menu.days.flatMap(d => d.meals.map(m => m.name))
+                this.globalState.menu.days.flatMap(d => d.meals.map(m => m.name))
             )
         )
+        this.onComplete = props.onComplete
     }
 
-    state: State;
+    globalState: State;
     days: string[];
     meals: string[];
+    onComplete: () => void
 
-    Render(onComplete: () => void): JSX.Element {
+    render(): JSX.Element {
         return (
             <>
                 <table>
@@ -51,20 +47,20 @@ class MenuTable {
                     </tbody>
                 </table>
                 <div>
-                    <button onClick={onComplete}>Finish</button>
+                    <button onClick={this.onComplete.bind(this)}>Finish</button>
                 </div>
             </>
         )
     }
 
-    RenderRow(mealName: string): JSX.Element {
+    private RenderRow(mealName: string): JSX.Element {
         return (
             <tr>
                 <td>{mealName}</td>
                 {
                     this.days
                         .map((dayName: string) => {
-                            return new Optional(this.state.menu.days.find(d => d.name === dayName))
+                            return new Optional(this.globalState.menu.days.find(d => d.name === dayName))
                                 .then(day => new Optional(day.meals.find(m => m.name === mealName))
                                     .then(meal => this.RenderMeal(day, meal))
                                     .else(<td></td>)
@@ -76,7 +72,7 @@ class MenuTable {
         )
     }
 
-    RenderMeal(day: Day, meal: Meal): JSX.Element {
+    private RenderMeal(day: Day, meal: Meal): JSX.Element {
         return (
             <td>
                 <table>
@@ -92,20 +88,20 @@ class MenuTable {
         )
     }
 
-    RenderDish(day: Day, meal: Meal, id: number, dish: Dish): JSX.Element {
+    private RenderDish(day: Day, meal: Meal, id: number, dish: Dish): JSX.Element {
         return (
             <tr key={id} >
                 <MealPicker
-                    recipes={this.state.dishes}
+                    recipes={this.globalState.dishes}
                     default={dish}
                     onChange={(newDish) => {
-                        new Optional(this.state.menu)
+                        new Optional(this.globalState.menu)
                             .then(menu => menu.days.find(d => d.name === day.name))
                             .elseLog(`Could not find day ${day.name}`)
                             .then(day => day.meals.find(m => m.name === meal.name))
                             .elseLog(`Could not find meal ${meal.name}`)
                             .then(meal => meal.dishes[id] = newDish)
-                            .then(() => this.state.setMenu(this.state.menu))
+                            .then(() => this.globalState.setMenu(this.globalState.menu))
                     }}
                 />
             </tr>

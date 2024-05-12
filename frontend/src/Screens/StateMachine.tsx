@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import Backend from "../Backend/Backend.tsx";
 import { State } from "../State/State.tsx";
 import FirstLoad from "./FirstLoad/FirstLoad.tsx";
@@ -8,114 +8,108 @@ import PantryLoad from './PantryLoad/PantryLoad.tsx';
 
 interface Props {
     backend: Backend;
-    state: State;
+    globalState: State;
 }
 
-function StateMachine(pp: Props): JSX.Element {
-    const [screen, setScreen] = useState(new LoadMenuScreen(pp.backend, pp.state))
-    const updateState = (newState) => {
-        setScreen(newState)
+export default class StateMachine extends React.Component<Props> {
+    state: { screen: Screen }
+
+    constructor(props: Props) {
+        super(props)
+        this.state = {
+            screen: new Screen({
+                ...props,
+                setScreen: (s: Screen) => this.setState({ screen: s })
+            })
+        }
     }
 
-    return screen.render(updateState)
+    render(): JSX.Element {
+        return this.state.screen.render()
+    }
 }
 
-export default StateMachine
+interface ScreenProps extends Props {
+    setScreen: (s: Screen) => void;
+}
 
-type ScreenSetter = React.Dispatch<React.SetStateAction<Screen>>
-
-class Screen {
-    backend: Backend;
+class Screen extends React.Component<ScreenProps> {
     name: string;
-    state: State;
+    backend: Backend;
+    globalState: State;
+    setScreen: (s: Screen) => void;
 
-    constructor(backend: Backend, state: State) {
-        this.backend = backend
-        this.state = state
+    constructor(p: ScreenProps) {
+        super(p)
+        this.name = "BASE Screen"
+        this.backend = p.backend
+        this.globalState = p.globalState
+        this.setScreen = p.setScreen
     }
 
-    render(setScreen: ScreenSetter): JSX.Element {
-        throw Error("Not implemented")
-    }
-
-    next(): Screen {
-        throw Error("Not implemented")
+    render(): JSX.Element {
+        this.setScreen(new LoadMenuScreen(this))
+        return <>Loading...</>
     }
 }
 
 class LoadMenuScreen extends Screen {
-    constructor(backend: Backend, state: State) {
-        super(backend, state)
+    constructor(pp: Screen) {
+        super(pp)
         this.name = "LoadingScreen"
     }
 
-    render(setScreen: ScreenSetter): JSX.Element {
+    render(): JSX.Element {
         return <FirstLoad
             backend={this.backend}
-            state={this.state}
-            onComplete={() => setScreen(this.next())}
+            globalState={this.globalState}
+            onComplete={() => this.setScreen(new MenuScreen(this))}
         />
-    }
-
-    next(): Screen {
-        return new MenuScreen(this.backend, this.state);
     }
 }
 
 class MenuScreen extends Screen {
-    constructor(backend: Backend, state: State) {
-        super(backend, state)
+    constructor(pp: Screen) {
+        super(pp)
         this.name = "MenuScreen";
     }
 
-    render(setScreen: ScreenSetter) {
+    render() {
         return <RenderMenu
             backend={this.backend}
-            state={this.state}
-            onComplete={() => setScreen(this.next())}
+            globalState={this.globalState}
+            onComplete={() => this.setScreen(new LoadPantryScreen(this))}
         />
-    }
-
-    next(): Screen {
-        return new LoadPantryScreen(this.backend, this.state)
     }
 }
 
 class LoadPantryScreen extends Screen {
-    constructor(backend: Backend, state: State) {
-        super(backend, state)
+    constructor(pp: Screen) {
+        super(pp)
         this.name = "LoadPantryScreen"
     }
 
-    render(setScreen: ScreenSetter): JSX.Element {
+    render(): JSX.Element {
         return <PantryLoad
             backend={this.backend}
-            state={this.state}
-            onComplete={() => setScreen(new PantryScreen(this.backend, this.state))}
+            state={this.globalState}
+            onComplete={() => this.setScreen(new PantryScreen(this))}
         />
-    }
-
-    next(): Screen {
-        return new PantryScreen(this.backend, this.state);
     }
 }
 
 
 class PantryScreen extends Screen {
-    constructor(backend: Backend, state: State) {
-        super(backend, state)
+    constructor(pp: Screen) {
+        super(pp)
         this.name = "PantryScreen";
     }
 
-    render(setScreen: ScreenSetter) {
+    render() {
         return <Pantry
             backend={this.backend}
-            state={this.state}
-            onBackToMenu={() => setScreen(this.next())}
+            state={this.globalState}
+            onBackToMenu={() => this.setScreen(new LoadMenuScreen(this))}
         />
-    }
-
-    next() {
-        return new LoadMenuScreen(this.backend, this.state)
     }
 }
