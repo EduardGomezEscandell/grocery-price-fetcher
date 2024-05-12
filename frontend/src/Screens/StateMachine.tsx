@@ -91,7 +91,7 @@ class LoadPantryScreen extends Screen {
         return <PantryLoad
             backend={this.backend}
             state={this.state}
-            onComplete={() => setScreen(this.next())}
+            onComplete={() => setScreen(new PantryScreen(this.backend, this.state))}
         />
     }
 
@@ -111,10 +111,11 @@ class PantryScreen extends Screen {
         return <Pantry
             backend={this.backend}
             state={this.state}
+            onBackToMenu={() => setScreen(this.next())}
         />
     }
 
-    transition() {
-        throw Error("Not implemented")
+    next() {
+        return new LoadMenuScreen(this.backend, this.state)
     }
 }

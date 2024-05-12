@@ -7,7 +7,6 @@ import SaveButton from './SaveButton.tsx';
 interface Props {
     backend: Backend;
     state: State;
-    onComplete: () => void;
     onBackToMenu: () => void;
 }
 
@@ -35,7 +34,6 @@ export default function Pantry(pp: Props) {
                 <HeaderTable
                     globalstate={pp.state}
                     backend={pp.backend}
-                    onComplete={pp.onComplete}
                     onBackToMenu={pp.onBackToMenu}
                     style={baseStyle}
                 />
@@ -52,7 +50,6 @@ export default function Pantry(pp: Props) {
 }
 
 interface HeaderTableProps {
-    onComplete: () => void,
     onBackToMenu: () => void,
     globalstate: State,
     backend: Backend,
@@ -64,14 +61,12 @@ class HeaderTable extends React.Component<HeaderTableProps> {
         super(pp)
         this.globalstate = pp.globalstate
         this.backend = pp.backend
-        this.onComplete = pp.onComplete
         this.onBackToMenu = pp.onBackToMenu
         this.style = pp.style ? pp.style : {}
     }
 
     globalstate: State;
     backend: Backend;
-    onComplete: () => void;
     onBackToMenu: () => void;
     style: React.CSSProperties;
 
