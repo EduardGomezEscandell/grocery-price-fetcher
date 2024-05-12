@@ -299,10 +299,10 @@ class Total {
 
     compute(i: Ingredient[]): Total {
         this.consumed = i
-            .map(i => Numbers.positive(i.need - i.have) * i.price / i.batch_size)
+            .map(i => Numbers.positive(i.need) * i.price / i.batch_size)
             .reduce((acc, x) => acc + x, 0)
         this.available = i
-            .map(i => Numbers.positive(i.have) * i.price)
+            .map(i => Numbers.positive(i.have) * i.price / i.batch_size)
             .reduce((acc, x) => acc + x, 0)
         this.purchased = i
             .map(i => Math.ceil(Numbers.positive(i.need - i.have) / i.batch_size) * i.price)
