@@ -16,8 +16,8 @@ export class MenuEndpoint {
                 'Accept': 'application/json',
             }
         })
-        .then(response => response.json())
-        .then(data => data.map(m => Menu.fromJSON(m)))
+            .then(response => response.json())
+            .then(data => data.map(m => Menu.fromJSON(m)))
     }
 
     async POST(menu: Menu): Promise<ShoppingList> {
@@ -29,8 +29,8 @@ export class MenuEndpoint {
             },
             body: menu.toJSON()
         })
-        .then(response => response.json())
-        .then(data => ShoppingList.fromJSON(data))
+            .then(response => response.json())
+            .then(data => ShoppingList.fromJSON(data))
     }
 }
 
@@ -53,6 +53,40 @@ export class MockMenuEndpoint extends MenuEndpoint {
             { batch_size: 1, need: 0.50, price: 0.50, product: "Pebrot verd" },
             { batch_size: 1, need: 0.95, price: 1.10, product: "Pebrot vermell" },
             { batch_size: 4, need: 4.00, price: 1.00, product: "Iogurt" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Poma" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Plàtan" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Peres" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Taronges" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Maduixes" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Kiwi" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Mandarines" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Pinya" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Mango" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Pera" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Cireres" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Préssecs" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Albercocs" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Nectarines" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Pressec de vinya" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Poma àcida" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Poma verda" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Pastanaga" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Ceba" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Ceba vermella" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Ceba tendra" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Ceba de figueres" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Ceba de calçot" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Ceba de figueres" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Ceba de calçot" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Ceba de figueres" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Ceba de calçot" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Ceba de figueres" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Ceba de calçot" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Ceba de figueres" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Ceba de calçot" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Ceba de figueres" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Ceba de calçot" },
+            { batch_size: 1, need: 0.50, price: 0.50, product: "Ceba de figueres" },
         ]))
     }
 }
