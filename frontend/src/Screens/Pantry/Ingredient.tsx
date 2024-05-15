@@ -27,23 +27,23 @@ export default function RenderIngredient(pp: Props): JSX.Element {
             onMouseLeave={() => setID(defaultID)}
         >
             <td className='Label' key='name'> {pp.ingredient.name}  </td>
-            <td className='Select' key='have'> <input
-                type="number"
-                value={storage}
-                onChange={(s) => {
-                    const newStorage = Numbers.positive(parseFloat(s.target.value))
-                    const newDeficit = Numbers.positive(pp.ingredient.need - newStorage)
-                    const newPackCount = Math.ceil(newDeficit / pp.ingredient.batch_size)
-                    setStorage(newStorage)
-                    setDeficit(newDeficit)
-                    setMustBuy(newPackCount)
-                    setCost(newPackCount * pp.ingredient.price)
-                    pp.onChange(newStorage)
-                }}
-                
-                datatype='number'
-                style={{ width: '40px' }}
-            /> </td>
+            <td className='Select' key='have'>
+                <input
+                    type="number"
+                    value={storage}
+                    onChange={(s) => {
+                        const newStorage = Numbers.positive(parseFloat(s.target.value))
+                        const newDeficit = Numbers.positive(pp.ingredient.need - newStorage)
+                        const newPackCount = Math.ceil(newDeficit / pp.ingredient.batch_size)
+                        setStorage(newStorage)
+                        setDeficit(newDeficit)
+                        setMustBuy(newPackCount)
+                        setCost(newPackCount * pp.ingredient.price)
+                        pp.onChange(newStorage)
+                    }}
+                    datatype='number'
+                />
+            </td>
             <td className='Number' key='need'> {Numbers.round2(pp.ingredient.need)} </td>
             <td className='Number' key='miss'> {Numbers.round2(deficit)} </td>
             <td className='Number' key='batch-size'> {pp.ingredient.batch_size === 1 ? '' : Numbers.round2(pp.ingredient.batch_size)} </td>

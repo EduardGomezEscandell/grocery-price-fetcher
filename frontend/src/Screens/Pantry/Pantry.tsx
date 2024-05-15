@@ -96,7 +96,8 @@ class PantryTable extends React.Component<PantryTableProps> {
                     <tbody>
                         {
                             this.shop.ingredients.map((i: Ingredient, idx: number) => (
-                                <RenderIngredient
+                                <RenderIngredient 
+                                    key={i.name}
                                     id={idx % 2 === 0 ? 'even' : 'odd'}
                                     ingredient={i}
                                     onChange={(value: number) => {
@@ -111,7 +112,6 @@ class PantryTable extends React.Component<PantryTableProps> {
                     </tbody>
                     <tfoot>
                         <tr style={{
-                            borderTop: '1px solid black',
                             fontWeight: 'bold',
                         }}>
                             <td colSpan={7} style={{ paddingLeft: '20px' }}>Total a comprar</td>
@@ -127,9 +127,11 @@ class PantryTable extends React.Component<PantryTableProps> {
                             <td className='Number'>-</td>
                             <td className='Number'>{Numbers.asEuro(this.total.remaining)}</td>
                         </tr>
+                        <tr>
+                            <td colSpan={8} style={{background: 'black'}}>    </td>
+                        </tr>
                         <tr style={{
                             fontWeight: 'bold',
-                            borderTop: '1px solid black',
                         }}>
                             <td colSpan={7} style={{ paddingLeft: '20px' }}>Cost del menjar consumit</td>
                             <td className='Number'>{Numbers.asEuro(this.total.consumed)}</td>

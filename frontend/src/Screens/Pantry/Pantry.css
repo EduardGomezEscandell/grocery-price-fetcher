@@ -5,19 +5,19 @@
 
     height: 100%;
     flex-grow: 1;
+    display: flex;
 
     .Table {
         margin: auto;
         align-items: center;
         width: fit-content;
-        border: 1px solid black;
         text-align: left;
         border-collapse: collapse;
+        background: black;
 
         thead {
             position: sticky;
             top: 0;
-            border: 1px solid black;
             color: white;
 
             .Header {
@@ -46,7 +46,6 @@
         tbody {
             overflow: auto;
             font-size: auto;
-            border-collapse: collapse;
 
             .Label {
                 width: 400px;
@@ -59,6 +58,13 @@
                 width: 200px;
                 text-align: center;
                 padding-left: 20px;
+
+                input {
+                    width: 50%;
+                    height: 100%;
+                    font-size: auto;
+                    text-align: right;
+                }
             }
 
             .Number {

@@ -44,7 +44,7 @@ export default class MenuTable extends React.Component<Props> {
                     <table>
                         <tbody>
                             <tr className='Header'>
-                                <th key='meal'>Meal</th>
+                                <th key='meal'>Àpat</th>
                                 {
                                     this.days.map(day => (<th key={day}>{day}</th>))
                                 }
