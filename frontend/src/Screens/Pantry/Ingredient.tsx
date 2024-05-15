@@ -2,9 +2,9 @@ import React, { useState } from 'react'
 import { Ingredient } from '../../State/State.js'
 
 interface Props {
-    style: React.CSSProperties;
     ingredient: Ingredient;
     onChange: (newHave: number) => void;
+    id: string;
 }
 
 export default function RenderIngredient(pp: Props): JSX.Element {
@@ -17,35 +17,17 @@ export default function RenderIngredient(pp: Props): JSX.Element {
     const [cost, setCost] = useState(pks * pp.ingredient.price)
 
     pp.ingredient.have = storage
-
-    const titleStyle: React.CSSProperties = {
-        width: '200px',
-        textAlign: 'left',
-        paddingLeft: '20px'
-    }
-
-    const numberStyle: React.CSSProperties = {
-        width: '100px',
-        textAlign: 'right',
-        paddingRight: '20px'
-    }
-
-    const defaultBackground = pp.style.background
-    const [rowStyle, setRowStyle] = useState(pp.style)
+    const defaultID = pp.id
+    const [ID, setID] = useState(defaultID)
 
     return (
         <tr key={pp.ingredient.name}
-            style={rowStyle}
-            onMouseEnter={() => {
-                setRowStyle({ ...rowStyle, background: 'lightblue' })
-            }}
-
-            onMouseLeave={() => {
-                setRowStyle({ ...rowStyle, background: defaultBackground })
-            }}
+            id={ID}
+            onMouseEnter={() => setID('mouseover')}
+            onMouseLeave={() => setID(defaultID)}
         >
-            <td style={titleStyle}> {pp.ingredient.name}  </td>
-            <td style={numberStyle}> <input
+            <td className='Label' key='name'> {pp.ingredient.name}  </td>
+            <td className='Select' key='have'> <input
                 type="number"
                 value={storage}
                 onChange={(s) => {
@@ -62,12 +44,12 @@ export default function RenderIngredient(pp: Props): JSX.Element {
                 datatype='number'
                 style={{ width: '40px' }}
             /> </td>
-            <td style={numberStyle}> {Numbers.round2(pp.ingredient.need)} </td>
-            <td style={numberStyle}> {Numbers.round2(deficit)} </td>
-            <td style={numberStyle}> {pp.ingredient.batch_size === 1 ? '' : Numbers.round2(pp.ingredient.batch_size)} </td>
-            <td style={numberStyle}> {Numbers.int(packs)}</td>
-            <td style={numberStyle}> {Numbers.asEuro(pp.ingredient.price)} </td>
-            <td style={numberStyle}> {Numbers.asEuro(cost)} </td>
+            <td className='Number' key='need'> {Numbers.round2(pp.ingredient.need)} </td>
+            <td className='Number' key='miss'> {Numbers.round2(deficit)} </td>
+            <td className='Number' key='batch-size'> {pp.ingredient.batch_size === 1 ? '' : Numbers.round2(pp.ingredient.batch_size)} </td>
+            <td className='Number' key='batch-count'> {Numbers.int(packs)}</td>
+            <td className='Number' key='pack-price'> {Numbers.asEuro(pp.ingredient.price)} </td>
+            <td className='Number' key='price-total'> {Numbers.asEuro(cost)} </td>
         </tr>
     )
 }

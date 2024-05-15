@@ -4,6 +4,7 @@ import Backend from '../../Backend/Backend.tsx';
 import TopBar from '../../TopBar/TopBar.tsx';
 import RenderIngredient, { Numbers } from './Ingredient.tsx';
 import SaveButton from './SaveButton.tsx';
+import './Pantry.css'
 
 interface Props {
     backend: Backend;
@@ -27,41 +28,26 @@ export default function Pantry(pp: Props) {
 
     return (
         <>
-            <div>
-                <TopBar
-                    components={[
-                        () => (
-                            <td key='go-back' style={{ textAlign: 'left' }}>
-                                <button
-                                    className='TopBar.Button'
-                                    onClick={pp.onBackToMenu}
-                                >Tornar al menú</button>
-                            </td>
-                        ),
-                        () => (<text key='pantry' className='TopBar.Text'>Rebost</text>),
-                        () => (
-                            <td key='save' style={{ textAlign: 'right' }}>
-                            <SaveButton
-                                className='TopBar__button'
-                                backend={pp.backend}
-                                globalState={pp.globalState}
-                            />
-                        </td>
-                        )
-                    ]}
-                />
-            </div>
-            <div style={{ 
-                margin: 'auto',
-                alignItems: 'center',
-                width: 'fit-content',
-             }}>
-                <PantryTable
-                    shop={pp.globalState.shoppingList}
-                    total={total}
-                    style={baseStyle}
-                />
-            </div>
+            <TopBar
+                components={[
+                    () => <button
+                        onClick={pp.onBackToMenu}
+                        key='go-back'>
+                        Tornar al menú
+                    </button>,
+                    () => (<p key='pantry'>Rebost</p>),
+                    () => (<SaveButton
+                        key='save'
+                        backend={pp.backend}
+                        globalState={pp.globalState}
+                    />)
+                ]}
+            />
+            <PantryTable
+                shop={pp.globalState.shoppingList}
+                total={total}
+                style={baseStyle}
+            />
         </>
     )
 }
@@ -85,71 +71,33 @@ class PantryTable extends React.Component<PantryTableProps> {
     }
 
     render(): JSX.Element {
-        const blue0 = '#1a237e'
-        const blue1 = '#405adb'
-        const blue2 = '#6aa2f0'
-
-        const headerStyle: React.CSSProperties = {
-            textAlign: 'center',
-            borderCollapse: 'collapse',
-            backgroundColor: blue0,
-            fontSize: '20px',
-            fontWeight: 'bold',
-            color: 'white',
-        }
-
-        const subHeaderStyle: React.CSSProperties = {
-            textAlign: 'center',
-            borderCollapse: 'collapse',
-            backgroundColor: blue0,
-            fontSize: '20px',
-            fontWeight: 'normal',
-            color: 'white',
-        }
-
-        const rowStyle = (idx: number): React.CSSProperties => {
-            return {
-                background: idx % 2 === 0 ? 'white' : '#eeeeee',
-                fontSize: '16px',
-            }
-        }
-
-        const footerStyle: React.CSSProperties = {
-            ...this.style,
-            fontSize: '20px',
-            background: 'orange',
-        }
-
         return (
-            <div key='pantry'>
-                <table style={{
-                    ...this.style,
-                    textAlign: 'left',
-                    borderCollapse: 'collapse',
-                }}>
-                    <tbody style={{ ...this.style, border: '1px solid black' }} key='pantry-body-1'>
-                        <tr style={headerStyle} key='header-1'>
+            <div key='pantry' className='Pantry'>
+                <table className='Table'>
+                    <thead>
+                        <tr className='Header' key='header'>
                             <td rowSpan={2}>Producte</td>
-                            <td colSpan={3} style={{ background: blue1 }}> <b>Unitats</b></td>
-                            <td colSpan={3} style={{ background: blue2 }}> <b>Paquets</b></td>
+                            <td colSpan={3} id='units'> <b>Unitats</b></td>
+                            <td colSpan={3} id='packs'> <b>Paquets</b></td>
                             <th rowSpan={2}>Preu</th>
                         </tr>
-                        <tr style={{
-                            ...subHeaderStyle,
+                        <tr className='SubHeader' key='subheader' style={{
                             borderBottom: '1px solid black',
-                        }} key='header-2'>
-                            <td style={{ background: blue1 }}>Tens</td>
-                            <td style={{ background: blue1 }}>Necessites</td>
-                            <td style={{ background: blue1 }}>Manquen</td>
+                        }}>
+                            <td key='1' id='units'>Tens</td>
+                            <td key='2' id='units'>Necessites</td>
+                            <td key='3' id='units'>Manquen</td>
 
-                            <td style={{ background: blue2 }}>Tamany</td>
-                            <td style={{ background: blue2 }}>Manquen</td>
-                            <td style={{ background: blue2 }}>Preu</td>
+                            <td key='4' id='packs'>Tamany</td>
+                            <td key='5' id='packs'>Manquen</td>
+                            <td key='6' id='packs'>Preu</td>
                         </tr>
+                    </thead>
+                    <tbody>
                         {
                             this.shop.ingredients.map((i: Ingredient, idx: number) => (
                                 <RenderIngredient
-                                    style={rowStyle(idx)}
+                                    id={idx % 2 === 0 ? 'even' : 'odd'}
                                     ingredient={i}
                                     onChange={(value: number) => {
                                         i.have = value
@@ -160,58 +108,33 @@ class PantryTable extends React.Component<PantryTableProps> {
                                 />
                             ))
                         }
-                        <tr style={{
-                            ...footerStyle,
-                            borderTop: '1px solid black',
-                            fontWeight: 'bold',
-                        }}>
-                            <td colSpan={7} style={{ paddingLeft: '20px' }}>
-                                Total a comprar
-                            </td>
-                            <td style={{
-                                textAlign: 'right',
-                                paddingRight: '20px'
-                            }}>{Numbers.asEuro(this.total.purchased)}</td>
-                        </tr>
-                        <tr style={footerStyle}>
-                            <td colSpan={6} style={{ paddingLeft: '20px' }}>
-                                Menjar que tens al rebost
-                            </td>
-                            <td style={{ textAlign: 'right' }}>
-                                +
-                            </td>
-                            <td style={{
-                                textAlign: 'right',
-                                paddingRight: '20px'
-                            }}>{Numbers.asEuro(this.total.available)}</td>
-                        </tr>
-                        <tr style={footerStyle}>
-                            <td colSpan={6} style={{ paddingLeft: '20px' }}>
-                                Menjar que quedarà al rebost
-                            </td>
-                            <td style={{ textAlign: 'right' }}>
-                                -
-                            </td>
-                            <td style={{
-                                textAlign: 'right',
-                                paddingRight: '20px'
-                            }}>{Numbers.asEuro(this.total.remaining)}</td>
-                        </tr>
-                        <tr style={{
-                            ...footerStyle,
-                            fontWeight: 'bold',
-                            borderTop: '1px solid black',
-                        }}>
-                            <td colSpan={7} style={{ paddingLeft: '20px' }}>
-                                Cost del menjar consumit
-                            </td>
-                            <td style={{
-                                textAlign: 'right',
-                                paddingRight: '20px',
-                                width: '300px',
-                            }}>{Numbers.asEuro(this.total.consumed)}</td>
-                        </tr>
                     </tbody>
+                    <tfoot>
+                        <tr style={{
+                            borderTop: '1px solid black',
+                            fontWeight: 'bold',
+                        }}>
+                            <td colSpan={7} style={{ paddingLeft: '20px' }}>Total a comprar</td>
+                            <td className='Number'>{Numbers.asEuro(this.total.purchased)}</td>
+                        </tr>
+                        <tr >
+                            <td colSpan={6} style={{ paddingLeft: '20px' }}>Menjar que tens al rebost</td>
+                            <td className='Number'>+</td>
+                            <td className='Number'>{Numbers.asEuro(this.total.available)}</td>
+                        </tr>
+                        <tr >
+                            <td colSpan={6} style={{ paddingLeft: '20px' }}>Menjar que quedarà al rebost</td>
+                            <td className='Number'>-</td>
+                            <td className='Number'>{Numbers.asEuro(this.total.remaining)}</td>
+                        </tr>
+                        <tr style={{
+                            fontWeight: 'bold',
+                            borderTop: '1px solid black',
+                        }}>
+                            <td colSpan={7} style={{ paddingLeft: '20px' }}>Cost del menjar consumit</td>
+                            <td className='Number'>{Numbers.asEuro(this.total.consumed)}</td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         )

@@ -1,0 +1,37 @@
+.Menu {
+    overflow: auto;
+    background: white;
+    width: 100%;
+    
+    height: 100%;
+    flex-grow: 1;
+    padding-bottom: 10px;
+
+    .Header {
+        background: lightblue;
+        padding: 10px;
+        height: 60px;
+        font-size: large;
+        font-weight: bold;
+        margin: none;
+        vertical-align: middle;
+    }
+
+    .Row {
+        background: white;
+        border-bottom: 1px solid black;
+
+        .MealName {
+            font-size: large;
+            font-weight: bold;
+        }
+
+        ;
+
+        .Meal {
+            justify-content: space-between;
+            padding: 10px;
+            font-size: small;
+        }
+    }
+}

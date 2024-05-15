@@ -1,0 +1,104 @@
+.Pantry {
+    overflow: auto;
+    background: white;
+    width: 100%;
+
+    height: 100%;
+    flex-grow: 1;
+
+    .Table {
+        margin: auto;
+        align-items: center;
+        width: fit-content;
+        border: 1px solid black;
+        text-align: left;
+        border-collapse: collapse;
+
+        thead {
+            position: sticky;
+            top: 0;
+            border: 1px solid black;
+            color: white;
+
+            .Header {
+                text-align: center;
+                background-color: #1a237e;
+                font-size: 20px;
+                font-weight: bold;
+            }
+
+            .SubHeader {
+                text-align: center;
+                background-color: #1a237e;
+                font-size: 20px;
+                font-weight: normal;
+            }
+
+            #units {
+                background: #405adb;
+            }
+
+            #packs {
+                background: #6aa2f0;
+            }
+        }
+
+        tbody {
+            overflow: auto;
+            font-size: auto;
+            border-collapse: collapse;
+
+            .Label {
+                width: 400px;
+                text-align: left;
+                padding-left: 20px;
+                padding: 10px;
+            }
+
+            .Select {
+                width: 200px;
+                text-align: center;
+                padding-left: 20px;
+            }
+
+            .Number {
+                width: 200px;
+                text-align: right;
+                padding-right: 10px;
+            }
+
+            #odd {
+                background: #ffffff;
+            }
+
+            #even {
+                background: #eeeeee;
+            }
+
+            #mouseover {
+                background: lightblue;
+            }
+        }
+
+        tfoot {
+            position: sticky;
+            bottom: 0;
+
+            font-size: 20px;
+            background: orange;
+
+
+            .Label {
+                width: 200px;
+                text-align: left;
+                padding-left: 20px;
+            }
+
+            .Number {
+                width: 300px;
+                text-align: right;
+                padding-right: 20px;
+            }
+        }
+    }
+}

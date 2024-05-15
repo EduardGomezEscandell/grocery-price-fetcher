@@ -27,7 +27,15 @@ export default class StateMachine extends React.Component<Props> {
     }
 
     render(): JSX.Element {
-        return this.state.screen.render()
+        return (
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100vh'
+            }}>
+                {this.state.screen.render()}
+            </div>
+        )
     }
 }
 
