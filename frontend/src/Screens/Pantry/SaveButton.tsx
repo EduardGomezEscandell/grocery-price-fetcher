@@ -11,20 +11,14 @@ enum Phase {
 interface Props {
     backend: Backend
     globalState: State
-    style: React.CSSProperties
+    className?: string
 }
 
 export default class SaveButton extends React.Component<Props> {
-    backend: Backend
-    globalstate: State
-    style: React.CSSProperties
     state: { phase: Phase }
 
     constructor(pp: Props) {
         super(pp)
-        this.backend = pp.backend
-        this.globalstate = pp.globalState
-        this.style = pp.style
         this.state = { phase: Phase.Idle }
     }
 
@@ -32,18 +26,22 @@ export default class SaveButton extends React.Component<Props> {
         const { text, style } = (() => {
             switch (this.state.phase) {
                 case Phase.Idle:
-                    return { text: 'Save', style: this.style }
+                    return { text: 'Guardar', style: {} }
                 case Phase.Saving:
-                    return { text: 'Saving...', style: { ...this.style, backgroundColor: 'gray' } }
+                    return { text: 'Guardant...', style: { backgroundColor: 'gray' } }
                 case Phase.Done:
-                    return { text: 'Saved', style: { ...this.style, color: 'green' } }
+                    return { text: 'Guardat', style: { color: 'green' } }
             }
         })()
 
         return (
             <button
+                className={this.props.className}
                 onClick={this.onClick.bind(this)}
-                style={style}
+                style={{
+                    ...style,
+                    width: '100px',
+                }}
             >{text}</button>
         )
     }
@@ -64,11 +62,11 @@ export default class SaveButton extends React.Component<Props> {
     }
 
     private async save(): Promise<any> {
-        return this.backend
+        return this.props.backend
             .Pantry()
             .POST({
                 name: '', // Let the backend handle the name for now
-                contents: this.globalstate.shoppingList.ingredients
+                contents: this.props.globalState.shoppingList.ingredients
                     .filter(i => i.have > 0)
                     .map(i => {
                         return { name: i.name, amount: i.have }

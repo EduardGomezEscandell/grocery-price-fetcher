@@ -3,6 +3,7 @@ import MealPicker from './MealPicker.tsx'
 import Backend from '../../Backend/Backend.ts';
 import Optional from '../../Optional/Optional.ts';
 import { State, Day, Dish, Meal } from '../../State/State.tsx';
+import TopBar from '../../TopBar/TopBar.tsx';
 
 interface Props {
     backend: Backend;
@@ -13,17 +14,15 @@ interface Props {
 export default class MenuTable extends React.Component<Props> {
     constructor(props: Props) {
         super(props)
-        this.globalState = props.globalState
-        this.days = this.globalState.menu.days.map(d => d.name)
+        this.days = props.globalState.menu.days.map(d => d.name)
         this.meals = Array.from(
             new Set<string>(
-                this.globalState.menu.days.flatMap(d => d.meals.map(m => m.name))
+                props.globalState.menu.days.flatMap(d => d.meals.map(m => m.name))
             )
         )
         this.onComplete = props.onComplete
     }
 
-    globalState: State;
     days: string[];
     meals: string[];
     onComplete: () => void
@@ -31,6 +30,18 @@ export default class MenuTable extends React.Component<Props> {
     render(): JSX.Element {
         return (
             <>
+                <div>
+                    <TopBar components={[
+                        () => <text className='TopBar.Text'>Grocery Price Fetcher</text>,
+                        () => <text className='TopBar.Text'>Menu</text>,
+                        () => <button
+                            key='save-continue'
+                            className='TopBar.Button'
+                            onClick={this.props.onComplete}
+                        >Guardar i continuar</button>,
+                    ]}
+                    ></TopBar>
+                </div>
                 <table>
                     <tbody>
                         <tr>
@@ -46,9 +57,6 @@ export default class MenuTable extends React.Component<Props> {
                         }
                     </tbody>
                 </table>
-                <div>
-                    <button onClick={this.onComplete.bind(this)}>Finish</button>
-                </div>
             </>
         )
     }
@@ -60,7 +68,7 @@ export default class MenuTable extends React.Component<Props> {
                 {
                     this.days
                         .map((dayName: string) => {
-                            return new Optional(this.globalState.menu.days.find(d => d.name === dayName))
+                            return new Optional(this.props.globalState.menu.days.find(d => d.name === dayName))
                                 .then(day => new Optional(day.meals.find(m => m.name === mealName))
                                     .then(meal => this.RenderMeal(day, meal))
                                     .else(<td></td>)
@@ -92,16 +100,16 @@ export default class MenuTable extends React.Component<Props> {
         return (
             <tr key={id} >
                 <MealPicker
-                    recipes={this.globalState.dishes}
+                    recipes={this.props.globalState.dishes}
                     default={dish}
                     onChange={(newDish) => {
-                        new Optional(this.globalState.menu)
+                        new Optional(this.props.globalState.menu)
                             .then(menu => menu.days.find(d => d.name === day.name))
                             .elseLog(`Could not find day ${day.name}`)
                             .then(day => day.meals.find(m => m.name === meal.name))
                             .elseLog(`Could not find meal ${meal.name}`)
                             .then(meal => meal.dishes[id] = newDish)
-                            .then(() => this.globalState.setMenu(this.globalState.menu))
+                            .then(() => this.props.globalState.setMenu(this.props.globalState.menu))
                     }}
                 />
             </tr>

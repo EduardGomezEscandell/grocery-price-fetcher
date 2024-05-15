@@ -1,17 +1,18 @@
 import React, { useState } from 'react'
 import { Ingredient, ShoppingList, State } from '../../State/State.tsx';
 import Backend from '../../Backend/Backend.tsx';
+import TopBar from '../../TopBar/TopBar.tsx';
 import RenderIngredient, { Numbers } from './Ingredient.tsx';
 import SaveButton from './SaveButton.tsx';
 
 interface Props {
     backend: Backend;
-    state: State;
+    globalState: State;
     onBackToMenu: () => void;
 }
 
 export default function Pantry(pp: Props) {
-    const total = new Total().compute(pp.state.shoppingList.ingredients)
+    const total = new Total().compute(pp.globalState.shoppingList.ingredients)
 
     const [available, setAvailable] = useState(total.available)
     const [remaining, setRemaining] = useState(total.remaining)
@@ -25,92 +26,45 @@ export default function Pantry(pp: Props) {
     }
 
     return (
-        <div style={{
-            margin: 'auto',
-            alignItems: 'center',
-            width: '800px',
-        }}>
+        <>
             <div>
-                <HeaderTable
-                    globalstate={pp.state}
-                    backend={pp.backend}
-                    onBackToMenu={pp.onBackToMenu}
-                    style={baseStyle}
+                <TopBar
+                    components={[
+                        () => (
+                            <td key='go-back' style={{ textAlign: 'left' }}>
+                                <button
+                                    className='TopBar.Button'
+                                    onClick={pp.onBackToMenu}
+                                >Tornar al menú</button>
+                            </td>
+                        ),
+                        () => (<text key='pantry' className='TopBar.Text'>Rebost</text>),
+                        () => (
+                            <td key='save' style={{ textAlign: 'right' }}>
+                            <SaveButton
+                                className='TopBar__button'
+                                backend={pp.backend}
+                                globalState={pp.globalState}
+                            />
+                        </td>
+                        )
+                    ]}
                 />
             </div>
-            <div style={{ height: '100%' }}>
+            <div style={{ 
+                margin: 'auto',
+                alignItems: 'center',
+                width: 'fit-content',
+             }}>
                 <PantryTable
-                    shop={pp.state.shoppingList}
+                    shop={pp.globalState.shoppingList}
                     total={total}
                     style={baseStyle}
                 />
             </div>
-        </div>
+        </>
     )
 }
-
-interface HeaderTableProps {
-    onBackToMenu: () => void,
-    globalstate: State,
-    backend: Backend,
-    style?: React.CSSProperties
-}
-
-class HeaderTable extends React.Component<HeaderTableProps> {
-    constructor(pp: HeaderTableProps) {
-        super(pp)
-        this.globalstate = pp.globalstate
-        this.backend = pp.backend
-        this.onBackToMenu = pp.onBackToMenu
-        this.style = pp.style ? pp.style : {}
-    }
-
-    globalstate: State;
-    backend: Backend;
-    onBackToMenu: () => void;
-    style: React.CSSProperties;
-
-    render(): JSX.Element {
-        const buttonStyle: React.CSSProperties = {
-            fontSize: '15px',
-            fontWeight: 'bold',
-            color: 'black',
-            border: 'black',
-            padding: '10px',
-            margin: '10px',
-        }
-
-        return (
-            <table style={{
-                ...this.style,
-                background: 'lightgrey',
-            }}>
-                <tbody style={this.style}>
-                    <tr key='x'>
-                        <td key='go-back' style={{ textAlign: 'left' }}>
-                            <button
-                                onClick={this.onBackToMenu}
-                                style={buttonStyle}
-                            >Tornar al menú</button>
-                        </td>
-                        <td key='save' style={{ textAlign: 'right' }}>
-                            <SaveButton
-                                backend={this.backend}
-                                globalState={this.globalstate}
-                                style={{
-                                    ...buttonStyle,
-                                    width: '100px',
-                                }}
-                            />
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        )
-    }
-}
-
-
 
 class PantryTableProps {
     shop: ShoppingList

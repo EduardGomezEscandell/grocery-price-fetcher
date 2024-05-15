@@ -1,7 +1,7 @@
 import React from 'react'
 import Backend from "../Backend/Backend.tsx";
 import { State } from "../State/State.tsx";
-import FirstLoad from "./FirstLoad/FirstLoad.tsx";
+import MenuLoad from "./MenuLoad/MenuLoad.tsx";
 import RenderMenu from "./Menu/Menu.tsx";
 import Pantry from "./Pantry/Pantry.tsx";
 import PantryLoad from './PantryLoad/PantryLoad.tsx';
@@ -16,11 +16,13 @@ export default class StateMachine extends React.Component<Props> {
 
     constructor(props: Props) {
         super(props)
+        const baseScreen = new Screen({
+            ...props,
+            setScreen: (s: Screen) => this.setState({ screen: s })
+        })
+
         this.state = {
-            screen: new Screen({
-                ...props,
-                setScreen: (s: Screen) => this.setState({ screen: s })
-            })
+            screen: new LoadMenuScreen(baseScreen)
         }
     }
 
@@ -39,17 +41,16 @@ class Screen extends React.Component<ScreenProps> {
     globalState: State;
     setScreen: (s: Screen) => void;
 
-    constructor(p: ScreenProps) {
-        super(p)
+    constructor(pp: ScreenProps) {
+        super(pp)
         this.name = "BASE Screen"
-        this.backend = p.backend
-        this.globalState = p.globalState
-        this.setScreen = p.setScreen
+        this.backend = pp.backend
+        this.globalState = pp.globalState
+        this.setScreen = pp.setScreen
     }
 
     render(): JSX.Element {
-        this.setScreen(new LoadMenuScreen(this))
-        return <>Loading...</>
+        return <>ERROR</>
     }
 }
 
@@ -60,7 +61,7 @@ class LoadMenuScreen extends Screen {
     }
 
     render(): JSX.Element {
-        return <FirstLoad
+        return <MenuLoad
             backend={this.backend}
             globalState={this.globalState}
             onComplete={() => this.setScreen(new MenuScreen(this))}
@@ -108,7 +109,7 @@ class PantryScreen extends Screen {
     render() {
         return <Pantry
             backend={this.backend}
-            state={this.globalState}
+            globalState={this.globalState}
             onBackToMenu={() => this.setScreen(new LoadMenuScreen(this))}
         />
     }

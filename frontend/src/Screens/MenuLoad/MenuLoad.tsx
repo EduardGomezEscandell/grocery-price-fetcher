@@ -1,4 +1,4 @@
-import React, { useEffect , useState } from 'react'
+import React, { useEffect } from 'react'
 import Backend from '../../Backend/Backend.ts';
 import { State, Menu } from '../../State/State.tsx';
 
@@ -8,7 +8,7 @@ interface Props {
     onComplete: () => void
 }
 
-function FirstLoad(props: Props) {
+export default function MenuLoad(props: Props) {
     useEffect(() => {
         Promise.all([
         props.backend
@@ -26,7 +26,4 @@ function FirstLoad(props: Props) {
     return (
         <p>Loading...</p>
     )
-
 }
-
-export default FirstLoad
