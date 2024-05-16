@@ -1,12 +1,16 @@
-.PHONY: tidy build-go build-js lint test update-golden quality run-mock build-docker push start stop clean
+.PHONY: tidy build-go build-js lint test update-golden quality run-mock build-docker package deploy full-start start stop clean
+
+
+VERSION := $(shell git describe --tags --always --dirty)
+GO := go build -ldflags -X=github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/services/version.Version=$(VERSION)
 
 tidy:
 	go mod tidy
 
 build-go: tidy
 	mkdir -p bin
-	go build -o bin/compra cmd/compra/main.go
-	go build -o bin/grocery-server cmd/server/main.go
+	$(GO) -o bin/compra cmd/compra/main.go	
+	$(GO) -o bin/grocery-server cmd/server/main.go
 
 lint:
 	$$(go env GOPATH)/bin/golangci-lint version \
@@ -33,8 +37,11 @@ run-mock: stop
 build-docker: build-go build-js
 	cd deploy/container && make build
 
-package: push
+package:
 	cd deploy/host && make package
+
+deploy:
+	cd deploy/host && make deploy
 
 full-start: build-docker start
 
