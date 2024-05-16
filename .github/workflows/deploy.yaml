@@ -3,8 +3,7 @@ name: Deploy
 on:
   push:
     branches: 
-      - release-*
-  pull_request:
+      - releases/**
   workflow_dispatch:
 
 jobs:
