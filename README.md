@@ -14,4 +14,4 @@ There's no guarantee this section is up-to-date.
 - The frontend is a basic React application.
 
 ## Deployment
-Check out ./depoy/README.md to see how to deploy the server.
+Check out [this guide](./deploy/README.md) to see how to deploy the server.
