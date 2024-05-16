@@ -17,6 +17,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/providers"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/providers/bonpreu"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/providers/mercadona"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/services/version"
 	"github.com/sirupsen/logrus"
 )
 
@@ -77,6 +78,11 @@ type settings struct {
 }
 
 func parseInput() settings {
+	if len(os.Args) == 2 && os.Args[1] == "version" {
+		fmt.Println(version.Version)
+		os.Exit(0)
+	}
+
 	var sett settings
 
 	flag.BoolVar(&sett.verbose, "v", false, "verbose mode")

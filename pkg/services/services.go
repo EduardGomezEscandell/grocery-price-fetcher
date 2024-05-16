@@ -15,6 +15,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/services/pantry"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/services/pricing"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/services/recipes"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/services/version"
 )
 
 type Manager struct {
@@ -61,6 +62,7 @@ func (s *Manager) Register(registerer func(endpoint string, handler httputils.Ha
 	registerer("/api/menu", s.menu.Handle)
 	registerer("/api/pantry", s.pantry.Handle)
 	registerer("/api/recipes", s.recipes.Handle)
+	registerer("/api/version", version.Service{}.Handle)
 }
 
 func (s *Manager) Run() {

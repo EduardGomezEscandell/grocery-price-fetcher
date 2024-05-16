@@ -33,7 +33,7 @@ purge: stop
 # DO NOT DEPLOY AFTER THIS LINE
 .PHONY: package deploy
 
-VERSION := $(shell git rev-parse HEAD | cut -c 1-8)
+VERSION := $(shell git describe --tags --always --dirty)
 package:
 	@echo "Building package $(PKG) version $(VERSION)"
 	if [ -z "$(DOCKER_USER)" ]; then echo "Error: Environment variable DOCKER_USER not set" >&2; exit 99; fi
@@ -81,4 +81,4 @@ deploy: package
 		  --zone=$(GCLOUD_ZONE)           \
 		  | grep natIP                    \
 		  | sed 's#^.*natIP: \(.*\)#\1#'  \
-		)/api/helloworld
+		)/api/version

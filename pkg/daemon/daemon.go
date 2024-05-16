@@ -32,6 +32,7 @@ func (d *Daemon) RegisterStaticEndpoint(path string, contentPath string) {
 }
 
 func (d *Daemon) RegisterDynamicEndpoint(path string, handler httputils.Handler) {
+	d.log.Debugf("Registering dynamic endpoint: %s", path)
 	d.dynamic[path] = handler
 }
 
