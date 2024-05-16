@@ -41,7 +41,7 @@ package:
 	sudo docker tag $(PKG) $(DOCKER_USER)/$(PKG):$(VERSION)
 	sudo docker push $(DOCKER_USER)/$(PKG):$(VERSION)
 
-	rm -r grocery-price-service-* || true
+	rm -r grocery-price-fetcher/ || true
 	mkdir -p $(PKG)
 	rsync -r ./* $(PKG) --exclude $(PKG) --exclude .gitignore
 
@@ -49,7 +49,7 @@ package:
 	sed -i -n '/# DO NOT DEPLOY AFTER THIS LINE/q;p' $(PKG)/Makefile
 
 	# Patch compose.yaml to pull image from docker hub
-	sed -i 's#$(PKG):latest#docker.io/$(DOCKER_USER)/$(PKG):$(VERSION)#g' $(PKG)/compose.yaml
+	sed -i 's#image: $(PKG)#image: docker.io/$(DOCKER_USER)/$(PKG):$(VERSION)#g' $(PKG)/compose.yaml
 
 	echo $(VERSION) > "$(PKG)/version"
 	tar -czf $(PKG).tar.gz $(PKG)
