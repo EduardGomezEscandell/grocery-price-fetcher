@@ -22,7 +22,8 @@ update-golden: build-go
 quality: build-go lint test
 
 build-js:
-	cd frontend && npm install && npm run build
+	cd frontend && npm install
+	cd frontend && npm run build
 
 run-mock: stop
 # Serves the frontend with a mock back-end
