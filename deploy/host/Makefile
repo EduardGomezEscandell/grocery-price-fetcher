@@ -3,7 +3,6 @@ ETC := /etc/$(PKG)
 DATA := /var/lib/$(PKG)
 SERVICE := /etc/systemd/system/$(PKG).service
 NOW := $$(date --rfc-3339 seconds)
-DOCKER_USER ?= "NO-USER-DEFINED"
 
 .PHONY: start stop purge
 
@@ -17,7 +16,7 @@ start:
 
 	sudo systemctl daemon-reload
 	sudo systemctl enable "$(PKG).service"
-	sudo systemctl start "$(PKG).service"
+	sudo systemctl restart "$(PKG).service"
 
 	systemctl status $(PKG).service --no-pager -l
 	printf "\\nTo view logs run:\\n$ journalctl -u $(PKG).service --since '$(NOW)'\\n"
@@ -32,16 +31,17 @@ purge: stop
 	sudo rm -rf "$(DATA)" || true
 
 # DO NOT DEPLOY AFTER THIS LINE
-.PHONY: package
+.PHONY: package deploy
 
 VERSION := $(shell git rev-parse HEAD | cut -c 1-8)
 package:
 	@echo "Building package $(PKG) version $(VERSION)"
+	if [ -z "$(DOCKER_USER)" ]; then echo "Error: Environment variable DOCKER_USER not set" >&2; exit 99; fi
 
 	sudo docker tag $(PKG) $(DOCKER_USER)/$(PKG):$(VERSION)
 	sudo docker push $(DOCKER_USER)/$(PKG):$(VERSION)
 
-	rm -r grocery-price-fetcher/ || true
+	rm -r $(PKG) / || true
 	mkdir -p $(PKG)
 	rsync -r ./* $(PKG) --exclude $(PKG) --exclude .gitignore
 
@@ -53,3 +53,32 @@ package:
 
 	echo $(VERSION) > "$(PKG)/version"
 	tar -czf $(PKG).tar.gz $(PKG)
+
+deploy: package
+	if [ -z "$(GCLOUD_VM)"      ]; then echo "Error: Environment variable GCLOUD_VM not set" >&2;      exit 99; fi
+	if [ -z "$(GCLOUD_ZONE)"    ]; then echo "Error: Environment variable GCLOUD_ZONE not set" >&2;    exit 99; fi
+	if [ -z "$(GCLOUD_PROJECT)" ]; then echo "Error: Environment variable GCLOUD_PROJECT not set" >&2; exit 99; fi
+
+	gcloud compute scp                  \
+		$(PKG).tar.gz                   \
+		$(GCLOUD_VM):~/$(PKG).tar.gz     \
+		--project='$(GCLOUD_PROJECT)'   \
+		--zone='$(GCLOUD_ZONE)'
+
+	gcloud compute ssh                  \
+		--project='$(GCLOUD_PROJECT)'   \
+		--zone='$(GCLOUD_ZONE)'         \
+		$(GCLOUD_VM)					\
+		--command="cd ~ && tar -xzf $(PKG).tar.gz && cd $(PKG) && make start"
+
+	@echo "Allowing server to start..."
+	sleep 10
+	
+	curl --fail http://$$(                \
+		gcloud compute instances describe \
+		  $(GCLOUD_VM)                    \
+		  --project=$(GCLOUD_PROJECT)     \
+		  --zone=$(GCLOUD_ZONE)           \
+		  | grep natIP                    \
+		  | sed 's#^.*natIP: \(.*\)#\1#'  \
+		)/api/helloworld

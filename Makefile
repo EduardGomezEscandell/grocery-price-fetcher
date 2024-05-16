@@ -1,4 +1,4 @@
-.PHONY: tidy build-go build-js lint test update-golden quality run-mock build-docker push start stop clean
+.PHONY: tidy build-go build-js lint test update-golden quality run-mock build-docker package deploy full-start start stop clean
 
 tidy:
 	go mod tidy
@@ -33,8 +33,11 @@ run-mock: stop
 build-docker: build-go build-js
 	cd deploy/container && make build
 
-package: push
+package:
 	cd deploy/host && make package
+
+deploy:
+	cd deploy/host && make deploy
 
 full-start: build-docker start
 
