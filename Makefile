@@ -1,4 +1,4 @@
-.PHONY: tidy build-go build-js lint test update-golden quality run-mock containerize push run stop clean
+.PHONY: tidy build-go build-js lint test update-golden quality run-mock build-docker push start stop clean
 
 tidy:
 	go mod tidy
@@ -29,20 +29,21 @@ run-mock: stop
 # Fast to spin up
 	cd frontend && npm run start
 
-containerize: build-go build-js
-	cd deploy/container && ./filesystem.sh build
-	cd deploy/container && sudo docker build . -t grocery-price-fetcher
+build-docker: build-go build-js
+	cd deploy/container && make build
 
-push: containerize
-	sudo docker tag grocery-price-fetcher edugomez/grocery-price-fetcher:latest
-	sudo docker push edugomez/grocery-price-fetcher:latest
+package: push
+	cd deploy/host && make package
 
-run: stop containerize
-	cd deploy && sudo docker-compose up
+full-start: build-docker start
+
+start:
+	cd deploy/host && make start
 
 stop:
-	sudo docker container rm -f `sudo docker container ls -a | grep grocery-server | cut -c-12` || true
+	cd deploy/host && make stop
 
-clean: stop
-	rm -r bin
-	cd deploy && ./filesystem.sh clean
+clean:
+	rm -r bin || true
+	cd deploy/container && make clean
+	cd deploy/host && make purge

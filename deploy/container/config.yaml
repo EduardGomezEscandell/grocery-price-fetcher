@@ -2,9 +2,9 @@ verbosity: 2
 database:
   type: json
   options:
-    products: '/mnt/grocery-server/data/products.json'
-    recipes:  '/mnt/grocery-server/data/recipes.json'
-    menus:    '/mnt/grocery-server/data/menus.json'
-    pantries:   '/mnt/grocery-server/data/pantries.json'
-frontend: '/usr/share/grocery-server/frontend'
+    products: '/mnt/grocery-price-fetcher/products.json'
+    recipes:  '/mnt/grocery-price-fetcher/recipes.json'
+    menus:    '/mnt/grocery-price-fetcher/menus.json'
+    pantries:   '/mnt/grocery-price-fetcher/pantries.json'
+frontend: '/usr/share/grocery-price-fetcher/frontend'
 address: 0.0.0.0:3000

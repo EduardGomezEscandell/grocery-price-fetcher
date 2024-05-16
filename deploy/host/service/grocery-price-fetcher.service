@@ -1,0 +1,9 @@
+[Unit]
+Description=Grocery Price Fetcher Server
+
+[Service]
+ExecStart=docker compose up
+WorkingDirectory=/etc/grocery-price-fetcher/
+
+[Install]
+WantedBy=multi-user.target

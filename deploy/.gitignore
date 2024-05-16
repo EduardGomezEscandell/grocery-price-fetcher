@@ -1,1 +1,3 @@
-root
+container/root
+host/grocery-price-fetcher
+host/grocery-price-fetcher.tar.gz

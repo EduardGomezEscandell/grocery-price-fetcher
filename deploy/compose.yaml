@@ -1,9 +1,0 @@
-services:
-  grocery:
-    image: docker.io/library/grocery-server
-    ports:
-      - 80:3000
-    volumes:
-      - type: bind
-        source: ./data
-        target: /mnt/grocery-server/data/
