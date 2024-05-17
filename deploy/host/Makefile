@@ -4,9 +4,15 @@ DATA := /var/lib/$(PKG)
 SERVICE := /etc/systemd/system/$(PKG).service
 NOW := $$(date --rfc-3339 seconds)
 
-.PHONY: start stop purge
+.PHONY: start stop purge help
 
-start:
+help: ## Show this help message
+	@echo "Grocery Price Fetcher Deployment Makefile"
+	@echo ""
+	@echo "COMMANDS"
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+start: ## Install and start the service
 	sudo mkdir -p "$(ETC)"
 	sudo mkdir -p "$(DATA)"
 
@@ -21,11 +27,11 @@ start:
 	systemctl status $(PKG).service --no-pager -l
 	printf "\\nTo view logs run:\\n$ journalctl -u $(PKG).service --since '$(NOW)'\\n"
 
-stop:
+stop: ## Stop the service
 	sudo systemctl stop "$(PKG).service"    || true
 	sudo systemctl disable "$(PKG).service" || true
 
-purge: stop
+purge: stop ## Stop and remove all service files and data
 	sudo rm -rf "$(SERVICE)"  || true
 	sudo rm -rf "$(ETC)" || true
 	sudo rm -rf "$(DATA)" || true
@@ -34,7 +40,7 @@ purge: stop
 .PHONY: package deploy
 
 VERSION := $(shell git describe --tags --always --dirty)
-package:
+package: ## Build a deployable package (requires DOCKER_USER)
 	@echo "Building package $(PKG) version $(VERSION)"
 	if [ -z "$(DOCKER_USER)" ]; then echo "Error: Environment variable DOCKER_USER not set" >&2; exit 99; fi
 
@@ -54,7 +60,7 @@ package:
 	echo $(VERSION) > "$(PKG)/version"
 	tar -czf $(PKG).tar.gz $(PKG)
 
-deploy: package
+deploy: package ## Deploy the package to a remote server (requires GCLOUD_VM, GCLOUD_ZONE, GCLOUD_PROJECT)
 	if [ -z "$(GCLOUD_VM)"      ]; then echo "Error: Environment variable GCLOUD_VM not set" >&2;      exit 99; fi
 	if [ -z "$(GCLOUD_ZONE)"    ]; then echo "Error: Environment variable GCLOUD_ZONE not set" >&2;    exit 99; fi
 	if [ -z "$(GCLOUD_PROJECT)" ]; then echo "Error: Environment variable GCLOUD_PROJECT not set" >&2; exit 99; fi
