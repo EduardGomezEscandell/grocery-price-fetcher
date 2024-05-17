@@ -2,17 +2,36 @@ import React from 'react'
 import './TopBar.css'
 
 interface Props {
-    components: { (): JSX.Element }[]
+    left: JSX.Element
+    right: JSX.Element
 }
 
-export default class TopBar extends React.Component<Props> {
-    separator: JSX.Element = <></>
-
-    render(): JSX.Element {
-        return (
-            <div className='TopBar'>
-                {this.props.components.map(f => f())}
-            </div>
-        )
+export default function TopBar(pp: Props): JSX.Element {
+    const style: React.CSSProperties = {
+        width: '33%',
+        display: 'flex',
     }
+
+    return (
+        <div className='TopBar'>
+            <div style={{...style, justifyContent: 'flex-start'}}>
+                {pp.left}
+            </div>
+            <div style={{...style, justifyContent: 'center'}}>
+                <Title />
+            </div>
+            <div style={{...style, justifyContent: 'flex-end'}}>
+                {pp.right}
+            </div>
+        </div>
+    )
+}
+
+function Title(): JSX.Element {
+    return <text key='1' className='Title'>
+        <img src='/logo64.png' alt='logo'style={{ alignSelf: 'center', scale: '90%', background: '#00000000' }}/>
+        <text>
+            Grocery Price Fetcher
+        </text>
+    </text>
 }

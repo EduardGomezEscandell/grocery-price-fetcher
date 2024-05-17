@@ -31,15 +31,10 @@ export default class MenuTable extends React.Component<Props> {
     render(): JSX.Element {
         return (
             <>
-                <TopBar components={[
-                    () => <p key='1' className='TopBar.Text'>Grocery Price Fetcher</p>,
-                    () => <p key='2' className='TopBar.Text'>Menu</p>,
-                    () => <button key='3'
-                        className='TopBar.Button'
-                        onClick={this.props.onComplete}
-                    >Guardar i continuar</button>,
-                ]}
-                ></TopBar>
+                <TopBar
+                    left= {<p key='2' className='Text'>Menu</p>}
+                    right={<button key='3' className='Button' onClick={this.props.onComplete}>Guardar i continuar</button>}
+                />
                 <div className='Menu' key='menu-table'>
                     <table>
                         <tbody>
