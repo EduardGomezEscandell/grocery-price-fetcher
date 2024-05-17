@@ -29,19 +29,8 @@ export default function Pantry(pp: Props) {
     return (
         <>
             <TopBar
-                components={[
-                    () => <button
-                        onClick={pp.onBackToMenu}
-                        key='go-back'>
-                        Tornar al menú
-                    </button>,
-                    () => (<p key='pantry'>Rebost</p>),
-                    () => (<SaveButton
-                        key='save'
-                        backend={pp.backend}
-                        globalState={pp.globalState}
-                    />)
-                ]}
+                left={<button onClick={pp.onBackToMenu} key='go-back'>Tornar al menú</button>}
+                right={<SaveButton key='save' backend={pp.backend} globalState={pp.globalState}/>}
             />
             <PantryTable
                 shop={pp.globalState.shoppingList}
@@ -96,7 +85,7 @@ class PantryTable extends React.Component<PantryTableProps> {
                     <tbody>
                         {
                             this.shop.ingredients.map((i: Ingredient, idx: number) => (
-                                <RenderIngredient 
+                                <RenderIngredient
                                     key={i.name}
                                     id={idx % 2 === 0 ? 'even' : 'odd'}
                                     ingredient={i}
@@ -128,7 +117,7 @@ class PantryTable extends React.Component<PantryTableProps> {
                             <td className='Number'>{Numbers.asEuro(this.total.remaining)}</td>
                         </tr>
                         <tr>
-                            <td colSpan={8} style={{background: 'black'}}>    </td>
+                            <td colSpan={8} style={{ background: 'black' }}>    </td>
                         </tr>
                         <tr style={{
                             fontWeight: 'bold',
