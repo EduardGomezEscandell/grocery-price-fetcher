@@ -35,7 +35,7 @@ build-js: ## Build the frontend JavaScript code
 	cd frontend && npm install
 	cd frontend && npm run build
 
-run-mock: stop ## Start the frontend with a mock backend
+run-mock: ## Start the frontend with a mock backend
 # Serves the frontend with a mock back-end
 # Fast to spin up
 	cd frontend && npm run start
