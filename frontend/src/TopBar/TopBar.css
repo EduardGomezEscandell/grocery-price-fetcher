@@ -4,6 +4,7 @@
     height: 60px;
     display: flex;
     justify-content: space-between;
+    border-bottom: 1px solid gray;
 
     p {
         font-size: auto;
@@ -18,12 +19,20 @@
         display: flex;
         align-items: center;
 
-        text {
-            font-size: 20px;
+        .Text {
+            font-size: auto;
             font-weight: bold;
             color: black;
             margin: 10px;
             vertical-align: middle;
+        }
+
+        .Logo {
+            scale: auto;
+            height: 100%;
+            margin: 10px;
+            vertical-align: middle;
+            background-color: rgba(0, 0, 0, 0);
         }
     }
 
@@ -36,5 +45,6 @@
         height: 40px;
         margin: 10px;
         vertical-align: middle;
+        border-radius: 5px;
     }
 }
