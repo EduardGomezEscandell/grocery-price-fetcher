@@ -28,10 +28,10 @@ export default function TopBar(pp: Props): JSX.Element {
 }
 
 function Title(): JSX.Element {
-    return <text key='1' className='Title'>
-        <img src='/logo64.png' alt='logo'style={{ alignSelf: 'center', scale: '90%', background: '#00000000' }}/>
-        <text>
+    return <div key='1' className='Title'>
+        <img src='/logo64.png' alt='logo' className="Logo"/>
+        <div className='Text'>
             Grocery Price Fetcher
-        </text>
-    </text>
+        </div>
+    </div>
 }

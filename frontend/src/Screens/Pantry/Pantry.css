@@ -1,38 +1,31 @@
 .Pantry {
     overflow: auto;
-    background: white;
+    background: lightblue;
     width: 100%;
+    border-left: #1a237e;
 
     height: 100%;
     flex-grow: 1;
     display: flex;
 
-    .Table {
+    table {
         margin: auto;
         align-items: center;
         width: fit-content;
         text-align: left;
         border-collapse: collapse;
-        background: black;
+        border-left: 1px solid #1a237e;
+        border-right: 1px solid #1a237e;
 
         thead {
             position: sticky;
             top: 0;
             color: white;
-
-            .Header {
-                text-align: center;
-                background-color: #1a237e;
-                font-size: 20px;
-                font-weight: bold;
-            }
-
-            .SubHeader {
-                text-align: center;
-                background-color: #1a237e;
-                font-size: 20px;
-                font-weight: normal;
-            }
+            text-align: center;
+            background-color: #1a237e;
+            font-size: auto;
+            height: 40px;
+            font-weight: bold;
 
             #units {
                 background: #405adb;
@@ -89,9 +82,9 @@
         tfoot {
             position: sticky;
             bottom: 0;
-
-            font-size: 20px;
-            background: orange;
+            font-size: auto;
+            background:  #85a9db;
+            height: 60px;
 
 
             .Label {
@@ -104,6 +97,41 @@
                 width: 300px;
                 text-align: right;
                 padding-right: 20px;
+            }
+        }
+    }
+
+    .Dialog {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 80%;
+
+        dialog[open] {
+            width: 80%;
+            max-width: 400px;
+            border-radius: 10px;
+
+            h1 {
+                text-align: center;
+                font-weight: bold;
+            }
+
+            p {
+                text-align: left;
+                text-justify: distribute-all-lines;
+            }
+
+            input {
+                width: 80px;
+            }
+
+            .Amount {
+                font-weight: bold;
+            }
+
+            .OK {
+                text-align: center;
             }
         }
     }

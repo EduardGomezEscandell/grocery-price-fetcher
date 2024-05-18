@@ -52,6 +52,7 @@ function MealPicker(pp: Props) {
                             type="number"
                             min="0"
                             value={amount}
+                            onClick={(e) => {e.target instanceof HTMLInputElement && e.target.select()}}
                             onChange={s => setAmount(s.target.value)}
                             contentEditable={name !== undefined && name !== ""}
                             style={{ width: '50px', height: '25px' }}

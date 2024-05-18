@@ -2,8 +2,8 @@ import React, { useState } from 'react'
 import { Ingredient, ShoppingList, State } from '../../State/State.tsx';
 import Backend from '../../Backend/Backend.tsx';
 import TopBar from '../../TopBar/TopBar.tsx';
-import RenderIngredient, { Numbers } from './Ingredient.tsx';
 import SaveButton from './SaveButton.tsx';
+import { FocusIngredient, RowIngredient, Numbers } from './PantryIngredient.tsx';
 import './Pantry.css'
 
 interface Props {
@@ -22,20 +22,15 @@ export default function Pantry(pp: Props) {
         .withAvailable(available, setAvailable)
         .withRemaining(remaining, setRemaining)
 
-    const baseStyle: React.CSSProperties = {
-        width: '800px',
-    }
-
     return (
         <>
             <TopBar
                 left={<button onClick={pp.onBackToMenu} key='go-back'>Tornar al menú</button>}
-                right={<SaveButton key='save' backend={pp.backend} globalState={pp.globalState}/>}
+                right={<SaveButton key='save' backend={pp.backend} globalState={pp.globalState} />}
             />
             <PantryTable
                 shop={pp.globalState.shoppingList}
                 total={total}
-                style={baseStyle}
             />
         </>
     )
@@ -44,95 +39,78 @@ export default function Pantry(pp: Props) {
 class PantryTableProps {
     shop: ShoppingList
     total: Total
-    style: React.CSSProperties
 }
 
-class PantryTable extends React.Component<PantryTableProps> {
-    shop: ShoppingList
-    total: Total
-    style: React.CSSProperties
+function PantryTable(pp: PantryTableProps): JSX.Element {
+    const [focussed, setFocussed] = useState<RowIngredient | null>(null)
 
-    constructor(pp: PantryTableProps) {
-        super(pp)
-        this.shop = pp.shop
-        this.total = pp.total
-        this.style = pp.style ? pp.style : {}
-    }
+    return (
+        <div className='Pantry' key='pantry'>
+            <table>
+                <thead>
+                    <tr key='header'>
+                        <th>Producte</th>
+                        <th>En tens</th>
+                        <th>Hauràs de comprar-ne</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {
+                        pp.shop.ingredients.map((i: Ingredient, idx: number) => (
+                            <RowIngredient
+                                key={i.name}
+                                id={idx % 2 === 0 ? 'even' : 'odd'}
+                                ingredient={i}
+                                onChange={(value: number) => {
+                                    i.have = value
+                                    pp.total
+                                        .compute(pp.shop.ingredients)
+                                        .commit()
+                                }}
+                                onClick={(ri: RowIngredient) => {
+                                    console.log('click', ri)
+                                    setFocussed(ri)
+                                }
+                                }
+                            />
+                        ))
+                    }
+                </tbody>
+                <tfoot>
+                    <tr >
+                        <td colSpan={3} style={{ background: 'black' }}>    </td>
+                    </tr>
+                    <tr style={{
+                        fontWeight: 'bold',
+                    }}>
+                        <td colSpan={2} style={{ paddingLeft: '20px' }}>Total a comprar</td>
+                        <td className='Number'>{Numbers.asEuro(pp.total.purchased)}</td>
+                    </tr>
 
-    render(): JSX.Element {
-        return (
-            <div key='pantry' className='Pantry'>
-                <table className='Table'>
-                    <thead>
-                        <tr className='Header' key='header'>
-                            <td rowSpan={2}>Producte</td>
-                            <td colSpan={3} id='units'> <b>Unitats</b></td>
-                            <td colSpan={3} id='packs'> <b>Paquets</b></td>
-                            <th rowSpan={2}>Preu</th>
-                        </tr>
-                        <tr className='SubHeader' key='subheader' style={{
-                            borderBottom: '1px solid black',
-                        }}>
-                            <td key='1' id='units'>Tens</td>
-                            <td key='2' id='units'>Necessites</td>
-                            <td key='3' id='units'>Manquen</td>
-
-                            <td key='4' id='packs'>Tamany</td>
-                            <td key='5' id='packs'>Manquen</td>
-                            <td key='6' id='packs'>Preu</td>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {
-                            this.shop.ingredients.map((i: Ingredient, idx: number) => (
-                                <RenderIngredient
-                                    key={i.name}
-                                    id={idx % 2 === 0 ? 'even' : 'odd'}
-                                    ingredient={i}
-                                    onChange={(value: number) => {
-                                        i.have = value
-                                        this.total
-                                            .compute(this.shop.ingredients)
-                                            .commit()
-                                    }}
-                                />
-                            ))
-                        }
-                    </tbody>
-                    <tfoot>
-                        <tr style={{
-                            fontWeight: 'bold',
-                        }}>
-                            <td colSpan={7} style={{ paddingLeft: '20px' }}>Total a comprar</td>
-                            <td className='Number'>{Numbers.asEuro(this.total.purchased)}</td>
-                        </tr>
-                        <tr >
-                            <td colSpan={6} style={{ paddingLeft: '20px' }}>Menjar que tens al rebost</td>
-                            <td className='Number'>+</td>
-                            <td className='Number'>{Numbers.asEuro(this.total.available)}</td>
-                        </tr>
-                        <tr >
-                            <td colSpan={6} style={{ paddingLeft: '20px' }}>Menjar que quedarà al rebost</td>
-                            <td className='Number'>-</td>
-                            <td className='Number'>{Numbers.asEuro(this.total.remaining)}</td>
-                        </tr>
-                        <tr>
-                            <td colSpan={8} style={{ background: 'black' }}>    </td>
-                        </tr>
-                        <tr style={{
-                            fontWeight: 'bold',
-                        }}>
-                            <td colSpan={7} style={{ paddingLeft: '20px' }}>Cost del menjar consumit</td>
-                            <td className='Number'>{Numbers.asEuro(this.total.consumed)}</td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-        )
-    }
-
-
+                    <tr style={{
+                        fontWeight: 'bold',
+                    }}>
+                        <td colSpan={2} style={{ paddingLeft: '20px' }}>Cost del menjar consumit</td>
+                        <td className='Number'>{Numbers.asEuro(pp.total.consumed)}</td>
+                    </tr>
+                </tfoot>
+            </table>
+            {
+                focussed && <FocusIngredient
+                    ingredient={focussed.props.ingredient}
+                    onClose={() => setFocussed(null)}
+                    onChange={(value: number) => {
+                        focussed.props.ingredient.have = value
+                        pp.total
+                            .compute(pp.shop.ingredients)
+                            .commit()
+                    }}
+                />
+            }
+        </div>
+    )
 }
+
 
 
 class Total {
