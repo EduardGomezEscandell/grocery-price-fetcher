@@ -1,4 +1,4 @@
-.PHONY: tidy build-go build-js lint test update-golden quality run-mock build-docker package deploy full-start install start stop clean
+.PHONY: tidy build-go build-js lint test update-golden quality run-mock build-docker package deploy full-start install start stop uninstall clean
 
 
 VERSION := $(shell git describe --tags --always --dirty)
@@ -59,6 +59,9 @@ start: ## Self-host the application (see deploy/start Makefile)
 
 stop: ## Stop the application (see deploy/host Makefile)
 	cd deploy/host && make stop
+
+uninstall: ## Uninstall the application (see deploy/purge Makefile)
+	cd deploy/host && make purge
 
 clean: ## Clean up build artifacts, Docker containers, and images
 	rm -r bin || true
