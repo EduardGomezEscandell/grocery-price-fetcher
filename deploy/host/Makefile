@@ -1,9 +1,9 @@
 PKG := grocery-price-fetcher
 ETC := /etc/$(PKG)
 SERVICE := /etc/systemd/system/$(PKG).service
-NOW := $$(date --rfc-3339 seconds)
+NOW := $(shell date --rfc-3339 seconds)
 
-.PHONY: start stop purge help
+.PHONY: install start stop purge help
 
 help: ## Show this help message
 	@echo "Grocery Price Fetcher Deployment Makefile"
@@ -11,7 +11,7 @@ help: ## Show this help message
 	@echo "COMMANDS"
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-start: ## Install and start the service
+install: ## Install the service
 	sudo mkdir -p "$(ETC)"
 
 	sudo cp ./service/$(PKG).service "$(SERVICE)"
@@ -19,20 +19,25 @@ start: ## Install and start the service
 	sudo cp -r ./sample-data "$(ETC)/sample-data"
 
 	sudo systemctl daemon-reload
+
+start: ## Start the service
+	sudo systemctl daemon-reload
 	sudo systemctl enable "$(PKG).service"
 	sudo systemctl restart "$(PKG).service"
-
-	systemctl status $(PKG).service --no-pager -l
-	printf "\\nTo view logs run:\\n$ journalctl -u $(PKG).service --since '$(NOW)'\\n"
+	systemctl status "$(PKG).service" --no-pager -l
+	@echo To view logs run:
+	@echo
+	@echo journalctl -u \"$(PKG).service\" --since \"$(NOW)\"
+	@echo
 
 stop: ## Stop the service
 	sudo systemctl stop "$(PKG).service"    || true
 	sudo systemctl disable "$(PKG).service" || true
 
 purge: stop ## Stop and remove all service files and data
-	sudo docker compose rm --force --volumes || true
-	sudo rm -rf "$(SERVICE)"     			 || true
-	sudo rm -rf "$(ETC)" 	     			 || true
+	sudo docker compose rm -fsv || true
+	sudo rm -rf "$(SERVICE)"    || true
+	sudo rm -rf "$(ETC)" 	    || true
 
 # DO NOT DEPLOY AFTER THIS LINE
 .PHONY: package deploy
@@ -72,12 +77,20 @@ deploy: package ## Deploy the package to a remote server (requires GCLOUD_VM, GC
 	gcloud compute ssh                  \
 		--project='$(GCLOUD_PROJECT)'   \
 		--zone='$(GCLOUD_ZONE)'         \
-		$(GCLOUD_VM)					\
-		--command="cd ~ && tar -xzf $(PKG).tar.gz && cd $(PKG) && make start"
+		$(GCLOUD_VM)                    \
+		--command="cd ~ && tar -xzf $(PKG).tar.gz && cd $(PKG) && make install && make start"
 
 	@echo "Allowing server to start..."
 	sleep 10
+
+	@echo "Deployment logs:"
+	gcloud compute ssh                  \
+		--project='$(GCLOUD_PROJECT)'   \
+		--zone='$(GCLOUD_ZONE)'         \
+		$(GCLOUD_VM)                    \
+		--command="journalctl -u '$(PKG).service' --since '$(NOW)' --no-pager -l"
 	
+	@echo "Deployment sanity-test..."
 	curl --fail http://$$(                \
 		gcloud compute instances describe \
 		  $(GCLOUD_VM)                    \
