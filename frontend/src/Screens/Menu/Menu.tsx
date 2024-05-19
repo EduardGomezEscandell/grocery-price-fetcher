@@ -187,6 +187,7 @@ export default class MenuTable extends React.Component<Props> {
                     </div>
                     <div className='Footer'>
                         <button className='Button' onClick={() => {
+                            this.props.globalState.setMenu(this.props.globalState.menu) // Trigger a cleanup
                             this.setState({
                                 ...this.state,
                                 focus: undefined
