@@ -1,6 +1,5 @@
 PKG := grocery-price-fetcher
 ETC := /etc/$(PKG)
-DATA := /var/lib/$(PKG)
 SERVICE := /etc/systemd/system/$(PKG).service
 NOW := $$(date --rfc-3339 seconds)
 
@@ -14,11 +13,10 @@ help: ## Show this help message
 
 start: ## Install and start the service
 	sudo mkdir -p "$(ETC)"
-	sudo mkdir -p "$(DATA)"
 
 	sudo cp ./service/$(PKG).service "$(SERVICE)"
 	sudo cp ./compose.yaml "$(ETC)/compose.yaml"
-	sudo cp ./data/* "$(DATA)"
+	sudo cp -r ./sample-data "$(ETC)/sample-data"
 
 	sudo systemctl daemon-reload
 	sudo systemctl enable "$(PKG).service"
@@ -32,9 +30,9 @@ stop: ## Stop the service
 	sudo systemctl disable "$(PKG).service" || true
 
 purge: stop ## Stop and remove all service files and data
-	sudo rm -rf "$(SERVICE)"  || true
-	sudo rm -rf "$(ETC)" || true
-	sudo rm -rf "$(DATA)" || true
+	sudo docker compose rm --force --volumes || true
+	sudo rm -rf "$(SERVICE)"     			 || true
+	sudo rm -rf "$(ETC)" 	     			 || true
 
 # DO NOT DEPLOY AFTER THIS LINE
 .PHONY: package deploy
