@@ -9,13 +9,16 @@ on:
 jobs:
   quality-go:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        module: [backend, end-to-end]
     steps:
     - name: Check out repository
       uses: actions/checkout@v4
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version-file: go.mod
+        go-version-file: go.work
         check-latest: true
         cache: false
     - name: Install Make
@@ -24,18 +27,22 @@ jobs:
         sudo apt update
         sudo apt install -y make
     - name: Tidy up
+      working-directory: ${{ github.workspace }}/${{ matrix.module}}
       run: |
-        make tidy
+        go mod tidy
         if [ -n "$(git status --porcelain)" ]; then
-          echo "Error: go.mod and/or go.sum are out of sync. Please run 'go mod tidy' and commit the changes." &>2
+          echo "Error: go.mod and/or go.sum are out of sync. Please run 'go mod tidy' and commit the changes." 1>&2
           exit 1
         fi
-    - name: Build Go
-      run: make build-go
-    - name: Lint Go
+    - name: Build
+      if: matrix.module != 'end-to-end'
+      working-directory: ${{ github.workspace }}/${{ matrix.module}}
+      run: make build
+    - name: Lint
       uses: golangci/golangci-lint-action@v4
       with:
         version: latest
+        working-directory: ${{ github.workspace }}/${{ matrix.module}}
 
   quality-js:
     runs-on: ubuntu-latest
@@ -71,7 +78,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version-file: go.mod
+        go-version-file: go.work
         check-latest: true
         cache: false
     - name: Sanity check
