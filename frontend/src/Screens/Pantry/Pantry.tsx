@@ -42,11 +42,16 @@ class PantryTableProps {
 }
 
 function PantryTable(pp: PantryTableProps): JSX.Element {
-    const [focussed, setFocussed] = useState<RowIngredient | null>(null)
+    const [focussed, setFocussed] = useState<RowIngredient | undefined>(undefined)
+
+    const tableStyle: React.CSSProperties = {}
+    if (focussed) {
+        tableStyle.filter = 'blur(5px)'
+    }
 
     return (
         <div className='Pantry' key='pantry'>
-            <table>
+            <table style={tableStyle}>
                 <thead>
                     <tr key='header'>
                         <th>Producte</th>
@@ -68,10 +73,12 @@ function PantryTable(pp: PantryTableProps): JSX.Element {
                                         .commit()
                                 }}
                                 onClick={(ri: RowIngredient) => {
-                                    console.log('click', ri)
-                                    setFocussed(ri)
-                                }
-                                }
+                                    if (focussed) {
+                                        setFocussed(undefined)
+                                    } else {
+                                        setFocussed(ri)
+                                    }
+                                }}
                             />
                         ))
                     }
@@ -98,7 +105,7 @@ function PantryTable(pp: PantryTableProps): JSX.Element {
             {
                 focussed && <FocusIngredient
                     ingredient={focussed.props.ingredient}
-                    onClose={() => setFocussed(null)}
+                    onClose={() => setFocussed(undefined)}
                     onChange={(value: number) => {
                         focussed.props.ingredient.have = value
                         pp.total
