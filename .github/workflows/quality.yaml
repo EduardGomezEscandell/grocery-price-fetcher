@@ -61,7 +61,7 @@ jobs:
     - name: Build front-end
       run: make build-js
   
-  deployment-sanity:
+  end-to-end:
     runs-on: ubuntu-latest
     steps:
     - name: Check out repository
@@ -81,13 +81,5 @@ jobs:
         go-version-file: go.work
         check-latest: true
         cache: false
-    - name: Sanity check
-      run: make full-start
-    - name: Wait for the application to start
-      run: sleep 10
-    - name: Test endpoint
-      run: curl http://localhost:80
-    - name: Stop the application
-      run: make clean
     - name: Run end-to-end tests
       run: make test
