@@ -25,12 +25,14 @@
             color: black;
             margin: 10px;
             vertical-align: middle;
+            margin: auto;
         }
 
         .Logo {
             scale: auto;
             height: 100%;
-            margin: 10px;
+            margin: auto;
+            padding: auto;
             vertical-align: middle;
             background-color: rgba(0, 0, 0, 0);
         }
