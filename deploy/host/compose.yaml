@@ -4,7 +4,19 @@ services:
     ports:
       - 80:3000
     volumes:
-      - type: bind
-        source: /var/lib/grocery-price-fetcher/
-        target: /mnt/grocery-price-fetcher/
+      - data:/mnt/grocery-price-fetcher/
+    links:
+      - prepopulate
+    depends_on:
+      prepopulate:
+        condition: service_completed_successfully
+  prepopulate:
+    image: ubuntu
+    command: ["/mnt/sample-data/prepopulate.sh", "/mnt/sample-data/data", "/mnt/grocery-price-fetcher"]
+    volumes:
+      - data:/mnt/grocery-price-fetcher/
+      - ./sample-data:/mnt/sample-data/:ro
+volumes:
+  data:
+    driver: local
 
