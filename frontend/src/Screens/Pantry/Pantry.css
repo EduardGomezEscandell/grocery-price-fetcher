@@ -120,10 +120,9 @@
             p {
                 text-align: left;
                 text-justify: distribute-all-lines;
-            }
-
-            input {
-                width: 80px;
+                width: 95%;
+                margin: auto;
+                padding: 10px;
             }
 
             .Amount {
@@ -132,6 +131,10 @@
 
             .OK {
                 text-align: center;
+                button {
+                    background-color: lightgray;
+                    width: 95%;
+                }
             }
         }
     }
