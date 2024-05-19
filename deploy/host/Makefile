@@ -1,7 +1,9 @@
 PKG := grocery-price-fetcher
 ETC := /etc/$(PKG)
 SERVICE := /etc/systemd/system/$(PKG).service
-NOW := $(shell date --rfc-3339 seconds)
+
+NOW := $(shell date +"%Y-%m-%d %H:%M:%S")
+NOW_UTC := $(shell date +"%Y-%m-%d %H:%M:%S" --utc)
 
 .PHONY: install start stop purge help
 
@@ -88,7 +90,7 @@ deploy: package ## Deploy the package to a remote server (requires GCLOUD_VM, GC
 		--project='$(GCLOUD_PROJECT)'   \
 		--zone='$(GCLOUD_ZONE)'         \
 		$(GCLOUD_VM)                    \
-		--command="journalctl -u '$(PKG).service' --since '$(NOW)' --no-pager -l"
+		--command="journalctl -u '$(PKG).service' --since '$(NOW_UTC)' --no-pager -l"
 	
 	@echo "Deployment sanity-test..."
 	curl --fail http://$$(                \
