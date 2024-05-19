@@ -105,16 +105,6 @@ export class Menu {
                     }
                 })
             })
-
-            // Padding small meals
-            const maxDishesPerMeal = Math.max(...menu.days.map(day => Math.max(...day.meals.map(meal => meal.dishes.length))))
-            menu.days.forEach(day => {
-                day.meals.forEach(meal => {
-                    while (meal.dishes.length < maxDishesPerMeal) {
-                        meal.dishes.push(new Dish("", 0))
-                    }
-                })
-            })
         } catch (e) {
             console.error(e)
         }
@@ -186,14 +176,25 @@ export class State {
 
     attachMenu(menu: Menu, setMenu: (m: Menu) => void): State {
         this.menu = menu
-        this.setMenu = setMenu
+        this._setMenu = setMenu
         return this
     }
 
     menu: Menu;
-    setMenu: (m: Menu) => void;
+    private _setMenu: (m: Menu) => void;
 
-    dishes: Array<string>;
-    shoppingList: ShoppingList;
+    setMenu(menu: Menu) {
+        menu.days.forEach(day => {
+            day.meals.forEach(meal => {
+                meal.dishes = meal.dishes
+                    .filter(dish => dish.name !== "")
+                    .filter(dish => dish.amount > 0)
+            })
+        })
+        this._setMenu(menu)
+    }
+
+dishes: Array<string>;
+shoppingList: ShoppingList;
 }
 

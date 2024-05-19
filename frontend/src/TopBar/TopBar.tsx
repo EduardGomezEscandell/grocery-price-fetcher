@@ -31,7 +31,7 @@ function Title(): JSX.Element {
     return <div key='1' className='Title'>
         <img src='/logo64.png' alt='logo' className="Logo"/>
         <div className='Text'>
-            Grocery Price Fetcher
+            El&nbsp;rebost
         </div>
     </div>
 }

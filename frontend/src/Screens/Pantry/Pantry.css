@@ -39,6 +39,7 @@
         tbody {
             overflow: auto;
             font-size: auto;
+            cursor: pointer;
 
             .Label {
                 width: 400px;

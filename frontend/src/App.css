@@ -3,9 +3,10 @@ button {
   font-weight: bold;
   color: black;
   border: black;
-  padding: 10px;
+  padding: auto;
   height: 40px;
   margin: 10px;
   vertical-align: middle;
   border-radius: 5px;
+  cursor: pointer;
 }
