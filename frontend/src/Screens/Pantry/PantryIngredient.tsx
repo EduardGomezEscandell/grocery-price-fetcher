@@ -1,5 +1,6 @@
 import React from 'react'
 import { Ingredient } from '../../State/State.js'
+import { asEuro, positive, round2, makePlural } from '../../Numbers/Numbers.ts'
 import './Pantry.css'
 
 interface Props {
@@ -19,7 +20,7 @@ class PantryIngredient<T extends Props, S extends State = State> extends React.C
 
     constructor(pp: T) {
         super(pp)
-        const def = Numbers.positive(pp.ingredient.need - pp.ingredient.have)
+        const def = positive(pp.ingredient.need - pp.ingredient.have)
         const pks = Math.ceil(def / pp.ingredient.batch_size)
 
         this.state = {
@@ -35,8 +36,8 @@ class PantryIngredient<T extends Props, S extends State = State> extends React.C
     }
 
     onChange(s: React.ChangeEvent<HTMLInputElement>) {
-        const newStorage = Numbers.positive(parseFloat(s.target.value))
-        const newDeficit = Numbers.positive(this.props.ingredient.need - newStorage)
+        const newStorage = positive(parseFloat(s.target.value))
+        const newDeficit = positive(this.props.ingredient.need - newStorage)
         const newPackCount = Math.ceil(newDeficit / this.props.ingredient.batch_size)
         this.setState({
             ...this.state,
@@ -60,15 +61,15 @@ export class FocusIngredient extends PantryIngredient<FocusIngredientProps> {
                 <dialog open>
                     <h1>{this.props.ingredient.name}</h1>
                     <p>
-                        Tens <span className='Amount'>{Numbers.round2(this.props.ingredient.have)}</span> {makePlural(this.state.storage, "unitat", "unitats")} al teu rebost. En necessites{' '}
-                        <span className='Amount'>{Numbers.round2(this.props.ingredient.need)}</span>, i per tant te'n falten {' '}
-                        <span className='Amount'>{Numbers.round2(this.state.deficit)}</span>. Aquest producte es ven en
-                        paquets de <span className='Amount'>{Numbers.round2(this.props.ingredient.batch_size)}</span> {makePlural(this.props.ingredient.batch_size, "unitat", "unitats")},
-                        i per tant has de comprar  <span className='Amount'>{Numbers.round2(this.state.packs)}</span> {makePlural(this.state.packs, "paquet", "paquets")}.
+                        Tens <span className='Amount'>{round2(this.props.ingredient.have)}</span> {makePlural(this.state.storage, "unitat", "unitats")} al teu rebost. En necessites{' '}
+                        <span className='Amount'>{round2(this.props.ingredient.need)}</span>, i per tant te'n falten {' '}
+                        <span className='Amount'>{round2(this.state.deficit)}</span>. Aquest producte es ven en
+                        paquets de <span className='Amount'>{round2(this.props.ingredient.batch_size)}</span> {makePlural(this.props.ingredient.batch_size, "unitat", "unitats")},
+                        i per tant has de comprar  <span className='Amount'>{round2(this.state.packs)}</span> {makePlural(this.state.packs, "paquet", "paquets")}.
                     </p>
                     <p>
-                        Cada paquet costa <span className='Amount'>{Numbers.asEuro(this.props.ingredient.price)}</span>, i per
-                        tant et costarà <span className='Amount'>{Numbers.asEuro(this.state.cost)}</span>
+                        Cada paquet costa <span className='Amount'>{asEuro(this.props.ingredient.price)}</span>, i per
+                        tant et costarà <span className='Amount'>{asEuro(this.state.cost)}</span>
                     </p>
                     <div className='OK'>
                         <button onClick={this.props.onClose}>OK</button>
@@ -118,43 +119,11 @@ export class RowIngredient extends PantryIngredient<RowIngredientProps, RowIngre
                         datatype='number'
                     />
                 </td>
-                <td className='Number' key='price-total'> {Numbers.asEuro(this.state.cost)} </td>
+                <td className='Number' key='price-total'> {asEuro(this.state.cost)} </td>
             </tr>
         )
     }
 }
 
 
-export class Numbers {
-    static positive(x: number): number {
-        return x >= 0 ? x : 0
-    }
 
-    static asEuro(x: number): string {
-        return x.toFixed(2) + ' €'
-    }
-
-    static roundUpTo(x: number, divisor: number): number {
-        return Math.ceil(x / divisor) * divisor
-    }
-
-    static int(x: number): string {
-        return x.toFixed(0)
-    }
-
-    static round2(x: number): string {
-        let y = x.toFixed(2)
-        if (y.endsWith('.00')) {
-            return y.substring(0, y.length - 3)
-        }
-        if (y.endsWith('0')) {
-            return y.substring(0, y.length - 1)
-        }
-        return y
-    }
-
-}
-
-function makePlural(x: number, singular: string, plural: string): string {
-    return x === 1 ? singular : plural
-}

@@ -7,7 +7,8 @@
     display: flex;
     padding: 10px;
 
-    
+    background: lightblue;
+
     td {
         min-width: 13.5vw;
         max-width: 1vw;
@@ -20,65 +21,73 @@
 
     .Day {
         min-width: 250px;
-
-        border: 1px solid black;
         border-radius: 20px;
-
         align-content: center;
-        background-color: #eeeeee;
+        background: white;
 
         .Header {
-            background-color: lightblue;
+            background-color: #1a237e;
+            text-transform: uppercase;
+
+            border-radius: 20px 20px 0px 0px;
+
+            color: white;
             height: 50px;
             display: flex;
 
-            font-size: auto;
+            font-size: large;
             font-weight: bold;
 
             padding: 10px;
             align-items: center;
             justify-content: center;
-
-            border-top-right-radius: 20px;
-            border-top-left-radius: 20px;
-            border-bottom: 1px solid black;
         }
     }
 
     .Meal {
-        background-color: white;
-        border: 1px solid black;
-        width: 90%;
-        border-radius: 20px;
         margin: auto;
-        margin-top: 20px;
-        margin-bottom: 10px;
+        cursor: pointer;
 
-        .Header {
+        .MealHeader {
             font-size: auto;
-            height: 30px;
-            padding: 0px;
+            font-weight: bold;
+            color: white;
 
-            background-color: lightblue;
+            height: 40px;
+            padding: auto;
+
+            background-color: #579dff;
             display: flex;
 
             align-items: center;
             justify-content: center;
-
-            border-top-right-radius: 20px;
-            border-top-left-radius: 20px;
-            border-bottom: 1px solid black;
         }
 
         .Body {
             vertical-align: top;
-            padding: 5px;
+            display: flex;
+            flex-direction: column;
 
-            p {
+            .DishItem {
                 font-size: 16px;
+                display: flex;
+                padding: 5px;
+
+                .Amount {
+                    width: 20px;
+                    padding: 5px;
+
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .Name {
+                    width: 100%;
+                    padding: 5px;
+                }
             }
         }
-
     }
 
     .Focus {
@@ -86,6 +95,7 @@
         flex-direction: column;
         align-items: center;
         vertical-align: center;
+        padding: 100px;
 
         dialog {
             padding: 0px;
@@ -93,14 +103,25 @@
             max-width: 90%;
             width: 500px !important;
 
-            .Header {
-                background-color: #85a9db;
+            border-radius: 20px;
+            border: 1px solid black;
+
+            .FocusHeader {
+                background-color: #579dff;
+                color: white;
                 height: 50px;
-                font-size: 20px;
+                font-size: larger;
                 font-weight: bold;
+
+                border-top-left-radius: 20px;
+                border-top-right-radius: 20px;
+
+                display: flex;
+                justify-content: center;
+                align-items: center;
             }
 
-            .Body {
+            .FocusBody {
                 padding: 10px;
                 font-size: 16px;
 
@@ -121,7 +142,7 @@
 
                     input {
                         width: 20%;
-                        
+
                         height: 40px;
                         max-height: 40px;
 
@@ -138,7 +159,7 @@
                         text-align: center;
                         font-size: 16px;
                     }
-    
+
                     .Select {
                         width: 80%;
                         padding: 0px;
@@ -149,7 +170,8 @@
                     button {
                         width: 40px;
                         cursor: pointer;
-                        
+                        background: rgb(255, 196, 85);
+
                         height: 40px;
                         padding: 0px;
                         margin: 0px;
@@ -158,21 +180,34 @@
                         border-top-left-radius: 0%;
                         border-bottom-left-radius: 0%;
                     }
+
+
+                }
+
+                .AddOne {
+                    justify-content: center;
+                    align-items: center;
+                    border-radius: 10px;
+
+                    font-size: 24px;
+                    font-weight: normal;
+
+                    border: 1px solid black;
                 }
             }
 
-            .Footer {
-                background-color: lightgray;
+            .FocusFooter {
+                background-color: rgb(255, 196, 85);
                 height: 50px;
                 width: 100%;
-                
+
                 border-bottom-left-radius: 20px;
                 border-bottom-right-radius: 20px;
-                
+
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                
+
                 button {
                     font-size: 20px;
                     width: 100%;

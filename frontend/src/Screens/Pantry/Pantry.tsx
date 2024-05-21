@@ -3,7 +3,8 @@ import { Ingredient, ShoppingList, State } from '../../State/State.tsx';
 import Backend from '../../Backend/Backend.tsx';
 import TopBar from '../../TopBar/TopBar.tsx';
 import SaveButton from './SaveButton.tsx';
-import { FocusIngredient, RowIngredient, Numbers } from './PantryIngredient.tsx';
+import { FocusIngredient, RowIngredient } from './PantryIngredient.tsx';
+import { asEuro, positive } from '../../Numbers/Numbers.ts'
 import './Pantry.css'
 
 interface Props {
@@ -91,14 +92,13 @@ function PantryTable(pp: PantryTableProps): JSX.Element {
                         fontWeight: 'bold',
                     }}>
                         <td colSpan={2} style={{ paddingLeft: '20px' }}>Total a comprar</td>
-                        <td className='Number'>{Numbers.asEuro(pp.total.purchased)}</td>
+                        <td className='Number'>{asEuro(pp.total.purchased)}</td>
                     </tr>
-
                     <tr style={{
                         fontWeight: 'bold',
                     }}>
                         <td colSpan={2} style={{ paddingLeft: '20px' }}>Cost del menjar consumit</td>
-                        <td className='Number'>{Numbers.asEuro(pp.total.consumed)}</td>
+                        <td className='Number'>{asEuro(pp.total.consumed)}</td>
                     </tr>
                 </tfoot>
             </table>
@@ -147,13 +147,13 @@ class Total {
 
     compute(i: Ingredient[]): Total {
         this.consumed = i
-            .map(i => Numbers.positive(i.need) * i.price / i.batch_size)
+            .map(i => positive(i.need) * i.price / i.batch_size)
             .reduce((acc, x) => acc + x, 0)
         this.available = i
-            .map(i => Numbers.positive(i.have) * i.price / i.batch_size)
+            .map(i => positive(i.have) * i.price / i.batch_size)
             .reduce((acc, x) => acc + x, 0)
         this.purchased = i
-            .map(i => Math.ceil(Numbers.positive(i.need - i.have) / i.batch_size) * i.price)
+            .map(i => Math.ceil(positive(i.need - i.have) / i.batch_size) * i.price)
             .reduce((acc, x) => acc + x, 0)
         this.remaining = this.purchased + this.available - this.consumed
 

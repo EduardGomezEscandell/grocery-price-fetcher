@@ -5,6 +5,7 @@ import { State, Day, Meal, Dish } from '../../State/State.tsx';
 import TopBar from '../../TopBar/TopBar.tsx';
 import DishPicker from './DishPicker.tsx'
 import './Menu.css'
+import { round2 } from '../../Numbers/Numbers.ts';
 
 interface Props {
     backend: Backend;
@@ -22,12 +23,14 @@ export default class MenuTable extends React.Component<Props> {
         days: string[],
         meals: MealMetadata[]
         focus: { day: Day, meal: Meal } | undefined
+        hover: string | undefined
     }
 
     constructor(props: Props) {
         super(props)
         this.state = {
             focus: undefined,
+            hover: undefined,
             days: props.globalState.menu.days.map(d => d.name),
             meals: props.globalState.menu.days.map((day: Day, i: number) => {
                 return day.meals.map(meal => {
@@ -108,24 +111,51 @@ export default class MenuTable extends React.Component<Props> {
 
                             this.setState({
                                 ...this.state,
+                                hover: undefined,
                                 focus: {
                                     day: day,
                                     meal: meal
                                 }
                             })
                         }}>
-                            <div className='Header'>
+                            <div className='MealHeader' key='MealName'>
                                 {meal.name}
                             </div>
-                            <div className="Body" style={{
+                            <div className="Body" key='MealBody' style={{
                                 minHeight: new Optional(this.meals.find(m => m.name === meal.name))
                                     .then(m => m.size * 50)
                                     .then(s => s.toString() + 'px')
                                     .else('0px')
                             }}>
                                 {
-                                    meal.dishes.map((dish) =>
-                                        <p key={dish.name}>{dish.amount}x {dish.name}</p>
+                                    meal.dishes.map((dish, i) =>
+                                        <DishItem
+                                            name={dish.name}
+                                            amount={dish.amount}
+                                            id={dish.name === this.state.hover 
+                                                ? 'mouseover' : 
+                                                i % 2 === 0 
+                                                ? 'odd' : 'even'
+                                            }
+                                            onMouseEnter={() => {
+                                                if (this.state.focus !== undefined) {
+                                                    return
+                                                }
+                                                this.setState({
+                                                    ...this.state,
+                                                    hover: dish.name
+                                                })
+                                            }}
+                                            onMouseLeave={() => {
+                                                if (this.state.focus !== undefined) {
+                                                    return
+                                                }
+                                                this.setState({
+                                                    ...this.state,
+                                                    hover: undefined
+                                                })
+                                            }}
+                                        />
                                     )
                                 }
                             </div>
@@ -148,11 +178,11 @@ export default class MenuTable extends React.Component<Props> {
 
         return (
             <div className='Focus'>
-                <dialog open className="Meal">
-                    <div className='Header'>
+                <dialog open>
+                    <div className='FocusHeader'>
                         {meal.name} de {day.name}
                     </div>
-                    <div className="Body" style={{
+                    <div className="FocusBody" style={{
                         minHeight: new Optional(this.meals.find(m => m.name === meal.name))
                             .then(m => m.size * 30)
                             .then(s => s.toString() + 'px')
@@ -185,7 +215,7 @@ export default class MenuTable extends React.Component<Props> {
                             this.forceUpdate()
                         }}> + </button>
                     </div>
-                    <div className='Footer'>
+                    <div className='FocusFooter'>
                         <button className='Button' onClick={() => {
                             this.props.globalState.setMenu(this.props.globalState.menu) // Trigger a cleanup
                             this.setState({
@@ -199,4 +229,19 @@ export default class MenuTable extends React.Component<Props> {
             </div>
         )
     }
+}
+
+function DishItem(pp: { name: string, amount: number, id: string, onMouseEnter: () => void, onMouseLeave: () => void }) {
+    return (
+        <div
+            className='DishItem'
+            key={pp.name}
+            onMouseEnter={pp.onMouseEnter}
+            onMouseLeave={pp.onMouseLeave}
+            id={pp.id}
+        >
+            <span className='Amount' key='Amount'>{round2(pp.amount)}</span>
+            <span className='Name' key='Name'>{pp.name}</span>
+        </div>
+    )
 }
