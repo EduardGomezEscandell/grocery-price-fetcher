@@ -7,9 +7,9 @@ import (
 	"os"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/daemon"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/settings"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
@@ -18,12 +18,12 @@ func main() {
 	sett := loadSettings()
 	log := newLogger(sett)
 
-	log.Debugf("Settings loaded: %#v", sett)
+	log.Debugf("Settings loaded: %s", sett)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	s, err := services.New(ctx, log, sett.Database)
+	s, err := services.New(ctx, log, sett.Services)
 	if err != nil {
 		log.Fatalf("Could not initialize service: %v", err)
 	}
@@ -51,24 +51,19 @@ func main() {
 	log.Infof("Exiting")
 }
 
-type Settings struct {
-	Verbosity int
-	Database  database.Settings
-	FrontEnd  string
-	Address   string
-}
-
-func loadSettings() Settings {
-	if len(os.Args) != 2 {
-		log.Fatalf("Usage: %s <manifest>\n", os.Args[0])
-	}
-
-	if os.Args[1] == "" {
-		log.Fatalf("Manifest path is empty")
+func loadSettings() settings.Settings {
+	switch len(os.Args) {
+	case 1:
+		fmt.Println("No manifest provided, using defaults.")
+		return settings.Defaults()
+	case 2:
+	default:
+		fmt.Printf("Usage: %s [MANIFEST]\n", os.Args[0])
+		os.Exit(1)
 	}
 
 	if os.Args[1] == "-h" || os.Args[1] == "--help" {
-		fmt.Printf("Usage: %s <manifest>\n", os.Args[0])
+		fmt.Printf("Usage: %s [MANIFEST]\n", os.Args[0])
 		os.Exit(0)
 	}
 
@@ -77,7 +72,7 @@ func loadSettings() Settings {
 		log.Fatalf("Failed to read manifest: %v", err)
 	}
 
-	var s Settings
+	s := settings.Defaults()
 	if err := yaml.Unmarshal(out, &s); err != nil {
 		log.Fatalf("Failed to unmarshal manifest: %v", err)
 	}
@@ -85,7 +80,7 @@ func loadSettings() Settings {
 	return s
 }
 
-func newLogger(s Settings) logger.Logger {
+func newLogger(s settings.Settings) logger.Logger {
 	logger := logger.New()
 
 	switch s.Verbosity {

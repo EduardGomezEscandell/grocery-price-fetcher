@@ -10,13 +10,33 @@ import (
 )
 
 type Service struct {
-	db database.DB
+	settings Settings
+	db       database.DB
 }
 
-func New(db database.DB) *Service {
-	return &Service{
-		db: db,
+type Settings struct {
+	Enable bool
+}
+
+func (s Settings) Defaults() Settings {
+	return Settings{
+		Enable: true,
 	}
+}
+
+func New(s Settings, db database.DB) *Service {
+	if !s.Enable {
+		return nil
+	}
+
+	return &Service{
+		settings: s,
+		db:       db,
+	}
+}
+
+func (s Service) Enabled() bool {
+	return s.settings.Enable
 }
 
 func (s *Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Request) error {
