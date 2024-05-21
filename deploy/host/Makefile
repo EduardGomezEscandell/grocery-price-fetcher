@@ -37,9 +37,10 @@ stop: ## Stop the service
 	sudo systemctl disable "$(PKG).service" || true
 
 purge: stop ## Stop and remove all service files and data
-	sudo docker compose rm -fsv || true
-	sudo rm -rf "$(SERVICE)"    || true
-	sudo rm -rf "$(ETC)" 	    || true
+	sudo docker compose rm -fsv          || true
+	sudo docker volume rm -f $(PKG)_data || true
+	sudo rm -rf "$(SERVICE)"             || true
+	sudo rm -rf "$(ETC)" 	             || true
 
 # DO NOT DEPLOY AFTER THIS LINE
 .PHONY: package deploy
