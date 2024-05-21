@@ -18,9 +18,16 @@ install: ## Install the service
 
 	sudo cp ./service/$(PKG).service "$(SERVICE)"
 	sudo cp ./compose.yaml "$(ETC)/compose.yaml"
+	sudo cp ./config.yaml "$(ETC)/config.yaml"
 	sudo cp -r ./sample-data "$(ETC)/sample-data"
 
 	sudo systemctl daemon-reload
+
+	@echo "Service installed. To start run:"
+	@echo
+	@echo make start
+	@echo
+	@echo "You can modify the configuration in $(ETC)/config.yaml, then restart the service."
 
 start: ## Start the service
 	sudo systemctl daemon-reload
