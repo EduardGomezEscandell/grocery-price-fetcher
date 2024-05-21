@@ -44,6 +44,25 @@ jobs:
         version: latest
         working-directory: ${{ github.workspace }}/${{ matrix.module}}
 
+  test-go:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v4
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: go.work
+        check-latest: true
+        cache: false
+    - name: Install Make
+      run: |
+        export DEBIAN_NONINTERACTIVE=1
+        sudo apt update
+        sudo apt install -y make
+    - name: Run tests
+      run: make test-go
+
   quality-js:
     runs-on: ubuntu-latest
     steps:
