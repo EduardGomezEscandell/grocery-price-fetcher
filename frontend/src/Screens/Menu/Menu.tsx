@@ -240,8 +240,8 @@ function DishItem(pp: { name: string, amount: number, id: string, onMouseEnter: 
             onMouseLeave={pp.onMouseLeave}
             id={pp.id}
         >
-            <span className='Amount' key='Amount'>{round2(pp.amount)}</span>
-            <span className='Name' key='Name'>{pp.name}</span>
+            <span id='amount' key='Amount'>{round2(pp.amount)}</span>
+            <span id='name' key='Name'>{pp.name}</span>
         </div>
     )
 }

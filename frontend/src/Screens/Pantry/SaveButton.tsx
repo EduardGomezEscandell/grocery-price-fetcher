@@ -1,6 +1,7 @@
 import React from 'react'
 import Backend from '../../Backend/Backend'
 import { State } from '../../State/State'
+import './Pantry.css'
 
 enum Phase {
     Idle = 0,
