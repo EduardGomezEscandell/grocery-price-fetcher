@@ -14,9 +14,6 @@ build: ## Create directories, copy files, and build Docker image
 	mkdir -p "$(ROOT)/etc/$(PKG)"
 	mkdir -p "$(ROOT)/usr/share/$(PKG)/frontend"
 
-	# Config
-	cp "config.yaml"                 "$(ROOT)/etc/$(PKG)/config.yaml"
-
 	# Artefacts
 	cp    "../../bin/grocery-server" "$(ROOT)/usr/bin/$(PKG)"
 	cp -R "../../frontend/build/."   "$(ROOT)/usr/share/$(PKG)/frontend/"

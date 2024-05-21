@@ -29,6 +29,15 @@ type JSON struct {
 	mu  sync.RWMutex
 }
 
+func DefaultSettings() map[string]interface{} {
+	return map[string]interface{}{
+		"products": "/mnt/grocery-price-fetcher/products.json",
+		"recipes":  "/mnt/grocery-price-fetcher/recipes.json",
+		"menus":    "/mnt/grocery-price-fetcher/menus.json",
+		"pantries": "/mnt/grocery-price-fetcher/pantries.json",
+	}
+}
+
 func New(ctx context.Context, log logger.Logger, options map[string]interface{}) (*JSON, error) {
 	prods, errP := getStringOption(options, "products")
 	recs, errR := getStringOption(options, "recipes")

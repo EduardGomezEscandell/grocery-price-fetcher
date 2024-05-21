@@ -34,6 +34,13 @@ type Settings struct {
 	Options map[string]interface{}
 }
 
+func (s Settings) Defaults() Settings {
+	return Settings{
+		Type:    "json",
+		Options: jsondb.DefaultSettings(),
+	}
+}
+
 func New(ctx context.Context, logger logger.Logger, s Settings) (DB, error) {
 	switch s.Type {
 	case "json":

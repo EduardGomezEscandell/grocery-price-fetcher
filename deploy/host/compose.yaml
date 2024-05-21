@@ -5,6 +5,7 @@ services:
       - 80:3000
     volumes:
       - data:/mnt/grocery-price-fetcher/
+      - /etc/grocery-price-fetcher/config.yaml:/etc/grocery-price-fetcher/config.yaml:ro
     links:
       - prepopulate
     depends_on:
@@ -19,4 +20,3 @@ services:
 volumes:
   data:
     driver: local
-

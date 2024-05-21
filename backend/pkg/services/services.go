@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
@@ -25,19 +26,43 @@ type Manager struct {
 	db  database.DB
 	log logger.Logger
 
-	menu    *menu.Service
-	recipes *recipes.Service
-	pricing *pricing.Service
-	pantry  *pantry.Service
+	helloworld *helloworld.Service
+	menu       *menu.Service
+	pantry     *pantry.Service
+	pricing    *pricing.Service
+	recipes    *recipes.Service
+	version    *version.Service
 }
 
-func New(ctx context.Context, logger logger.Logger, DBsettings database.Settings) (*Manager, error) {
+type Settings struct {
+	Database   database.Settings
+	HelloWorld helloworld.Settings
+	Menu       menu.Settings
+	Pantry     pantry.Settings
+	Pricing    pricing.Settings
+	Recipes    recipes.Settings
+	Version    version.Settings
+}
+
+func (Settings) Defaults() Settings {
+	return Settings{
+		Database:   database.Settings{}.Defaults(),
+		HelloWorld: helloworld.Settings{}.Defaults(),
+		Menu:       menu.Settings{}.Defaults(),
+		Pantry:     pantry.Settings{}.Defaults(),
+		Pricing:    pricing.Settings{}.Defaults(),
+		Recipes:    recipes.Settings{}.Defaults(),
+		Version:    version.Settings{}.Defaults(),
+	}
+}
+
+func New(ctx context.Context, logger logger.Logger, settings Settings) (*Manager, error) {
 	ctx, cancel := context.WithCancel(ctx)
 
 	providers.Register(bonpreu.New(logger))
 	providers.Register(mercadona.New(logger))
 
-	db, err := database.New(ctx, logger, DBsettings)
+	db, err := database.New(ctx, logger, settings.Database)
 	if err != nil {
 		cancel()
 		return nil, fmt.Errorf("could not load database: %v", err)
@@ -50,19 +75,36 @@ func New(ctx context.Context, logger logger.Logger, DBsettings database.Settings
 		db:  db,
 		log: logger,
 
-		menu:    menu.New(db),
-		pantry:  pantry.New(db),
-		pricing: pricing.New(ctx, logger, db),
-		recipes: recipes.New(db),
+		helloworld: helloworld.New(settings.HelloWorld),
+		menu:       menu.New(settings.Menu, db),
+		pantry:     pantry.New(settings.Pantry, db),
+		pricing:    pricing.New(ctx, settings.Pricing, logger, db),
+		recipes:    recipes.New(settings.Recipes, db),
+		version:    version.New(settings.Version),
 	}, nil
 }
 
 func (s *Manager) Register(registerer func(endpoint string, handler httputils.Handler)) {
-	registerer("/api/helloworld", helloworld.Service{}.Handle)
-	registerer("/api/menu", s.menu.Handle)
-	registerer("/api/pantry", s.pantry.Handle)
-	registerer("/api/recipes", s.recipes.Handle)
-	registerer("/api/version", version.Service{}.Handle)
+	for _, p := range []struct {
+		path    string
+		handler interface {
+			Handle(logger.Logger, http.ResponseWriter, *http.Request) error
+			Enabled() bool
+		}
+	}{
+		{path: "/api/helloworld", handler: s.helloworld},
+		{path: "/api/menu", handler: s.menu},
+		{path: "/api/pantry", handler: s.pantry},
+		{path: "/api/recipes", handler: s.recipes},
+		{path: "/api/version", handler: s.version},
+	} {
+		if !p.handler.Enabled() {
+			s.log.Infof("Skipping dynamic endpoint %s", p.path)
+			continue
+		}
+
+		registerer(p.path, p.handler.Handle)
+	}
 }
 
 func (s *Manager) Run() {
