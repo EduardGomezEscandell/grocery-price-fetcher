@@ -8,215 +8,193 @@
     padding: 10px;
 
     background: lightblue;
+}
 
-    td {
-        min-width: 13.5vw;
-        max-width: 1vw;
+.Menu td {
+    min-width: 13.5vw;
+    max-width: 1vw;
 
-        border-collapse: collapse;
-        max-width: 800px;
+    border-collapse: collapse;
+    max-width: 800px;
+    padding: 5px;
+    vertical-align: top;
+}
+
+.Menu .Day {
+    min-width: 250px;
+    border-radius: 20px;
+    align-content: center;
+    background: white;
+}
+
+.Menu .Day .Header {
+    background-color: #1a237e;
+    text-transform: uppercase;
+
+    border-radius: 20px 20px 0px 0px;
+
+    color: white;
+    height: 50px;
+    display: flex;
+
+    font-size: large;
+    font-weight: bold;
+
+    padding: 10px;
+    align-items: center;
+    justify-content: center;
+}
+
+.Menu .Meal {
+    margin: auto;
+}
+
+.Menu .Meal .MealHeader {
+    font-size: auto;
+    font-weight: bold;
+    color: white;
+
+    height: 40px;
+    padding: auto;
+
+    background-color: #579dff;
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+}
+
+.Menu .Meal .Body {
+    vertical-align: top;
+    display: flex;
+    flex-direction: column;
+}
+
+.Menu .Meal .Body .DishItem {
+    font-size: 16px;
+    display: flex;
+    padding: 5px;
+
+    #amount {
+        width: 20px;
         padding: 5px;
-        vertical-align: top;
-    }
 
-    .Day {
-        min-width: 250px;
-        border-radius: 20px;
-        align-content: center;
-        background: white;
-
-        .Header {
-            background-color: #1a237e;
-            text-transform: uppercase;
-
-            border-radius: 20px 20px 0px 0px;
-
-            color: white;
-            height: 50px;
-            display: flex;
-
-            font-size: large;
-            font-weight: bold;
-
-            padding: 10px;
-            align-items: center;
-            justify-content: center;
-        }
-    }
-
-    .Meal {
-        margin: auto;
-        cursor: pointer;
-
-        .MealHeader {
-            font-size: auto;
-            font-weight: bold;
-            color: white;
-
-            height: 40px;
-            padding: auto;
-
-            background-color: #579dff;
-            display: flex;
-
-            align-items: center;
-            justify-content: center;
-        }
-
-        .Body {
-            vertical-align: top;
-            display: flex;
-            flex-direction: column;
-
-            .DishItem {
-                font-size: 16px;
-                display: flex;
-                padding: 5px;
-
-                .Amount {
-                    width: 20px;
-                    padding: 5px;
-
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-
-                .Name {
-                    width: 100%;
-                    padding: 5px;
-                }
-            }
-        }
-    }
-
-    .Focus {
         display: flex;
-        flex-direction: column;
         align-items: center;
-        vertical-align: center;
-        padding: 100px;
+        justify-content: center;
+    }
 
-        dialog {
-            padding: 0px;
+    #name {
+        width: 100%;
+        padding: 5px;
+    }
+}
 
-            max-width: 90%;
-            width: 500px !important;
+.Menu .Focus {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    vertical-align: center;
+    padding: 100px;
 
-            border-radius: 20px;
-            border: 1px solid black;
+    dialog {
+        padding: 0px;
+        max-width: 90%;
+        width: 500px !important;
+        border-radius: 20px;
+        border: 1px solid black;
+    }
+}
 
-            .FocusHeader {
-                background-color: #579dff;
-                color: white;
-                height: 50px;
-                font-size: larger;
-                font-weight: bold;
+.Menu .Focus .FocusHeader {
+    background-color: #579dff;
+    color: white;
+    height: 50px;
+    font-size: larger;
+    font-weight: bold;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-                border-top-left-radius: 20px;
-                border-top-right-radius: 20px;
+.Menu .Focus dialog .FocusBody {
+    padding: 10px;
+    font-size: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: top;
+}
 
-                display: flex;
-                justify-content: center;
-                align-items: center;
-            }
+.Menu .Focus dialog .FocusBody .DishPicker {
+    display: flex;
+    flex-direction: row;
+    align-items: left;
+    justify-content: left;
+    text-align: left;
+    margin: 10px;
+    border-radius: 10px;
+    border: 1px solid black;
+    height: 40px;
+}
 
-            .FocusBody {
-                padding: 10px;
-                font-size: 16px;
+.Menu .Focus dialog .FocusBody .DishPicker input {
+    width: 20%;
 
-                display: flex;
-                flex-direction: column;
-                justify-content: top;
+    height: 40px;
+    max-height: 40px;
 
-                .DishPicker {
-                    display: flex;
-                    flex-direction: row;
-                    align-items: left;
-                    justify-content: left;
-                    text-align: left;
-                    margin: 10px;
-                    border-radius: 10px;
-                    border: 1px solid black;
-                    height: 40px;
+    padding: 0px;
+    margin: 0px;
 
-                    input {
-                        width: 20%;
+    border: none;
+    border-right: 1px solid black;
 
-                        height: 40px;
-                        max-height: 40px;
+    border-radius: 10px;
+    border-top-right-radius: 0%;
+    border-bottom-right-radius: 0%;
 
-                        padding: 0px;
-                        margin: 0px;
+    text-align: center;
+    font-size: 16px;
+}
 
-                        border: none;
-                        border-right: 1px solid black;
+.Menu .Focus dialog .FocusBody .DishPicker .Select {
+    width: 80%;
+    padding: 0px;
+    margin: 0px;
+    font-size: 16px;
 
-                        border-radius: 10px;
-                        border-top-right-radius: 0%;
-                        border-bottom-right-radius: 0%;
+    +button {
+        width: 40px;
+        background: rgb(255, 196, 85);
 
-                        text-align: center;
-                        font-size: 16px;
-                    }
+        height: 40px;
+        padding: 0px;
+        margin: 0px;
 
-                    .Select {
-                        width: 80%;
-                        padding: 0px;
-                        margin: 0px;
-                        font-size: 16px;
-                    }
+        border-radius: 10px;
+        border-top-left-radius: 0%;
+        border-bottom-left-radius: 0%;
+    }
+}
 
-                    button {
-                        width: 40px;
-                        cursor: pointer;
-                        background: rgb(255, 196, 85);
+.Menu .Focus dialog .FocusFooter {
+    background-color: rgb(255, 196, 85);
+    height: 50px;
+    width: 100%;
 
-                        height: 40px;
-                        padding: 0px;
-                        margin: 0px;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
-                        border-radius: 10px;
-                        border-top-left-radius: 0%;
-                        border-bottom-left-radius: 0%;
-                    }
-
-
-                }
-
-                .AddOne {
-                    justify-content: center;
-                    align-items: center;
-                    border-radius: 10px;
-
-                    font-size: 24px;
-                    font-weight: normal;
-
-                    border: 1px solid black;
-                }
-            }
-
-            .FocusFooter {
-                background-color: rgb(255, 196, 85);
-                height: 50px;
-                width: 100%;
-
-                border-bottom-left-radius: 20px;
-                border-bottom-right-radius: 20px;
-
-                display: flex;
-                justify-content: center;
-                align-items: center;
-
-                button {
-                    font-size: 20px;
-                    width: 100%;
-                    height: 100%;
-                    font-size: auto;
-                    background-color: transparent;
-                    cursor: pointer;
-                }
-            }
-        }
+    button {
+        font-size: 20px;
+        width: 100%;
+        height: 100%;
+        font-size: auto;
+        background-color: transparent;
     }
 }

@@ -1,4 +1,4 @@
-.PHONY: build-go build-js test update-golden run-mock build-docker package deploy full-start install start stop uninstall clean
+.PHONY: help build-go test-go test-e2e update-golden update-golden build-js run-mock build-docker package deploy full-start install start stop uninstall clean
 
 VERSION := $(shell git describe --tags --always --dirty)
 
