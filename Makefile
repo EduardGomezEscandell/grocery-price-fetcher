@@ -19,8 +19,8 @@ test-go: build-go ## Run unit tests
 test-e2e: build-go ## Run end-to-end tests
 	cd end-to-end && go test ./... -count=1 -race -shuffle on
 
-update-golden: build-go ## Update golden test files
-	UPDATE_GOLDEN=1 go test ./...
+update-golden: export UPDATE_GOLDEN = 1
+update-golden: test-e2e ## Update golden test files
 
 build-js: ## Build the frontend JavaScript code
 	cd frontend && npm install
