@@ -14,7 +14,7 @@ build-go: ## Build Go binaries
 	cd backend && make build VERSION=$(VERSION)
 
 test: build-go ## Run tests
-	cd end-to-end && go test ./...
+	cd end-to-end && go test ./... -count=1 -race -shuffle on
 
 update-golden: build-go ## Update golden test files
 	UPDATE_GOLDEN=1 go test ./...
