@@ -13,7 +13,7 @@ build-go: ## Build Go binaries
 	cd backend && make lint
 	cd backend && make build VERSION=$(VERSION)
 
-test: build-go ## Run tests
+test-e2e: build-go ## Run end-to-end tests
 	cd end-to-end && go test ./... -count=1 -race -shuffle on
 
 update-golden: build-go ## Update golden test files

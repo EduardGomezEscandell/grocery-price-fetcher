@@ -82,4 +82,4 @@ jobs:
         check-latest: true
         cache: false
     - name: Run end-to-end tests
-      run: make test
+      run: make test-e2e
