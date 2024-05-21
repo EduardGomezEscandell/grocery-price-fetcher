@@ -55,9 +55,9 @@ function PantryTable(pp: PantryTableProps): JSX.Element {
             <table style={tableStyle}>
                 <thead>
                     <tr key='header'>
-                        <th>Producte</th>
-                        <th>En tens</th>
-                        <th>Hauràs de comprar-ne</th>
+                        <th id="left">Producte</th>
+                        <th id="center">Tens</th>
+                        <th id="right">A comprar</th>
                     </tr>
                 </thead>
                 <tbody>
