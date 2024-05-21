@@ -1,1 +1,155 @@
-[{"name":"default","contents":[{"name":"All","amount":2.3},{"name":"Arròs","amount":1.1},{"name":"Barretes de cranc","amount":3},{"name":"Bolets","amount":1.2},{"name":"Cafè","amount":8},{"name":"Caldo","amount":2},{"name":"Canonges","amount":0.25},{"name":"Carn picada","amount":3},{"name":"Ceba","amount":2},{"name":"Cereals","amount":0.2},{"name":"Cigrons","amount":1},{"name":"Civada","amount":1.2},{"name":"Embotit","amount":0.8},{"name":"Espàrrecs","amount":1.1},{"name":"Fideus","amount":3},{"name":"Fruita","amount":2},{"name":"Galets","amount":0.8},{"name":"Iogurt","amount":3},{"name":"Iogurt vegà","amount":3},{"name":"Llenties","amount":1},{"name":"Llet d'avena","amount":1.1},{"name":"Llom","amount":4},{"name":"Macarrons","amount":1.2},{"name":"Olives","amount":1},{"name":"Ous","amount":4},{"name":"Pa de motlle","amount":0.3},{"name":"Pastanaga","amount":5},{"name":"Patata","amount":3},{"name":"Patates fregides","amount":1},{"name":"Pebrot verd","amount":1},{"name":"Pebrot vermell","amount":0.8},{"name":"Pollastre","amount":3},{"name":"Proteïna vegana","amount":2},{"name":"Ravioli","amount":0.5},{"name":"Suc de taronja","amount":1},{"name":"Tofu","amount":0.4},{"name":"Tomàquet triturat","amount":1}]}]
+[
+    {
+        "name": "default",
+        "contents": [
+            {
+                "name": "All",
+                "amount": 2.3
+            },
+            {
+                "name": "Arròs",
+                "amount": 1.1
+            },
+            {
+                "name": "Barretes de cranc",
+                "amount": 3
+            },
+            {
+                "name": "Bolets",
+                "amount": 1.2
+            },
+            {
+                "name": "Cafè",
+                "amount": 8
+            },
+            {
+                "name": "Caldo",
+                "amount": 2
+            },
+            {
+                "name": "Canonges",
+                "amount": 0.25
+            },
+            {
+                "name": "Carn picada",
+                "amount": 3
+            },
+            {
+                "name": "Ceba",
+                "amount": 2
+            },
+            {
+                "name": "Cereals",
+                "amount": 0.2
+            },
+            {
+                "name": "Cigrons",
+                "amount": 1
+            },
+            {
+                "name": "Civada",
+                "amount": 1.2
+            },
+            {
+                "name": "Embotit",
+                "amount": 0.8
+            },
+            {
+                "name": "Espàrrecs",
+                "amount": 1.1
+            },
+            {
+                "name": "Fideus",
+                "amount": 3
+            },
+            {
+                "name": "Fruita",
+                "amount": 2
+            },
+            {
+                "name": "Galets",
+                "amount": 0.8
+            },
+            {
+                "name": "Iogurt",
+                "amount": 3
+            },
+            {
+                "name": "Iogurt vegà",
+                "amount": 3
+            },
+            {
+                "name": "Llenties",
+                "amount": 1
+            },
+            {
+                "name": "Llet d'avena",
+                "amount": 1.1
+            },
+            {
+                "name": "Llom",
+                "amount": 4
+            },
+            {
+                "name": "Macarrons",
+                "amount": 1.2
+            },
+            {
+                "name": "Olives",
+                "amount": 1
+            },
+            {
+                "name": "Ous",
+                "amount": 4
+            },
+            {
+                "name": "Pa de motlle",
+                "amount": 0.3
+            },
+            {
+                "name": "Pastanaga",
+                "amount": 5
+            },
+            {
+                "name": "Patata",
+                "amount": 3
+            },
+            {
+                "name": "Patates fregides",
+                "amount": 1
+            },
+            {
+                "name": "Pebrot verd",
+                "amount": 1
+            },
+            {
+                "name": "Pebrot vermell",
+                "amount": 0.8
+            },
+            {
+                "name": "Pollastre",
+                "amount": 3
+            },
+            {
+                "name": "Proteïna vegana",
+                "amount": 2
+            },
+            {
+                "name": "Ravioli",
+                "amount": 0.5
+            },
+            {
+                "name": "Suc de taronja",
+                "amount": 1
+            },
+            {
+                "name": "Tofu",
+                "amount": 0.4
+            },
+            {
+                "name": "Tomàquet triturat",
+                "amount": 1
+            }
+        ]
+    }
+]

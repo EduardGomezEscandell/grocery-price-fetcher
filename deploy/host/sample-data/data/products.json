@@ -1,1 +1,420 @@
-[{"name":"Fruita","batch_size":1,"provider":"Bonpreu","product_id":["90041"]},{"name":"Alvocat","batch_size":1,"provider":"Bonpreu","product_id":["82055"]},{"name":"Canonges","batch_size":1,"provider":"Bonpreu","product_id":["61688"]},{"name":"Pastanaga","batch_size":10,"provider":"Bonpreu","product_id":["15297"]},{"name":"Pebrot verd","batch_size":1,"provider":"Bonpreu","product_id":["46754"]},{"name":"Pebrot vermell","batch_size":1,"provider":"Bonpreu","product_id":["82148"]},{"name":"Espàrrecs","batch_size":1,"provider":"Bonpreu","product_id":["25431"]},{"name":"Ceba","batch_size":1,"provider":"Bonpreu","product_id":["00394"]},{"name":"All","batch_size":1,"provider":"Bonpreu","product_id":["01200"]},{"name":"Bolets","batch_size":1,"provider":"Bonpreu","product_id":["24224"]},{"name":"Llenties","batch_size":1,"provider":"Bonpreu","product_id":["17744"]},{"name":"Cigrons","batch_size":1,"provider":"Bonpreu","product_id":["17785"]},{"name":"Hummus","batch_size":1,"provider":"Bonpreu","product_id":["31874"]},{"name":"Patata","batch_size":1,"provider":"Bonpreu","product_id":["02961"]},{"name":"Arròs","batch_size":1,"provider":"Bonpreu","product_id":["84755"]},{"name":"Civada","batch_size":1,"provider":"Bonpreu","product_id":["07381"]},{"name":"Cereals","batch_size":1,"provider":"Bonpreu","product_id":["48182"]},{"name":"Pa de motlle","batch_size":1,"provider":"Bonpreu","product_id":["79645"]},{"name":"Pa d'hamburguesa","batch_size":4,"provider":"Bonpreu","product_id":["13438"]},{"name":"Bastonets de pa","batch_size":1,"provider":"Bonpreu","product_id":["21719"]},{"name":"Macarrons","batch_size":1,"provider":"Bonpreu","product_id":["59968"]},{"name":"Galets","batch_size":1,"provider":"Bonpreu","product_id":["02773"]},{"name":"Fideus","batch_size":1,"provider":"Mercadona","product_id":["8713","mad1"]},{"name":"Ravioli","batch_size":1,"provider":"Bonpreu","product_id":["71240"]},{"name":"Caldo","batch_size":1,"provider":"Bonpreu","product_id":["41571"]},{"name":"Llet d'avena","batch_size":1,"provider":"Bonpreu","product_id":["39666"]},{"name":"Iogurt","batch_size":4,"provider":"Bonpreu","product_id":["49529"]},{"name":"Iogurt vegà","batch_size":4,"provider":"Bonpreu","product_id":["45511"]},{"name":"Salsa de tomàquet","batch_size":1,"provider":"Bonpreu","product_id":["60771"]},{"name":"Tomàquet triturat","batch_size":1,"provider":"Bonpreu","product_id":["59481"]},{"name":"Fajita","batch_size":1,"provider":"Mercadona","product_id":["80859","bcn1"]},{"name":"Suc de taronja","batch_size":1,"provider":"Bonpreu","product_id":["25562"]},{"name":"Olives","batch_size":1,"provider":"Bonpreu","product_id":["28569"]},{"name":"Patates fregides","batch_size":2,"provider":"Bonpreu","product_id":["77957"]},{"name":"Ous","batch_size":6,"provider":"Bonpreu","product_id":["29974"]},{"name":"Embotit","batch_size":1,"provider":"Bonpreu","product_id":["34705"]},{"name":"Xoriço","batch_size":1,"provider":"Bonpreu","product_id":["24374"]},{"name":"Tofu","batch_size":1,"provider":"Bonpreu","product_id":["09085"]},{"name":"Proteïna vegana","batch_size":2,"provider":"Bonpreu","product_id":["78516"]},{"name":"Hamburguesa vegana","batch_size":2,"provider":"Bonpreu","product_id":["09493"]},{"name":"Hamburguesa","batch_size":4,"provider":"Bonpreu","product_id":["43136"]},{"name":"Llom","batch_size":4,"provider":"Bonpreu","product_id":["07084"]},{"name":"Pollastre","batch_size":3,"provider":"Bonpreu","product_id":["76013"]},{"name":"Carn picada","batch_size":5,"provider":"Bonpreu","product_id":["16193"]},{"name":"Peix","batch_size":5,"provider":"Bonpreu","product_id":["56640"]},{"name":"Barretes de cranc","batch_size":5,"provider":"Bonpreu","product_id":["02234"]},{"name":"Formatge","batch_size":1,"provider":"Bonpreu","product_id":["41984"]},{"name":"Cafè","batch_size":30,"provider":"Bonpreu","product_id":["32238"]},{"name":"Avellanes","batch_size":1,"provider":"Bonpreu","product_id":["64776"]},{"name":"Nous","batch_size":1,"provider":"Bonpreu","product_id":["20071"]},{"name":"Atmetlles","batch_size":1,"provider":"Bonpreu","product_id":["13709"]},{"name":"Pipes","batch_size":1,"provider":"Bonpreu","product_id":["81764"]}]
+[
+    {
+        "name": "Fruita",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "90041"
+        ]
+    },
+    {
+        "name": "Alvocat",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "82055"
+        ]
+    },
+    {
+        "name": "Canonges",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "61688"
+        ]
+    },
+    {
+        "name": "Pastanaga",
+        "batch_size": 10,
+        "provider": "Bonpreu",
+        "product_id": [
+            "15297"
+        ]
+    },
+    {
+        "name": "Pebrot verd",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "46754"
+        ]
+    },
+    {
+        "name": "Pebrot vermell",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "82148"
+        ]
+    },
+    {
+        "name": "Espàrrecs",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "25431"
+        ]
+    },
+    {
+        "name": "Ceba",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "21049"
+        ]
+    },
+    {
+        "name": "All",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "01200"
+        ]
+    },
+    {
+        "name": "Bolets",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "24224"
+        ]
+    },
+    {
+        "name": "Llenties",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "17744"
+        ]
+    },
+    {
+        "name": "Cigrons",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "17785"
+        ]
+    },
+    {
+        "name": "Hummus",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "31874"
+        ]
+    },
+    {
+        "name": "Patata",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "02961"
+        ]
+    },
+    {
+        "name": "Arròs",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "84755"
+        ]
+    },
+    {
+        "name": "Civada",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "07381"
+        ]
+    },
+    {
+        "name": "Cereals",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "48182"
+        ]
+    },
+    {
+        "name": "Pa de motlle",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "79645"
+        ]
+    },
+    {
+        "name": "Pa d'hamburguesa",
+        "batch_size": 4,
+        "provider": "Bonpreu",
+        "product_id": [
+            "13438"
+        ]
+    },
+    {
+        "name": "Bastonets de pa",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "21719"
+        ]
+    },
+    {
+        "name": "Macarrons",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "59968"
+        ]
+    },
+    {
+        "name": "Galets",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "02773"
+        ]
+    },
+    {
+        "name": "Fideus",
+        "batch_size": 1,
+        "provider": "Mercadona",
+        "product_id": [
+            "8713",
+            "mad1"
+        ]
+    },
+    {
+        "name": "Ravioli",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "71240"
+        ]
+    },
+    {
+        "name": "Caldo",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "41571"
+        ]
+    },
+    {
+        "name": "Llet d'avena",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "39666"
+        ]
+    },
+    {
+        "name": "Iogurt",
+        "batch_size": 4,
+        "provider": "Bonpreu",
+        "product_id": [
+            "49529"
+        ]
+    },
+    {
+        "name": "Iogurt vegà",
+        "batch_size": 4,
+        "provider": "Bonpreu",
+        "product_id": [
+            "45511"
+        ]
+    },
+    {
+        "name": "Salsa de tomàquet",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "60771"
+        ]
+    },
+    {
+        "name": "Tomàquet triturat",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "59481"
+        ]
+    },
+    {
+        "name": "Fajita",
+        "batch_size": 1,
+        "provider": "Mercadona",
+        "product_id": [
+            "80859",
+            "bcn1"
+        ]
+    },
+    {
+        "name": "Suc de taronja",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "25562"
+        ]
+    },
+    {
+        "name": "Olives",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "28569"
+        ]
+    },
+    {
+        "name": "Patates fregides",
+        "batch_size": 2,
+        "provider": "Bonpreu",
+        "product_id": [
+            "77957"
+        ]
+    },
+    {
+        "name": "Ous",
+        "batch_size": 6,
+        "provider": "Bonpreu",
+        "product_id": [
+            "29974"
+        ]
+    },
+    {
+        "name": "Embotit",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "34705"
+        ]
+    },
+    {
+        "name": "Xoriço",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "24374"
+        ]
+    },
+    {
+        "name": "Tofu",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "09085"
+        ]
+    },
+    {
+        "name": "Proteïna vegana",
+        "batch_size": 2,
+        "provider": "Bonpreu",
+        "product_id": [
+            "78516"
+        ]
+    },
+    {
+        "name": "Hamburguesa vegana",
+        "batch_size": 2,
+        "provider": "Bonpreu",
+        "product_id": [
+            "09493"
+        ]
+    },
+    {
+        "name": "Hamburguesa",
+        "batch_size": 4,
+        "provider": "Bonpreu",
+        "product_id": [
+            "43136"
+        ]
+    },
+    {
+        "name": "Llom",
+        "batch_size": 4,
+        "provider": "Bonpreu",
+        "product_id": [
+            "07084"
+        ]
+    },
+    {
+        "name": "Pollastre",
+        "batch_size": 3,
+        "provider": "Bonpreu",
+        "product_id": [
+            "76013"
+        ]
+    },
+    {
+        "name": "Carn picada",
+        "batch_size": 5,
+        "provider": "Bonpreu",
+        "product_id": [
+            "16193"
+        ]
+    },
+    {
+        "name": "Peix",
+        "batch_size": 5,
+        "provider": "Bonpreu",
+        "product_id": [
+            "56640"
+        ]
+    },
+    {
+        "name": "Barretes de cranc",
+        "batch_size": 5,
+        "provider": "Bonpreu",
+        "product_id": [
+            "02234"
+        ]
+    },
+    {
+        "name": "Formatge",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "41984"
+        ]
+    },
+    {
+        "name": "Cafè",
+        "batch_size": 30,
+        "provider": "Bonpreu",
+        "product_id": [
+            "32238"
+        ]
+    },
+    {
+        "name": "Avellanes",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "64776"
+        ]
+    },
+    {
+        "name": "Nous",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "20071"
+        ]
+    },
+    {
+        "name": "Atmetlles",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "13709"
+        ]
+    },
+    {
+        "name": "Pipes",
+        "batch_size": 1,
+        "provider": "Bonpreu",
+        "product_id": [
+            "81764"
+        ]
+    }
+]
