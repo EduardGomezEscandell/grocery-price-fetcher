@@ -10,12 +10,12 @@
 
     table {
         margin: auto;
-        align-items: center;
-        width: fit-content;
-        text-align: left;
         border-collapse: collapse;
         border-left: 1px solid #1a237e;
         border-right: 1px solid #1a237e;
+
+        max-width: 100% !important;
+        width: 800px;
 
         thead {
             position: sticky;
@@ -24,15 +24,21 @@
             text-align: center;
             background-color: #1a237e;
             font-size: auto;
-            height: 40px;
+
+            max-height: 5vh !important;
+            height: 60px;
+
+            font-size: larger;
             font-weight: bold;
 
-            #units {
-                background: #405adb;
+            #left {
+                text-align: left;
+                padding: 20px;
             }
 
-            #packs {
-                background: #6aa2f0;
+            #right {
+                text-align: right;
+                padding: 20px;
             }
         }
 
@@ -42,41 +48,37 @@
             cursor: pointer;
 
             .Label {
-                width: 400px;
+                width: 50%;
                 text-align: left;
-                padding-left: 20px;
                 padding: 10px;
             }
 
             .Select {
-                width: 200px;
+                height: 20px;
                 text-align: center;
-                padding-left: 20px;
+                min-width: 25%;
+                text-align: center;
 
                 input {
-                    width: 50%;
-                    height: 100%;
+                    width: 80px;
+                    height: 80%;
+
                     font-size: auto;
                     text-align: right;
+
+                    /* border: 1px solid #1a237e; */
+                    border: none;
+                    box-shadow: 0 0 3px 0 black;
+
+                    border-radius: 10px;
+                    background: white;
                 }
             }
 
             .Number {
-                width: 200px;
+                min-width: 25%;
                 text-align: right;
                 padding-right: 10px;
-            }
-
-            #odd {
-                background: #ffffff;
-            }
-
-            #even {
-                background: #eeeeee;
-            }
-
-            #mouseover {
-                background: lightblue;
             }
         }
 
@@ -84,18 +86,16 @@
             position: sticky;
             bottom: 0;
             font-size: auto;
-            background:  #85a9db;
+            background: #85a9db;
             height: 60px;
 
 
             .Label {
-                width: 200px;
                 text-align: left;
                 padding-left: 20px;
             }
 
             .Number {
-                width: 300px;
                 text-align: right;
                 padding-right: 20px;
             }
@@ -132,6 +132,7 @@
 
             .OK {
                 text-align: center;
+
                 button {
                     background-color: lightgray;
                     width: 95%;

@@ -10,3 +10,15 @@ button {
   border-radius: 5px;
   cursor: pointer;
 }
+
+#odd {
+  background: #eeeeee;
+}
+
+#even {
+  background: white;
+}
+
+#mouseover {
+  background: rgb(255, 196, 85);
+}
