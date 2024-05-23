@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import Select from 'react-select'
 import { Dish } from '../../State/State'
-import './Menu.css'
+import './DishPicker.css'
 
 interface Props {
     recipes: string[];
@@ -86,7 +86,7 @@ export default function DishPicker(pp: Props) {
                 options={options}
                 isSearchable
             />
-            <button
+            <button id='highlight'
                 onClick={pp.onRemove}
             >X</button>
         </div>

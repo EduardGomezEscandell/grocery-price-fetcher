@@ -1,143 +1,66 @@
 .Pantry {
+    #left {
+        text-align: left;
+        padding-left: 20px;
+    }
+
+    #right {
+        text-align: right;
+        padding-right: 20px;
+    }
+
     overflow: auto;
-    background: lightblue;
     width: 100%;
-    border-left: #1a237e;
 
     height: 100%;
     flex-grow: 1;
     display: flex;
 
+    justify-content: center;
+
     table {
-        margin: auto;
         border-collapse: collapse;
         border-left: 1px solid #1a237e;
         border-right: 1px solid #1a237e;
 
         max-width: 100% !important;
         width: 800px;
+        font: inherit;
 
         thead {
             position: sticky;
             top: 0;
-            color: white;
-            text-align: center;
-            background-color: #1a237e;
-            font-size: auto;
-
             max-height: 5vh !important;
             height: 60px;
-
-            font-size: larger;
-            font-weight: bold;
-
-            #left {
-                text-align: left;
-                padding: 20px;
-            }
-
-            #right {
-                text-align: right;
-                padding: 20px;
-            }
+            text-align: center;
         }
 
         tbody {
             overflow: auto;
-            font-size: auto;
-            cursor: pointer;
-
-            .Label {
-                width: 50%;
-                text-align: left;
+            
+            td {
+                cursor: pointer;
                 padding: 10px;
-            }
-
-            .Select {
-                height: 20px;
                 text-align: center;
-                min-width: 25%;
-                text-align: center;
+                min-width: fit-content;
 
                 input {
                     width: 80px;
-                    height: 80%;
-
-                    font-size: auto;
                     text-align: right;
+                    font: inherit;
 
-                    /* border: 1px solid #1a237e; */
                     border: none;
                     box-shadow: 0 0 3px 0 black;
 
                     border-radius: 10px;
-                    background: white;
                 }
-            }
-
-            .Number {
-                min-width: 25%;
-                text-align: right;
-                padding-right: 10px;
             }
         }
 
         tfoot {
             position: sticky;
             bottom: 0;
-            font-size: auto;
-            background: #85a9db;
             height: 60px;
-
-
-            .Label {
-                text-align: left;
-                padding-left: 20px;
-            }
-
-            .Number {
-                text-align: right;
-                padding-right: 20px;
-            }
-        }
-    }
-
-    .Dialog {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 80%;
-
-        dialog[open] {
-            width: 80%;
-            max-width: 400px;
-            border-radius: 10px;
-
-            h1 {
-                text-align: center;
-                font-weight: bold;
-            }
-
-            p {
-                text-align: left;
-                text-justify: distribute-all-lines;
-                width: 95%;
-                margin: auto;
-                padding: 10px;
-            }
-
-            .Amount {
-                font-weight: bold;
-            }
-
-            .OK {
-                text-align: center;
-
-                button {
-                    background-color: lightgray;
-                    width: 95%;
-                }
-            }
         }
     }
 }

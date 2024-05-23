@@ -1,5 +1,36 @@
+html {
+  font-size: 100%;
+  background: lightblue;
+}
+
+#odd {
+  background: #eeeeee;
+}
+
+#even {
+  background: white;
+}
+
+#highlight {
+  background: rgb(255, 196, 85);
+}
+
+#header1 {
+  background: #1a237e;
+  color: white;
+  font-size: 115%;
+  font-weight: bold;
+}
+
+#header2 {
+  background: #579dff;
+  color: white;
+  font-size: 105%;
+  font-weight: bold;
+}
+
+
 button {
-  font-size: auto;
   font-weight: bold;
   color: black;
   border: black;
@@ -11,14 +42,62 @@ button {
   cursor: pointer;
 }
 
-#odd {
-  background: #eeeeee;
-}
+dialog {
+  justify-self: center;
+  display: flex;
+  flex-direction: column;
 
-#even {
-  background: white;
-}
+  padding: 0px;
+  margin-top: 100px;
 
-#mouseover {
-  background: rgb(255, 196, 85);
+  max-width: 90%;
+  width: 500px !important;
+
+  border-radius: 20px;
+  border: 1px solid black;
+
+  >#header {
+    height: 50px;
+    width: 100%;
+
+    margin: 0px;
+
+    background-color: #579dff;
+
+    color: white;
+    font-weight: bold;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border-radius: inherit;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+  }
+
+  >#body {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: top;
+  }
+
+  >#footer {
+    background-color: rgb(255, 196, 85);
+    height: 50px;
+    width: 100%;
+
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    button {
+      width: 100%;
+      height: 100%;
+      background-color: transparent;
+    }
+  }
 }

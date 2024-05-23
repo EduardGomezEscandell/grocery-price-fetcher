@@ -99,7 +99,7 @@ export default class MenuTable extends React.Component<Props> {
     private DayCol(day: Day): JSX.Element {
         return (
             <div className='Day'>
-                <div className='Header'>
+                <div className='Header' id='header1'>
                     {day.name}
                 </div>
                 {
@@ -118,7 +118,7 @@ export default class MenuTable extends React.Component<Props> {
                                 }
                             })
                         }}>
-                            <div className='MealHeader' key='MealName'>
+                            <div className='MealHeader' key='MealName' id='header2'>
                                 {meal.name}
                             </div>
                             <div className="Body" key='MealBody' style={{
@@ -132,10 +132,10 @@ export default class MenuTable extends React.Component<Props> {
                                         <DishItem
                                             name={dish.name}
                                             amount={dish.amount}
-                                            id={dish.name === this.state.hover 
-                                                ? 'mouseover' : 
-                                                i % 2 === 0 
-                                                ? 'odd' : 'even'
+                                            id={dish.name === this.state.hover
+                                                ? 'highlight' :
+                                                i % 2 === 0
+                                                    ? 'odd' : 'even'
                                             }
                                             onMouseEnter={() => {
                                                 if (this.state.focus !== undefined) {
@@ -175,58 +175,55 @@ export default class MenuTable extends React.Component<Props> {
         const day = f.day
         const meal = f.meal
 
-
         return (
-            <div className='Focus'>
-                <dialog open>
-                    <div className='FocusHeader'>
-                        {meal.name} de {day.name}
-                    </div>
-                    <div className="FocusBody" style={{
-                        minHeight: new Optional(this.meals.find(m => m.name === meal.name))
-                            .then(m => m.size * 30)
-                            .then(s => s.toString() + 'px')
-                            .else('0px')
-                    }}>
-                        {
-                            meal.dishes.map((dish, i) =>
-                                <DishPicker
-                                    key={`dish-${i}`}
-                                    recipes={this.props.globalState.dishes}
-                                    default={dish}
-                                    onChange={(newDish) => {
-                                        new Optional(this.props.globalState.menu)
-                                            .then(menu => menu.days.find(d => d.name === day.name))
-                                            .elseLog(`Could not find day ${day.name}`)
-                                            .then(day => day.meals.find(m => m.name === meal.name))
-                                            .elseLog(`Could not find meal ${meal.name}`)
-                                            .then(meal => meal.dishes[i] = newDish)
-                                            .then(() => this.props.globalState.setMenu(this.props.globalState.menu))
-                                    }}
-                                    onRemove={() => {
-                                        meal.dishes.splice(i, 1)
-                                        this.forceUpdate()
-                                    }}
-                                />
-                            )
-                        }
-                        <button className='AddOne' onClick={() => {
-                            meal.dishes.push(new Dish("", 1))
-                            this.forceUpdate()
-                        }}> + </button>
-                    </div>
-                    <div className='FocusFooter'>
-                        <button className='Button' onClick={() => {
-                            this.props.globalState.setMenu(this.props.globalState.menu) // Trigger a cleanup
-                            this.setState({
-                                ...this.state,
-                                focus: undefined
-                            })
-                        }
-                        }>Tancar</button>
-                    </div>
-                </dialog>
-            </div>
+            <dialog open>
+                <h2 id='header'>
+                    {meal.name} de {day.name}
+                </h2>
+                <div id="body" style={{
+                    minHeight: new Optional(this.meals.find(m => m.name === meal.name))
+                        .then(m => m.size * 30)
+                        .then(s => s.toString() + 'px')
+                        .else('0px')
+                }}>
+                    {
+                        meal.dishes.map((dish, i) =>
+                            <DishPicker
+                                key={`dish-${i}`}
+                                recipes={this.props.globalState.dishes}
+                                default={dish}
+                                onChange={(newDish) => {
+                                    new Optional(this.props.globalState.menu)
+                                        .then(menu => menu.days.find(d => d.name === day.name))
+                                        .elseLog(`Could not find day ${day.name}`)
+                                        .then(day => day.meals.find(m => m.name === meal.name))
+                                        .elseLog(`Could not find meal ${meal.name}`)
+                                        .then(meal => meal.dishes[i] = newDish)
+                                        .then(() => this.props.globalState.setMenu(this.props.globalState.menu))
+                                }}
+                                onRemove={() => {
+                                    meal.dishes.splice(i, 1)
+                                    this.forceUpdate()
+                                }}
+                            />
+                        )
+                    }
+                    <button className='AddOne' onClick={() => {
+                        meal.dishes.push(new Dish("", 1))
+                        this.forceUpdate()
+                    }}> + </button>
+                </div>
+                <div id='footer'>
+                    <button onClick={() => {
+                        this.props.globalState.setMenu(this.props.globalState.menu) // Trigger a cleanup
+                        this.setState({
+                            ...this.state,
+                            focus: undefined
+                        })
+                    }
+                    }>Tancar</button>
+                </div>
+            </dialog>
         )
     }
 }
