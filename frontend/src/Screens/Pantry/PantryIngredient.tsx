@@ -57,25 +57,26 @@ interface FocusIngredientProps extends Props {
 export class FocusIngredient extends PantryIngredient<FocusIngredientProps> {
     render(): JSX.Element {
         return (
-            <div className="Dialog">
-                <dialog open>
-                    <h1>{this.props.ingredient.name}</h1>
+
+            <dialog open>
+                <h2 id="header">{this.props.ingredient.name}</h2>
+                <div id="body">
                     <p>
-                        Tens <span className='Amount'>{round2(this.props.ingredient.have)}</span> {makePlural(this.state.storage, "unitat", "unitats")} al teu rebost. En necessites{' '}
-                        <span className='Amount'>{round2(this.props.ingredient.need)}</span>, i per tant te'n falten {' '}
-                        <span className='Amount'>{round2(this.state.deficit)}</span>. Aquest producte es ven en
-                        paquets de <span className='Amount'>{round2(this.props.ingredient.batch_size)}</span> {makePlural(this.props.ingredient.batch_size, "unitat", "unitats")},
-                        i per tant has de comprar  <span className='Amount'>{round2(this.state.packs)}</span> {makePlural(this.state.packs, "paquet", "paquets")}.
+                        Tens <b>{round2(this.props.ingredient.have)}</b> {makePlural(this.state.storage, "unitat", "unitats")} al teu rebost. En necessites{' '}
+                        <b>{round2(this.props.ingredient.need)}</b>, i per tant te'n falten {' '}
+                        <b>{round2(this.state.deficit)}</b>. Aquest producte es ven en
+                        paquets de <b>{round2(this.props.ingredient.batch_size)}</b> {makePlural(this.props.ingredient.batch_size, "unitat", "unitats")},
+                        i per tant has de comprar  <b>{round2(this.state.packs)}</b> {makePlural(this.state.packs, "paquet", "paquets")}.
                     </p>
                     <p>
-                        Cada paquet costa <span className='Amount'>{asEuro(this.props.ingredient.price)}</span>, i per
-                        tant et costarà <span className='Amount'>{asEuro(this.state.cost)}</span>
+                        Cada paquet costa <b>{asEuro(this.props.ingredient.price)}</b>, i per
+                        tant et costarà <b>{asEuro(this.state.cost)}</b>
                     </p>
-                    <div className='OK'>
-                        <button onClick={this.props.onClose}>OK</button>
-                    </div>
-                </dialog>
-            </div>
+                </div>
+                <div id="footer">
+                    <button onClick={this.props.onClose}>OK</button>
+                </div>
+            </dialog>
         )
     }
 }

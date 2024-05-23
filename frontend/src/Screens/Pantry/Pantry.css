@@ -101,43 +101,4 @@
             }
         }
     }
-
-    .Dialog {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 80%;
-
-        dialog[open] {
-            width: 80%;
-            max-width: 400px;
-            border-radius: 10px;
-
-            h1 {
-                text-align: center;
-                font-weight: bold;
-            }
-
-            p {
-                text-align: left;
-                text-justify: distribute-all-lines;
-                width: 95%;
-                margin: auto;
-                padding: 10px;
-            }
-
-            .Amount {
-                font-weight: bold;
-            }
-
-            .OK {
-                text-align: center;
-
-                button {
-                    background-color: lightgray;
-                    width: 95%;
-                }
-            }
-        }
-    }
 }
