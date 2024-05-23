@@ -1,14 +1,6 @@
-button {
-  font-size: auto;
-  font-weight: bold;
-  color: black;
-  border: black;
-  padding: auto;
-  height: 40px;
-  margin: 10px;
-  vertical-align: middle;
-  border-radius: 5px;
-  cursor: pointer;
+html {
+  font-size: 100%;
+  background: lightblue;
 }
 
 #odd {
@@ -19,8 +11,35 @@ button {
   background: white;
 }
 
-#mouseover {
+#highlight {
   background: rgb(255, 196, 85);
+}
+
+#header1 {
+  background: #1a237e;
+  color: white;
+  font-size: 115%;
+  font-weight: bold;
+}
+
+#header2 {
+  background: #579dff;
+  color: white;
+  font-size: 105%;
+  font-weight: bold;
+}
+
+
+button {
+  font-weight: bold;
+  color: black;
+  border: black;
+  padding: auto;
+  height: 40px;
+  margin: 10px;
+  vertical-align: middle;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
 dialog {
@@ -59,7 +78,6 @@ dialog {
 
   >#body {
     padding: 10px;
-    font-size: 16px;
     display: flex;
     flex-direction: column;
     justify-content: top;
@@ -77,10 +95,8 @@ dialog {
     align-items: center;
 
     button {
-      font-size: 20px;
       width: 100%;
       height: 100%;
-      font-size: auto;
       background-color: transparent;
     }
   }

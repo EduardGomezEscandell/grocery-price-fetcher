@@ -99,7 +99,7 @@ export default class MenuTable extends React.Component<Props> {
     private DayCol(day: Day): JSX.Element {
         return (
             <div className='Day'>
-                <div className='Header'>
+                <div className='Header' id='header1'>
                     {day.name}
                 </div>
                 {
@@ -118,7 +118,7 @@ export default class MenuTable extends React.Component<Props> {
                                 }
                             })
                         }}>
-                            <div className='MealHeader' key='MealName'>
+                            <div className='MealHeader' key='MealName' id='header2'>
                                 {meal.name}
                             </div>
                             <div className="Body" key='MealBody' style={{
@@ -133,7 +133,7 @@ export default class MenuTable extends React.Component<Props> {
                                             name={dish.name}
                                             amount={dish.amount}
                                             id={dish.name === this.state.hover
-                                                ? 'mouseover' :
+                                                ? 'highlight' :
                                                 i % 2 === 0
                                                     ? 'odd' : 'even'
                                             }
@@ -214,7 +214,7 @@ export default class MenuTable extends React.Component<Props> {
                     }}> + </button>
                 </div>
                 <div id='footer'>
-                    <button className='Button' onClick={() => {
+                    <button onClick={() => {
                         this.props.globalState.setMenu(this.props.globalState.menu) // Trigger a cleanup
                         this.setState({
                             ...this.state,

@@ -8,16 +8,16 @@
     padding: 10px;
 
     background: lightblue;
-}
-
-.Menu td {
-    min-width: 13.5vw;
-    max-width: 1vw;
-
-    border-collapse: collapse;
-    max-width: 800px;
-    padding: 5px;
-    vertical-align: top;
+    
+    td {
+        min-width: 13.5vw;
+        max-width: 1vw;
+        
+        border-collapse: collapse;
+        max-width: 800px;
+        padding: 5px;
+        vertical-align: top;
+    }
 }
 
 .Menu .Day {
@@ -28,50 +28,30 @@
 }
 
 .Menu .Day .Header {
-    background-color: #1a237e;
+    height: 60px;
     text-transform: uppercase;
 
-    border-radius: 20px 20px 0px 0px;
+    border-top-left-radius: inherit;
+    border-top-right-radius: inherit;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
 
-    color: white;
-    height: 50px;
+    
     display: flex;
-
-    font-size: large;
-    font-weight: bold;
-
-    padding: 10px;
     align-items: center;
     justify-content: center;
 }
 
-.Menu .Meal {
-    margin: auto;
-}
 
-.Menu .Meal .MealHeader {
-    font-size: auto;
-    font-weight: bold;
-    color: white;
-
+.Meal .MealHeader {
     height: 40px;
-    padding: auto;
 
-    background-color: #579dff;
     display: flex;
-
     align-items: center;
     justify-content: center;
 }
 
-.Menu .Meal .Body {
-    vertical-align: top;
-    display: flex;
-    flex-direction: column;
-}
-
-.Menu .Meal .Body .DishItem {
-    font-size: 16px;
+.Meal .Body .DishItem {
     display: flex;
     padding: 5px;
 

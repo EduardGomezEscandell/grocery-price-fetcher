@@ -103,16 +103,16 @@ export class RowIngredient extends PantryIngredient<RowIngredientProps, RowIngre
         return (
             <tr key={this.props.ingredient.name}
                 id={this.state.id || 'odd'}
-                onMouseEnter={() => this.setState({ ...this.state, id: 'mouseover' })}
+                onMouseEnter={() => this.setState({ ...this.state, id: 'highlight' })}
                 onMouseLeave={() => this.setState({ ...this.state, id: this.defaultID })}
                 onClick={(e) => {
                     if (e.target instanceof HTMLInputElement) return
                     this.props.onClick(this)
                 }}
             >
-                <td className='Label' key='name'> {this.props.ingredient.name}  </td>
-                <td className='Select' key='have'>
-                    <input
+                <td id='left' key='name'> {this.props.ingredient.name}  </td>
+                <td key='have'>
+                    <input 
                         type="number"
                         value={this.state.storage}
                         onClick={(e) => { e.target instanceof HTMLInputElement && e.target.select() }}
@@ -120,7 +120,7 @@ export class RowIngredient extends PantryIngredient<RowIngredientProps, RowIngre
                         datatype='number'
                     />
                 </td>
-                <td className='Number' key='price-total'> {asEuro(this.state.cost)} </td>
+                <td id='right' key='price-total'> {asEuro(this.state.cost)} </td>
             </tr>
         )
     }

@@ -86,7 +86,7 @@ export default function DishPicker(pp: Props) {
                 options={options}
                 isSearchable
             />
-            <button
+            <button id='highlight'
                 onClick={pp.onRemove}
             >X</button>
         </div>

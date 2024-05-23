@@ -54,7 +54,7 @@ function PantryTable(pp: PantryTableProps): JSX.Element {
         <div className='Pantry' key='pantry'>
             <table style={tableStyle}>
                 <thead>
-                    <tr key='header'>
+                    <tr key='header' id='header1'>
                         <th id="left">Producte</th>
                         <th id="center">Tens</th>
                         <th id="right">A comprar</th>
@@ -84,21 +84,15 @@ function PantryTable(pp: PantryTableProps): JSX.Element {
                         ))
                     }
                 </tbody>
-                <tfoot>
-                    <tr >
-                        <td colSpan={3} style={{ background: 'black' }}>    </td>
+                <tfoot id='header2'>
+                    <tr><td colSpan={3} id='header1'/></tr>
+                    <tr>
+                        <td colSpan={2} id='left'>Total a comprar</td>
+                        <td id='right'>{asEuro(pp.total.purchased)}</td>
                     </tr>
-                    <tr style={{
-                        fontWeight: 'bold',
-                    }}>
-                        <td colSpan={2} style={{ paddingLeft: '20px' }}>Total a comprar</td>
-                        <td className='Number'>{asEuro(pp.total.purchased)}</td>
-                    </tr>
-                    <tr style={{
-                        fontWeight: 'bold',
-                    }}>
-                        <td colSpan={2} style={{ paddingLeft: '20px' }}>Cost del menjar consumit</td>
-                        <td className='Number'>{asEuro(pp.total.consumed)}</td>
+                    <tr>
+                        <td colSpan={2} id='left'>Cost del menjar consumit</td>
+                        <td id='right'>{asEuro(pp.total.consumed)}</td>
                     </tr>
                 </tfoot>
             </table>
