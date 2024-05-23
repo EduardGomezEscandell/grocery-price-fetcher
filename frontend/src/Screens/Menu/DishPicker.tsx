@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import Select from 'react-select'
 import { Dish } from '../../State/State'
-import './Menu.css'
+import './DishPicker.css'
 
 interface Props {
     recipes: string[];

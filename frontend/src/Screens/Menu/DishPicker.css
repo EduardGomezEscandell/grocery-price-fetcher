@@ -1,0 +1,51 @@
+.DishPicker {
+    display: flex;
+    flex-direction: row;
+    align-items: left;
+    justify-content: left;
+    text-align: left;
+    margin: 10px;
+    border-radius: 10px;
+    border: 1px solid black;
+    height: 40px;
+}
+
+.DishPicker input {
+    width: 20%;
+
+    height: 40px;
+    max-height: 40px;
+
+    padding: 0px;
+    margin: 0px;
+
+    border: none;
+    border-right: 1px solid black;
+
+    border-radius: 10px;
+    border-top-right-radius: 0%;
+    border-bottom-right-radius: 0%;
+
+    text-align: center;
+    font-size: 16px;
+}
+
+.DishPicker .Select {
+    width: 80%;
+    padding: 0px;
+    margin: 0px;
+    font-size: 16px;
+
+    +button {
+        width: 40px;
+        background: rgb(255, 196, 85);
+
+        height: 40px;
+        padding: 0px;
+        margin: 0px;
+
+        border-radius: 10px;
+        border-top-left-radius: 0%;
+        border-bottom-left-radius: 0%;
+    }
+}
