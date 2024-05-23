@@ -29,7 +29,6 @@ export default class SaveButton extends React.Component<Props> {
 
     render(): JSX.Element {
         const { text, id } = this.getPhaseData(this.state.phase)
-        console.log('SaveButton render', id)
         return <button className='save-button' id={id} onClick={this.cycle.bind(this)}>{text}</button>
     }
 

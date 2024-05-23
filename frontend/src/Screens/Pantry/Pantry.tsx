@@ -6,7 +6,6 @@ import SaveButton from '../../SaveButton/SaveButton.tsx';
 import { FocusIngredient, RowIngredient } from './PantryIngredient.tsx';
 import { asEuro, positive } from '../../Numbers/Numbers.ts'
 import { savePantry } from './../ShoppingList/ShoppingList.tsx'
-import './Pantry.css'
 
 interface Props {
     backend: Backend;
@@ -65,7 +64,7 @@ function PantryTable(pp: PantryTableProps): JSX.Element {
     }
 
     return (
-        <div className='Pantry' key='pantry'>
+        <div className='scroll-table' key='pantry'>
             <table style={tableStyle}>
                 <thead>
                     <tr key='header' id='header1'>

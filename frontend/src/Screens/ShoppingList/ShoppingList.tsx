@@ -3,7 +3,6 @@ import Backend from '../../Backend/Backend.tsx';
 import TopBar from '../../TopBar/TopBar.tsx';
 import { State } from '../../State/State.tsx';
 import SaveButton from '../../SaveButton/SaveButton.tsx';
-import './ShoppingList.css';
 
 interface Props {
     backend: Backend;

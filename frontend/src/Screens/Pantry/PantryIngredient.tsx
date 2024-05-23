@@ -1,7 +1,6 @@
 import React from 'react'
 import { Ingredient } from '../../State/State.js'
 import { asEuro, positive, round2, makePlural } from '../../Numbers/Numbers.ts'
-import './Pantry.css'
 
 interface Props {
     ingredient: Ingredient;
@@ -57,7 +56,6 @@ interface FocusIngredientProps extends Props {
 export class FocusIngredient extends PantryIngredient<FocusIngredientProps> {
     render(): JSX.Element {
         return (
-
             <dialog open>
                 <h2 id="header">{this.props.ingredient.name}</h2>
                 <div id="body">

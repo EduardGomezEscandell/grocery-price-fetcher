@@ -1,5 +1,5 @@
-.save-button {
-    width: fit-content;
+button+.save-button {
+    width: 120px;
     padding: 10px;
 
     &#idle{
