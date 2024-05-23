@@ -6,6 +6,8 @@ import TopBar from '../../TopBar/TopBar.tsx';
 import DishPicker from './DishPicker.tsx'
 import './Menu.css'
 import { round2 } from '../../Numbers/Numbers.ts';
+import SaveButton from '../../SaveButton/SaveButton.tsx';
+import DownloadPantry from '../Pantry/PantryLoad.ts';
 
 interface Props {
     backend: Backend;
@@ -54,7 +56,6 @@ export default class MenuTable extends React.Component<Props> {
 
     }
 
-
     get days(): string[] {
         return this.state.days
     }
@@ -73,7 +74,20 @@ export default class MenuTable extends React.Component<Props> {
             <>
                 <TopBar
                     left={<p key='2' className='Text'>Menu</p>}
-                    right={<button key='3' className='Button' onClick={this.props.onComplete}>Guardar i continuar</button>}
+                    right={<SaveButton
+                        key='save'
+
+                        baseTxt='Desar i seguir'
+                        
+                        onSave={() => DownloadPantry(this.props.backend, this.props.globalState)}
+                        onSaveTxt='Desant...'
+
+                        onAcceptTxt='Desat'
+                        onAccept={this.props.onComplete}
+
+                        onRejectTxt='Error'
+
+                    />}
                 />
                 <div className='Menu'>
                     <table key='menu-table' style={tableStyle}>

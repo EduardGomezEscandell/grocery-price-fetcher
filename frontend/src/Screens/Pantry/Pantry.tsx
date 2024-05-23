@@ -2,15 +2,17 @@ import React, { useState } from 'react'
 import { Ingredient, ShoppingList, State } from '../../State/State.tsx';
 import Backend from '../../Backend/Backend.tsx';
 import TopBar from '../../TopBar/TopBar.tsx';
-import SaveButton from './SaveButton.tsx';
+import SaveButton from '../../SaveButton/SaveButton.tsx';
 import { FocusIngredient, RowIngredient } from './PantryIngredient.tsx';
 import { asEuro, positive } from '../../Numbers/Numbers.ts'
+import { savePantry } from './../ShoppingList/ShoppingList.tsx'
 import './Pantry.css'
 
 interface Props {
     backend: Backend;
     globalState: State;
     onBackToMenu: () => void;
+    onComplete: () => void;
 }
 
 export default function Pantry(pp: Props) {
@@ -27,7 +29,19 @@ export default function Pantry(pp: Props) {
         <>
             <TopBar
                 left={<button onClick={pp.onBackToMenu} key='go-back'>Tornar al menú</button>}
-                right={<SaveButton key='save' backend={pp.backend} globalState={pp.globalState} />}
+                right={<SaveButton
+                    key='save'
+                    baseTxt='Desar'
+
+                    onSave={() => savePantry(pp.backend, pp.globalState)}
+                    onSaveTxt='Desant...'
+
+                    onAccept={() => {console.log("HI!!!"); return  pp.onComplete()}}
+                    onAcceptTxt='Desat'
+
+                    onReject={() => console.log('Error saving pantry')}
+                    onRejectTxt='Error'
+                />}
             />
             <PantryTable
                 shop={pp.globalState.shoppingList}

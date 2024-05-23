@@ -1,0 +1,20 @@
+.save-button {
+    width: fit-content;
+    padding: 10px;
+
+    &#idle{
+        color: inherit;
+    }
+    
+    &#busy{
+        color: inherit;
+    }
+    
+    &#done{
+        color: green;
+    }
+    
+    &#error{
+        color: red;
+    }
+}

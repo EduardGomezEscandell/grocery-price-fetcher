@@ -31,14 +31,14 @@ html {
 
 
 button {
-  font-weight: bold;
-  color: black;
-  border: black;
-  padding: auto;
+  font: inherit;
+
   height: 40px;
   margin: 10px;
-  vertical-align: middle;
+  
+  border: none;
   border-radius: 5px;
+  
   cursor: pointer;
 }
 

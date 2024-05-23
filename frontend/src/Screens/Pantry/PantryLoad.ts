@@ -1,33 +1,18 @@
-import React, { useEffect } from 'react'
-import Backend from '../../Backend/Backend'
+import Backend from '../../Backend/Backend.ts'
 import { Pantry, ShoppingList, State } from '../../State/State.tsx'
 
-interface Props {
-    backend: Backend
-    state: State
-    onComplete: () => void
-}
-
-export default function PantryLoad(pp: Props) {
-    useEffect(() => {
-        Promise.all([
-            pp.backend
-                .Menu()
-                .POST(pp.state.menu),
-            pp.backend
-                .Pantry()
-                .GET()
-                .then((p: Pantry[]) => p.length > 0 ?  p[0] : new Pantry())
-        ])
-            .then(([shopping, pantry]) => merge(pantry, shopping))
-            .then(s => pp.state.shoppingList = s)
-            .finally(() => pp.onComplete())
-    })
-
-    return (
-        <p>Loading...</p>
-    )
-
+export default async function DownloadPantry(backend: Backend, state: State): Promise<void> {
+    const [shopping, pantry] = await Promise.all([
+        backend
+            .Menu()
+            .POST(state.menu),
+        backend
+            .Pantry()
+            .GET()
+            .then((p: Pantry[]) => p.length > 0 ? p[0] : new Pantry())
+    ])
+    const s = merge(pantry, shopping)
+    state.shoppingList = s
 }
 
 function merge(pantry: Pantry, shoppingList: ShoppingList): ShoppingList {
@@ -40,7 +25,7 @@ function merge(pantry: Pantry, shoppingList: ShoppingList): ShoppingList {
         const p = pantry.contents[i]
         const s = shoppingList.ingredients[j]
 
-        
+
         switch (p.name.localeCompare(s.name)) {
             case 0:
                 shoppingList.ingredients[j].have = p.have

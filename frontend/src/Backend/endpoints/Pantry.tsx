@@ -44,22 +44,23 @@ interface PostMessage {
 export class MockPantryEndpoint extends PantryEndpoint {
     async GET(): Promise<Pantry[]> {
         console.log(`GET from ${MockPantryEndpoint.path}`)
-        return Promise.resolve(
-            [
-                Pantry.fromJSON({
-                    name: "test", contents: [
-                        { ingredient: "Pastanaga", amount: 3 },
-                        { ingredient: "Iogurt", amount: 2 },
-                    ]
-                }),
-                Pantry.fromJSON({ name: "Dummy menu" })
-            ]
-        )
+        return new Promise(resolve => setTimeout(resolve, 100))
+            .then(() =>
+                [
+                    Pantry.fromJSON({
+                        name: "test", contents: [
+                            { ingredient: "Pastanaga", amount: 3 },
+                            { ingredient: "Iogurt", amount: 2 },
+                        ]
+                    }),
+                    Pantry.fromJSON({ name: "Dummy menu" })
+                ]
+            )
     }
 
     async POST(msg: PostMessage): Promise<void> {
         console.log(`POST to ${MockPantryEndpoint.path}:`)
         console.log(JSON.stringify(msg)) // Ensure toJSON is called without errors
-        return Promise.resolve()
+        return new Promise(resolve => setTimeout(resolve, 100))
     }
 }
