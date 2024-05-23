@@ -1,5 +1,5 @@
 import { Menu } from '../../State/State.tsx'
-import { ShoppingList } from '../../State/State.tsx'
+import { ShoppingNeeds } from '../../State/State.tsx'
 
 export class MenuEndpoint {
     protected static path: string = '/api/menu'
@@ -20,7 +20,7 @@ export class MenuEndpoint {
             .then(data => data.map(m => Menu.fromJSON(m)))
     }
 
-    async POST(menu: Menu): Promise<ShoppingList> {
+    async POST(menu: Menu): Promise<ShoppingNeeds> {
         return fetch(MenuEndpoint.path, {
             method: 'POST',
             headers: {
@@ -30,7 +30,7 @@ export class MenuEndpoint {
             body: menu.toJSON()
         })
             .then(response => response.json())
-            .then(data => ShoppingList.fromJSON(data))
+            .then(data => ShoppingNeeds.fromJSON(data))
     }
 }
 
@@ -46,11 +46,11 @@ export class MockMenuEndpoint extends MenuEndpoint {
             )
     }
 
-    async POST(menu: Menu): Promise<ShoppingList> {
+    async POST(menu: Menu): Promise<ShoppingNeeds> {
         console.log(`POST to ${MockMenuEndpoint.path}:`)
         console.log(menu.toJSON().substring(0, 30), '...') // Ensure toJSON is called without errors
         return new Promise(resolve => setTimeout(resolve, 100))
-            .then(() => ShoppingList.fromJSON([
+            .then(() => ShoppingNeeds.fromJSON([
                 { batch_size: 1, need: 1.00, price: 0.17, product: "Pastanaga" },
                 { batch_size: 1, need: 0.50, price: 0.50, product: "Pebrot verd" },
                 { batch_size: 1, need: 0.95, price: 1.10, product: "Pebrot vermell" },

@@ -1,5 +1,5 @@
 import Backend from '../../Backend/Backend.ts'
-import { Pantry, ShoppingList, State } from '../../State/State.tsx'
+import { Pantry, ShoppingNeeds, State } from '../../State/State.tsx'
 
 export default async function DownloadPantry(backend: Backend, state: State): Promise<void> {
     const [shopping, pantry] = await Promise.all([
@@ -11,24 +11,23 @@ export default async function DownloadPantry(backend: Backend, state: State): Pr
             .GET()
             .then((p: Pantry[]) => p.length > 0 ? p[0] : new Pantry())
     ])
-    const s = merge(pantry, shopping)
-    state.shoppingList = s
+    state.inNeed = merge(pantry, shopping)
 }
 
-function merge(pantry: Pantry, shoppingList: ShoppingList): ShoppingList {
-    pantry.contents.sort((a, b) => a.name.localeCompare(b.name))
-    shoppingList.ingredients.sort((a, b) => a.name.localeCompare(b.name))
+function merge(have: Pantry, need: ShoppingNeeds): ShoppingNeeds {
+    have.contents.sort((a, b) => a.name.localeCompare(b.name))
+    need.ingredients.sort((a, b) => a.name.localeCompare(b.name))
 
     var i = 0
     var j = 0
-    while (i < pantry.contents.length && j < shoppingList.ingredients.length) {
-        const p = pantry.contents[i]
-        const s = shoppingList.ingredients[j]
+    while (i < have.contents.length && j < need.ingredients.length) {
+        const p = have.contents[i]
+        const s = need.ingredients[j]
 
 
         switch (p.name.localeCompare(s.name)) {
             case 0:
-                shoppingList.ingredients[j].have = p.have
+                need.ingredients[j].have = p.have
                 i++
                 j++
                 break
@@ -41,5 +40,5 @@ function merge(pantry: Pantry, shoppingList: ShoppingList): ShoppingList {
         }
     }
 
-    return shoppingList
+    return need
 }

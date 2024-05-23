@@ -2,6 +2,7 @@ import { process } from 'react'
 import { MenuEndpoint, MockMenuEndpoint } from './endpoints/Menu.tsx'
 import { DishesEndpoint, MockDishesEndpoint } from './endpoints/Dishes.tsx'
 import { PantryEndpoint, MockPantryEndpoint } from './endpoints/Pantry.tsx'
+import { MockShoppingListEndpoint, ShoppingListEndpoint } from './endpoints/ShoppingList.tsx'
 
 class Backend {
     static New(): Backend {
@@ -15,6 +16,7 @@ class Backend {
         this.menu = mock ? new MockMenuEndpoint() : new MenuEndpoint()
         this.dishes = mock ? new MockDishesEndpoint() : new DishesEndpoint()
         this.pantry = mock ? new MockPantryEndpoint() : new PantryEndpoint()
+        this.shopping =  mock ? new MockShoppingListEndpoint() : new ShoppingListEndpoint()
     }
 
     private menu: MenuEndpoint;
@@ -30,6 +32,11 @@ class Backend {
     private pantry: PantryEndpoint;
     Pantry(): PantryEndpoint {
         return this.pantry
+    }
+
+    private shopping: ShoppingListEndpoint;
+    Shopping(): ShoppingListEndpoint {
+        return this.shopping
     }
 }
 

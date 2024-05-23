@@ -1,11 +1,10 @@
 import React, { useState } from 'react'
-import { Ingredient, ShoppingList, State } from '../../State/State.tsx';
+import { Ingredient, ShoppingList, ShoppingNeeds, State } from '../../State/State.tsx';
 import Backend from '../../Backend/Backend.tsx';
 import TopBar from '../../TopBar/TopBar.tsx';
 import SaveButton from '../../SaveButton/SaveButton.tsx';
 import { FocusIngredient, RowIngredient } from './PantryIngredient.tsx';
 import { asEuro, positive } from '../../Numbers/Numbers.ts'
-import { savePantry } from './../ShoppingList/ShoppingList.tsx'
 
 interface Props {
     backend: Backend;
@@ -15,7 +14,7 @@ interface Props {
 }
 
 export default function Pantry(pp: Props) {
-    const total = new Total().compute(pp.globalState.shoppingList.ingredients)
+    const total = new Total().compute(pp.globalState.inNeed.ingredients)
 
     const [available, setAvailable] = useState(total.available)
     const [remaining, setRemaining] = useState(total.remaining)
@@ -35,23 +34,65 @@ export default function Pantry(pp: Props) {
                     onSave={() => savePantry(pp.backend, pp.globalState)}
                     onSaveTxt='Desant...'
 
-                    onAccept={() => {console.log("HI!!!"); return  pp.onComplete()}}
+                    onAccept={() => { pp.onComplete() }}
                     onAcceptTxt='Desat'
 
-                    onReject={() => console.log('Error saving pantry')}
+                    onReject={(reason: any) => console.log('Error saving pantry: ', reason || 'Unknown error')}
                     onRejectTxt='Error'
                 />}
             />
             <PantryTable
-                shop={pp.globalState.shoppingList}
+                inNeed={pp.globalState.inNeed}
                 total={total}
             />
         </>
     )
 }
 
+export function savePantry(backend: Backend, globalState: State): Promise<void> {
+    return Promise.all([
+        backend
+            .Pantry()
+            .POST({
+                name: '', // Let the backend handle the name for now
+                contents: globalState.inNeed.ingredients
+                    .filter(i => i.have > 0)
+                    .map(i => {
+                        return { name: i.name, amount: i.have }
+                    })
+            }).then(() => { }),
+        backend
+            .Shopping()
+            .GET()
+            .then((s: ShoppingList[]) => s.length > 0 ? s[0] : new ShoppingList())
+            .then(s => globalState.shoppingList = makeShoppingList(s, globalState.inNeed))
+            .then(() => { })
+    ]).then(() => { })
+}
+
+function makeShoppingList(list: ShoppingList, needs: ShoppingNeeds): ShoppingList {
+    return {
+        name: list.name,
+        timeStamp: list.timeStamp,
+        items: needs.ingredients
+            .filter(i => i.need > 0)
+            .map(i => {
+                const alreadyBought = list.items.findIndex(si => si.name === i.name) !== -1
+                const mustBuy = Math.max(0, i.need - i.have)
+
+                return {
+                    name: i.name,
+                    done: alreadyBought,
+                    units: mustBuy,
+                    packs: Math.ceil(mustBuy / i.batch_size),
+                    cost: Math.ceil(mustBuy / i.batch_size) * i.price,
+                }
+            })
+    }
+}
+
 class PantryTableProps {
-    shop: ShoppingList
+    inNeed: ShoppingNeeds
     total: Total
 }
 
@@ -75,7 +116,7 @@ function PantryTable(pp: PantryTableProps): JSX.Element {
                 </thead>
                 <tbody>
                     {
-                        pp.shop.ingredients.map((i: Ingredient, idx: number) => (
+                        pp.inNeed.ingredients.map((i: Ingredient, idx: number) => (
                             <RowIngredient
                                 key={i.name}
                                 id={idx % 2 === 0 ? 'even' : 'odd'}
@@ -83,7 +124,7 @@ function PantryTable(pp: PantryTableProps): JSX.Element {
                                 onChange={(value: number) => {
                                     i.have = value
                                     pp.total
-                                        .compute(pp.shop.ingredients)
+                                        .compute(pp.inNeed.ingredients)
                                         .commit()
                                 }}
                                 onClick={(ri: RowIngredient) => {
@@ -98,7 +139,7 @@ function PantryTable(pp: PantryTableProps): JSX.Element {
                     }
                 </tbody>
                 <tfoot id='header2'>
-                    <tr><td colSpan={3} id='header1'/></tr>
+                    <tr><td colSpan={3} id='header1' /></tr>
                     <tr>
                         <td colSpan={2} id='left'>Total a comprar</td>
                         <td id='right'>{asEuro(pp.total.purchased)}</td>
@@ -116,7 +157,7 @@ function PantryTable(pp: PantryTableProps): JSX.Element {
                     onChange={(value: number) => {
                         focussed.props.ingredient.have = value
                         pp.total
-                            .compute(pp.shop.ingredients)
+                            .compute(pp.inNeed.ingredients)
                             .commit()
                     }}
                 />

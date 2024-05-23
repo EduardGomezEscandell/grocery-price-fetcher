@@ -1,14 +1,14 @@
-import { Pantry } from '../../State/State.tsx'
+import { ShoppingList } from '../../State/State.tsx'
 
-export class PantryEndpoint {
-    protected static path: string = '/api/pantry'
+export class ShoppingListEndpoint {
+    protected static path: string = '/api/shopping-list'
 
     static Path(): string {
         return this.path
     }
 
-    async GET(): Promise<Pantry[]> {
-        return fetch(PantryEndpoint.path, {
+    async GET(): Promise<ShoppingList[]> {
+        return fetch(ShoppingListEndpoint.path, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -16,11 +16,11 @@ export class PantryEndpoint {
             }
         })
             .then(response => response.json())
-            .then(data => data.map(p => Pantry.fromJSON(p)))
+            .then(data => data.map(p => ShoppingList.fromJSON(p)))
     }
 
     async POST(msg: PostMessage): Promise<void> {
-        return fetch(PantryEndpoint.path, {
+        return fetch(ShoppingListEndpoint.path, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -35,32 +35,31 @@ export class PantryEndpoint {
 
 interface PostMessage {
     name: string
-    contents: Array<{
-        name: string
-        amount: number
-    }>
+    items: string[]
 }
 
-export class MockPantryEndpoint extends PantryEndpoint {
-    async GET(): Promise<Pantry[]> {
-        console.log(`GET from ${MockPantryEndpoint.path}`)
+export class MockShoppingListEndpoint extends ShoppingListEndpoint {
+    async GET(): Promise<ShoppingList[]> {
+        console.log(`GET from ${MockShoppingListEndpoint.path}`)
         return new Promise(resolve => setTimeout(resolve, 100))
             .then(() =>
                 [
-                    Pantry.fromJSON({
-                        name: "test", contents: [
-                            { name: "Albercocs", amount: 7 },
-                            { name: "Pastanaga", amount: 3 },
-                            { name: "Iogurt", amount: 2 },
-                        ]
+                    ShoppingList.fromJSON({
+                        "name": "default",
+                        "time_stamp": "2024-05-24T14:57:36Z",
+                        "items": ["Ametlles","Avellanes"],
                     }),
-                    Pantry.fromJSON({ name: "Dummy menu" })
+                    ShoppingList.fromJSON({
+                        "name": "dummy",
+                        "time_stamp": "2024-05-24T14:57:36Z",
+                        "items": [],
+                    }),
                 ]
             )
     }
 
     async POST(msg: PostMessage): Promise<void> {
-        console.log(`POST to ${MockPantryEndpoint.path}:`)
+        console.log(`POST to ${MockShoppingListEndpoint.path}:`)
         console.log(JSON.stringify(msg)) // Ensure toJSON is called without errors
         return new Promise(resolve => setTimeout(resolve, 100))
     }

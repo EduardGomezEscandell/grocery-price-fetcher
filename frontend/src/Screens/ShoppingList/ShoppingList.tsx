@@ -3,6 +3,8 @@ import Backend from '../../Backend/Backend.tsx';
 import TopBar from '../../TopBar/TopBar.tsx';
 import { State } from '../../State/State.tsx';
 import SaveButton from '../../SaveButton/SaveButton.tsx';
+import ShoppingItem from './ShoppingItem.tsx';
+import { asEuro } from '../../Numbers/Numbers.ts';
 
 interface Props {
     backend: Backend;
@@ -10,7 +12,7 @@ interface Props {
     onBackToPantry: () => void;
 }
 
-export default function ShoppingList(props: Props): JSX.Element {
+export default function Shopping(props: Props): JSX.Element {
     return (
         <>
             <TopBar
@@ -19,29 +21,55 @@ export default function ShoppingList(props: Props): JSX.Element {
                     key='save'
 
                     baseTxt='Desar'
-                    onSave={() => savePantry(props.backend, props.globalState)}
+                    onSave={() => saveShoppingList(props.backend, props.globalState)}
                     onSaveTxt='Desant...'
                     onAcceptTxt='Desat'
                     onRejectTxt='Error'
                 />}
             />
-            <div className='shopping-list'>
-                <h1 id='header1'>Llista de la compra</h1>
+            <div className='scroll-table'>
+                <table>
+                    <thead id='header1'>
+                        <tr>
+                            <th></th>
+                            <th>Ingredient</th>
+                            <th>Unitats</th>
+                            <th>Paquets</th>
+                            <th>Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {
+                            props.globalState.shoppingList.items.map((i, idx) =>
+                                <ShoppingItem i={i} idx={idx} key={idx} globalState={props.globalState} />
+                            )
+                        }
+                    </tbody>
+                    <tfoot id='header2'>
+                        <tr>
+                            <td></td>
+                            <td id='left' colSpan={3}>Total</td>
+                            <td id='right' >{
+                                asEuro(
+                                    props.globalState.shoppingList.items.reduce((acc, i) => acc + i.cost, 0)
+                                )
+                            }</td>
+                        </tr>
+                    </tfoot>
+                </table>
             </div>
         </>
     )
 }
 
 
-export function savePantry(backend: Backend, globalState: State): Promise<void> {
+function saveShoppingList(backend: Backend, globalState: State): Promise<void> {
     return backend
-        .Pantry()
+        .Shopping()
         .POST({
-            name: '', // Let the backend handle the name for now
-            contents: globalState.shoppingList.ingredients
-                .filter(i => i.have > 0)
-                .map(i => {
-                    return { name: i.name, amount: i.have }
-                })
+            name: globalState.shoppingList.name, // Let the backend handle the name for now
+            items: globalState.shoppingList.items
+                .filter(i => i.done)
+                .map(i => i.name)
         })
 }

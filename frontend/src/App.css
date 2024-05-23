@@ -15,6 +15,11 @@ html {
   background: rgb(255, 196, 85);
 }
 
+#lowlight {
+  background: lightgray;
+  color: gray;
+}
+
 #header1 {
   background: #1a237e;
   color: white;
@@ -148,7 +153,7 @@ dialog {
               text-align: center;
               min-width: fit-content;
 
-              input {
+              input[type="number"] {
                   width: 80px;
                   text-align: right;
                   font: inherit;
@@ -158,6 +163,10 @@ dialog {
 
                   border-radius: 10px;
               }
+
+              input[type="checkbox"] {
+                border-radius: 10px;
+            }
           }
       }
 
