@@ -40,3 +40,9 @@ type Pantry struct {
 	Name     string       `json:"name"`
 	Contents []Ingredient `json:"contents"`
 }
+
+type ShoppingList struct {
+	Name      string   `json:"name"`
+	TimeStamp string   `json:"time_stamp"`
+	Items     []string `json:"items"`
+}
