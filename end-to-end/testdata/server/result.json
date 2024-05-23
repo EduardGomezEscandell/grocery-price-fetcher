@@ -1,7 +1,7 @@
 [
 	{"batch_size": 1.00, "have": 0.00, "need": 1.00, "price": 0.39, "product": "All"},
 	{"batch_size": 1.00, "have": 0.00, "need": 0.40, "price": 1.27, "product": "Arròs"},
-	{"batch_size": 1.00, "have": 0.00, "need": 0.45, "price": 2.19, "product": "Atmetlles"},
+	{"batch_size": 1.00, "have": 0.00, "need": 0.45, "price": 1.99, "product": "Atmetlles"},
 	{"batch_size": 1.00, "have": 0.00, "need": 0.30, "price": 3.95, "product": "Avellanes"},
 	{"batch_size": 5.00, "have": 0.00, "need": 2.00, "price": 4.65, "product": "Barretes de cranc"},
 	{"batch_size": 1.00, "have": 0.00, "need": 2.30, "price": 1.89, "product": "Bolets"},
@@ -11,7 +11,7 @@
 	{"batch_size": 5.00, "have": 0.00, "need": 2.00, "price": 3.30, "product": "Carn picada"},
 	{"batch_size": 1.00, "have": 0.00, "need": 3.00, "price": 0.75, "product": "Ceba"},
 	{"batch_size": 1.00, "have": 0.00, "need": 0.40, "price": 2.10, "product": "Cereals"},
-	{"batch_size": 1.00, "have": 0.00, "need": 0.50, "price": 0.75, "product": "Cigrons"},
+	{"batch_size": 1.00, "have": 0.00, "need": 0.50, "price": 0.71, "product": "Cigrons"},
 	{"batch_size": 1.00, "have": 0.00, "need": 0.15, "price": 0.85, "product": "Civada"},
 	{"batch_size": 1.00, "have": 0.00, "need": 0.60, "price": 4.09, "product": "Embotit"},
 	{"batch_size": 1.00, "have": 0.00, "need": 1.80, "price": 1.95, "product": "Espàrrecs"},
