@@ -37,6 +37,7 @@ html {
 
 button {
   font: inherit;
+  background: whitesmoke;
 
   height: 40px;
   margin: 10px;

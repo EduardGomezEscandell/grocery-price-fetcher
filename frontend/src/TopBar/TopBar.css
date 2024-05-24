@@ -7,7 +7,6 @@
     border-bottom: 1px solid gray;
 
     p {
-        font-size: auto;
         font-weight: bold;
         color: black;
         padding: 10px;
@@ -20,7 +19,6 @@
         align-items: center;
 
         .Text {
-            font-size: auto;
             font-weight: bold;
             color: black;
             margin: 10px;
