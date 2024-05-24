@@ -1,10 +1,9 @@
-import React from 'react'
+import React, { useState } from 'react'
 import Backend from '../../Backend/Backend.tsx';
 import TopBar from '../../TopBar/TopBar.tsx';
 import { ShoppingNeeds, ShoppingList, State } from '../../State/State.tsx';
 import SaveButton from '../../SaveButton/SaveButton.tsx';
 import ShoppingItem from './ShoppingItem.tsx';
-import { asEuro } from '../../Numbers/Numbers.ts';
 
 interface Props {
     backend: Backend;
@@ -12,7 +11,23 @@ interface Props {
     onBackToPantry: () => void;
 }
 
+enum Dialog {
+    OFF,
+    ON,
+    CLOSING,
+}
+
 export default function Shopping(props: Props): JSX.Element {
+    const [dialog, _setDialog] = useState(Dialog.OFF);
+    const [k, setK] = useState(0)
+    const forceChildUpdate = () => setK(k + 1)
+
+    const setDialog = (d: Dialog): boolean => {
+        if (dialog === Dialog.CLOSING) return false
+        _setDialog(d)
+        return true
+    }
+
     return (
         <>
             <TopBar
@@ -42,34 +57,68 @@ export default function Shopping(props: Props): JSX.Element {
                 <table>
                     <thead id='header1'>
                         <tr>
-                            <th></th>
-                            <th>Ingredient</th>
-                            <th>Unitats</th>
-                            <th>Paquets</th>
-                            <th>Cost</th>
+                            <th>
+                                <button id='clear' onClick={() => {
+                                    setDialog(Dialog.ON)
+                                }}>x</button>
+                            </th>
+                            <th id='left'>Ingredient</th>
+                            <th id='right'>Unitats</th>
+                            <th id='right'>Paquets</th>
                         </tr>
                     </thead>
                     <tbody>
                         {
                             props.globalState.shoppingList.items.map((i, idx) =>
-                                <ShoppingItem i={i} idx={idx} key={idx} globalState={props.globalState} />
+                                <ShoppingItem i={i} idx={idx} key={`${k}-${idx}`} globalState={props.globalState} />
                             )
                         }
                     </tbody>
                     <tfoot id='header2'>
                         <tr>
-                            <td></td>
-                            <td id='left' colSpan={3}>Total</td>
-                            <td id='right' >{
-                                asEuro(
-                                    props.globalState.shoppingList.items.reduce((acc, i) => acc + i.cost, 0)
-                                )
-                            }</td>
+                            <td colSpan={4}>
+                             Gràcies per utilitzar El Rebost!
+                            </td>
                         </tr>
                     </tfoot>
                 </table>
+                {dialog !== Dialog.OFF &&
+                    <ResetDialog
+                        onReset={() => {
+                            if (!setDialog(Dialog.CLOSING)) {
+                                return
+                            }
+                            props.globalState.shoppingList.items.forEach(i => i.done = false)
+                            saveShoppingList(props.backend, props.globalState)
+                                .then(() => forceChildUpdate())
+                                .then(() => setDialog(Dialog.OFF))
+                        }}
+                        onExit={() => setDialog(Dialog.OFF)}
+                    />
+                }
             </div>
         </>
+    )
+}
+
+function ResetDialog(props: {
+    onReset: () => void
+    onExit: () => void
+}): JSX.Element {
+    return (
+        <dialog open>
+            <h3 id='header'>
+                Restaurar la llista de la compra?
+            </h3>
+            <div id='body'>
+                <p>Tots els elements marcats com a comprats es desmarcaran</p>
+                <p>Aquesta acció és irreversible, prem Tornar si no vols realitzar-la</p>
+            </div>
+            <div id='footer'>
+                <button id='dialog-left' onClick={props.onExit}>Tornar</button>
+                <button id='dialog-right' onClick={props.onReset}>Restaurar</button>
+            </div>
+        </dialog>
     )
 }
 
