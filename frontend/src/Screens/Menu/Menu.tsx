@@ -77,7 +77,7 @@ export default class MenuTable extends React.Component<Props> {
                     right={<SaveButton
                         key='save'
 
-                        baseTxt='Desar i seguir'
+                        baseTxt='Següent'
                         
                         onSave={() => DownloadPantry(this.props.backend, this.props.globalState)}
                         onSaveTxt='Desant...'

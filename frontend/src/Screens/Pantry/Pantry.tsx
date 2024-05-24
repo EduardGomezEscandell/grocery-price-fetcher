@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
-import { Ingredient, ShoppingList, ShoppingNeeds, State } from '../../State/State.tsx';
+import { Ingredient, ShoppingNeeds, State } from '../../State/State.tsx';
 import Backend from '../../Backend/Backend.tsx';
 import TopBar from '../../TopBar/TopBar.tsx';
 import SaveButton from '../../SaveButton/SaveButton.tsx';
 import { FocusIngredient, RowIngredient } from './PantryIngredient.tsx';
 import { asEuro, positive } from '../../Numbers/Numbers.ts'
+import { downloadShoppingList } from '../ShoppingList/ShoppingList.tsx';
 
 interface Props {
     backend: Backend;
@@ -26,12 +27,26 @@ export default function Pantry(pp: Props) {
     return (
         <>
             <TopBar
-                left={<button onClick={pp.onBackToMenu} key='go-back'>Tornar al menú</button>}
+                left={<SaveButton
+                    key='save'
+
+                    baseTxt='Tornar'
+                    onSave={() => savePantry(pp.backend, pp.globalState)}
+                    onSaveTxt='Desant...'
+
+                    onAccept={() => pp.onBackToMenu()}
+                    onAcceptTxt='Desat'
+
+                    onRejectTxt='Error'
+                />}
                 right={<SaveButton
                     key='save'
-                    baseTxt='Desar'
+                    baseTxt='Següent'
 
-                    onSave={() => savePantry(pp.backend, pp.globalState)}
+                    onSave={() => Promise.all([
+                        savePantry(pp.backend, pp.globalState),
+                        downloadShoppingList(pp.backend, pp.globalState),
+                    ])}
                     onSaveTxt='Desant...'
 
                     onAccept={() => { pp.onComplete() }}
@@ -49,46 +64,17 @@ export default function Pantry(pp: Props) {
     )
 }
 
-export function savePantry(backend: Backend, globalState: State): Promise<void> {
-    return Promise.all([
-        backend
-            .Pantry()
-            .POST({
-                name: '', // Let the backend handle the name for now
-                contents: globalState.inNeed.ingredients
-                    .filter(i => i.have > 0)
-                    .map(i => {
-                        return { name: i.name, amount: i.have }
-                    })
-            }).then(() => { }),
-        backend
-            .Shopping()
-            .GET()
-            .then((s: ShoppingList[]) => s.length > 0 ? s[0] : new ShoppingList())
-            .then(s => globalState.shoppingList = makeShoppingList(s, globalState.inNeed))
-            .then(() => { })
-    ]).then(() => { })
-}
-
-function makeShoppingList(list: ShoppingList, needs: ShoppingNeeds): ShoppingList {
-    return {
-        name: list.name,
-        timeStamp: list.timeStamp,
-        items: needs.ingredients
-            .filter(i => i.need > 0)
-            .map(i => {
-                const alreadyBought = list.items.findIndex(si => si.name === i.name) !== -1
-                const mustBuy = Math.max(0, i.need - i.have)
-
-                return {
-                    name: i.name,
-                    done: alreadyBought,
-                    units: mustBuy,
-                    packs: Math.ceil(mustBuy / i.batch_size),
-                    cost: Math.ceil(mustBuy / i.batch_size) * i.price,
-                }
-            })
-    }
+export async function savePantry(backend: Backend, globalState: State): Promise<void> {
+    await backend
+        .Pantry()
+        .POST({
+            name: '', // Let the backend handle the name for now
+            contents: globalState.inNeed.ingredients
+                .filter(i => i.have > 0)
+                .map(i_1 => {
+                    return { name: i_1.name, amount: i_1.have };
+                })
+        });
 }
 
 class PantryTableProps {

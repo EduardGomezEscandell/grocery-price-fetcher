@@ -102,7 +102,7 @@ class PantryScreen extends Screen {
         return <Pantry
             backend={this.backend}
             globalState={this.globalState}
-            onBackToMenu={() => this.setScreen(new LoadMenuScreen(this))}
+            onBackToMenu={() => this.setScreen(new MenuScreen(this))}
             onComplete={() => this.setScreen(new ShoppingListScreen(this))}
         />
     }

@@ -1,7 +1,7 @@
 import React from 'react'
 import Backend from '../../Backend/Backend.tsx';
 import TopBar from '../../TopBar/TopBar.tsx';
-import { State } from '../../State/State.tsx';
+import { ShoppingNeeds, ShoppingList, State } from '../../State/State.tsx';
 import SaveButton from '../../SaveButton/SaveButton.tsx';
 import ShoppingItem from './ShoppingItem.tsx';
 import { asEuro } from '../../Numbers/Numbers.ts';
@@ -16,7 +16,18 @@ export default function Shopping(props: Props): JSX.Element {
     return (
         <>
             <TopBar
-                left={<button onClick={props.onBackToPantry} key='go-back'>Tornar al rebost</button>}
+                left={<SaveButton
+                    key='save'
+
+                    baseTxt='Tornar'
+                    onSave={() => saveShoppingList(props.backend, props.globalState)}
+                    onSaveTxt='Desant...'
+
+                    onAccept={() => props.onBackToPantry()}
+                    onAcceptTxt='Desat'
+
+                    onRejectTxt='Error'
+                />}
                 right={<SaveButton
                     key='save'
 
@@ -72,4 +83,31 @@ function saveShoppingList(backend: Backend, globalState: State): Promise<void> {
                 .filter(i => i.done)
                 .map(i => i.name)
         })
+}
+
+export async function downloadShoppingList(backend: Backend, globalState: State): Promise<void> {
+    const lists = await backend.Shopping().GET();
+    const s = lists[0] || new ShoppingList();
+    globalState.shoppingList = makeShoppingList(s, globalState.inNeed);
+}
+
+function makeShoppingList(list: ShoppingList, needs: ShoppingNeeds): ShoppingList {
+    return {
+        name: list.name,
+        timeStamp: list.timeStamp,
+        items: needs.ingredients
+            .filter(i => i.need > 0)
+            .map(i => {
+                const alreadyBought = list.items.findIndex(si => si.name === i.name) !== -1
+                const mustBuy = Math.max(0, i.need - i.have)
+
+                return {
+                    name: i.name,
+                    done: alreadyBought,
+                    units: mustBuy,
+                    packs: Math.ceil(mustBuy / i.batch_size),
+                    cost: Math.ceil(mustBuy / i.batch_size) * i.price,
+                }
+            })
+    }
 }
