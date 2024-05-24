@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import Backend from '../../Backend/Backend.tsx';
 import TopBar from '../../TopBar/TopBar.tsx';
 import { ShoppingNeeds, ShoppingList, State } from '../../State/State.tsx';
@@ -12,7 +12,23 @@ interface Props {
     onBackToPantry: () => void;
 }
 
+enum Dialog {
+    OFF,
+    ON,
+    CLOSING,
+}
+
 export default function Shopping(props: Props): JSX.Element {
+    const [dialog, _setDialog] = useState(Dialog.OFF);
+    const [k, setK] = useState(0)
+    const forceChildUpdate = () => setK(k + 1)
+
+    const setDialog = (d: Dialog): boolean => {
+        if (dialog === Dialog.CLOSING) return false
+        _setDialog(d)
+        return true
+    }
+
     return (
         <>
             <TopBar
@@ -42,7 +58,11 @@ export default function Shopping(props: Props): JSX.Element {
                 <table>
                     <thead id='header1'>
                         <tr>
-                            <th></th>
+                            <th>
+                                <button id='clear' onClick={() => {
+                                    setDialog(Dialog.ON)
+                                }}>Reset</button>
+                            </th>
                             <th>Ingredient</th>
                             <th>Unitats</th>
                             <th>Paquets</th>
@@ -52,7 +72,7 @@ export default function Shopping(props: Props): JSX.Element {
                     <tbody>
                         {
                             props.globalState.shoppingList.items.map((i, idx) =>
-                                <ShoppingItem i={i} idx={idx} key={idx} globalState={props.globalState} />
+                                <ShoppingItem i={i} idx={idx} key={`${k}-${idx}`} globalState={props.globalState} />
                             )
                         }
                     </tbody>
@@ -69,7 +89,42 @@ export default function Shopping(props: Props): JSX.Element {
                     </tfoot>
                 </table>
             </div>
+            {dialog !== Dialog.OFF &&
+                <ResetDialog
+                    onReset={() => {
+                        if (!setDialog(Dialog.CLOSING)) {
+                            return
+                        }
+                        props.globalState.shoppingList.items.forEach(i => i.done = false)
+                        saveShoppingList(props.backend, props.globalState)
+                            .then(() => forceChildUpdate())
+                            .then(() => setDialog(Dialog.OFF))
+                    }}
+                    onExit={() => setDialog(Dialog.OFF)}
+                />
+            }
         </>
+    )
+}
+
+function ResetDialog(props: {
+    onReset: () => void
+    onExit: () => void
+}): JSX.Element {
+    return (
+        <dialog open>
+            <h2 id='header'>
+                Restaurar la llista de la compra?
+            </h2>
+            <div id='body'>
+                <p>Tots els elements marcats com a comprats es desmarcaran</p>
+                <p>Aquesta acció és irreversible, prem Tornar si no vols realitzar-la</p>
+            </div>
+            <div id='footer'>
+                <button id='left' onClick={props.onExit}>Tornar</button>
+                <button id='right' onClick={props.onReset}>Restaurar</button>
+            </div>
+        </dialog>
     )
 }
 

@@ -60,7 +60,8 @@ dialog {
   width: 500px !important;
 
   border-radius: 20px;
-  border: 1px solid black;
+  outline: 1px solid black;
+  border: none;
 
   >#header {
     height: 50px;
@@ -84,18 +85,23 @@ dialog {
 
   >#body {
     padding: 10px;
+
     display: flex;
     flex-direction: column;
     justify-content: top;
+    min-height: 100px;
   }
 
   >#footer {
     background-color: rgb(255, 196, 85);
     height: 50px;
     width: 100%;
+    
+    border-radius: inherit;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    border: none;
 
-    border-bottom-left-radius: 20px;
-    border-bottom-right-radius: 20px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -103,7 +109,26 @@ dialog {
     button {
       width: 100%;
       height: 100%;
-      background-color: transparent;
+
+      margin: 0px;
+      padding: 0px;
+
+      border-radius: inherit;
+      border: none;
+      background: inherit;
+      
+      &#left {
+        border-top: 1px solid black;
+        border-radius: inherit;
+        border-bottom-right-radius: 0px;
+      }
+
+      &#right {
+        border-top: 1px solid black;
+        border-left: 1px solid black;
+        border-radius: inherit;
+        border-bottom-left-radius: 0px;
+      }
     }
   }
 }
