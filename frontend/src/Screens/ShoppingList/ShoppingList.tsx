@@ -4,7 +4,6 @@ import TopBar from '../../TopBar/TopBar.tsx';
 import { ShoppingNeeds, ShoppingList, State } from '../../State/State.tsx';
 import SaveButton from '../../SaveButton/SaveButton.tsx';
 import ShoppingItem from './ShoppingItem.tsx';
-import { asEuro } from '../../Numbers/Numbers.ts';
 
 interface Props {
     backend: Backend;
@@ -61,12 +60,11 @@ export default function Shopping(props: Props): JSX.Element {
                             <th>
                                 <button id='clear' onClick={() => {
                                     setDialog(Dialog.ON)
-                                }}>Reset</button>
+                                }}>x</button>
                             </th>
-                            <th>Ingredient</th>
-                            <th>Unitats</th>
-                            <th>Paquets</th>
-                            <th>Cost</th>
+                            <th id='left'>Ingredient</th>
+                            <th id='right'>Unitats</th>
+                            <th id='right'>Paquets</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -78,31 +76,27 @@ export default function Shopping(props: Props): JSX.Element {
                     </tbody>
                     <tfoot id='header2'>
                         <tr>
-                            <td></td>
-                            <td id='left' colSpan={3}>Total</td>
-                            <td id='right' >{
-                                asEuro(
-                                    props.globalState.shoppingList.items.reduce((acc, i) => acc + i.cost, 0)
-                                )
-                            }</td>
+                            <td colSpan={4}>
+                             Gràcies per utilitzar El Rebost!
+                            </td>
                         </tr>
                     </tfoot>
                 </table>
+                {dialog !== Dialog.OFF &&
+                    <ResetDialog
+                        onReset={() => {
+                            if (!setDialog(Dialog.CLOSING)) {
+                                return
+                            }
+                            props.globalState.shoppingList.items.forEach(i => i.done = false)
+                            saveShoppingList(props.backend, props.globalState)
+                                .then(() => forceChildUpdate())
+                                .then(() => setDialog(Dialog.OFF))
+                        }}
+                        onExit={() => setDialog(Dialog.OFF)}
+                    />
+                }
             </div>
-            {dialog !== Dialog.OFF &&
-                <ResetDialog
-                    onReset={() => {
-                        if (!setDialog(Dialog.CLOSING)) {
-                            return
-                        }
-                        props.globalState.shoppingList.items.forEach(i => i.done = false)
-                        saveShoppingList(props.backend, props.globalState)
-                            .then(() => forceChildUpdate())
-                            .then(() => setDialog(Dialog.OFF))
-                    }}
-                    onExit={() => setDialog(Dialog.OFF)}
-                />
-            }
         </>
     )
 }
@@ -113,16 +107,16 @@ function ResetDialog(props: {
 }): JSX.Element {
     return (
         <dialog open>
-            <h2 id='header'>
+            <h3 id='header'>
                 Restaurar la llista de la compra?
-            </h2>
+            </h3>
             <div id='body'>
                 <p>Tots els elements marcats com a comprats es desmarcaran</p>
                 <p>Aquesta acció és irreversible, prem Tornar si no vols realitzar-la</p>
             </div>
             <div id='footer'>
-                <button id='left' onClick={props.onExit}>Tornar</button>
-                <button id='right' onClick={props.onReset}>Restaurar</button>
+                <button id='dialog-left' onClick={props.onExit}>Tornar</button>
+                <button id='dialog-right' onClick={props.onReset}>Restaurar</button>
             </div>
         </dialog>
     )

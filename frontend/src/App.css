@@ -117,13 +117,13 @@ dialog {
       border: none;
       background: inherit;
       
-      &#left {
+      &#dialog-left {
         border-top: 1px solid black;
         border-radius: inherit;
         border-bottom-right-radius: 0px;
       }
 
-      &#right {
+      &#dialog-right {
         border-top: 1px solid black;
         border-left: 1px solid black;
         border-radius: inherit;
@@ -142,6 +142,13 @@ dialog {
   #right {
       text-align: right;
       padding-right: 20px;
+  }
+
+  #clear {
+    margin: 0px;
+    padding: 0px;
+    height: 30px;
+    width: 30px;
   }
 
   overflow: auto;

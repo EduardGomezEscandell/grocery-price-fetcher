@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { ShoppingListItem, State } from '../../State/State.tsx';
-import { asEuro, round2 } from '../../Numbers/Numbers.ts';
+import { round2 } from '../../Numbers/Numbers.ts';
 
 interface Props {
     globalState: State;
@@ -35,7 +35,6 @@ export default function ShoppingItem(props: Props) {
             <td id='left'>{i.name}</td>
             <td id='right'>{round2(i.units)}</td>
             <td id='right'>{round2(i.packs)}</td>
-            <td id='right'>{asEuro(i.cost)}</td>
         </tr>
     )
 }
