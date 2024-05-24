@@ -137,9 +137,9 @@ export default class MenuTable extends React.Component<Props> {
                             </div>
                             <div className="Body" key='MealBody' style={{
                                 minHeight: new Optional(this.meals.find(m => m.name === meal.name))
-                                    .then(m => m.size * 50)
+                                    .then(m => 15 + m.size * 35)
                                     .then(s => s.toString() + 'px')
-                                    .else('0px')
+                                    .else('15px')
                             }}>
                                 {
                                     meal.dishes.map((dish, i) =>
