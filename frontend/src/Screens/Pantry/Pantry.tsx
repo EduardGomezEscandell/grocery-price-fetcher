@@ -1,20 +1,21 @@
 import React, { useState } from 'react'
-import { Ingredient, ShoppingList, State } from '../../State/State.tsx';
+import { Ingredient, ShoppingNeeds, State } from '../../State/State.tsx';
 import Backend from '../../Backend/Backend.tsx';
 import TopBar from '../../TopBar/TopBar.tsx';
-import SaveButton from './SaveButton.tsx';
+import SaveButton from '../../SaveButton/SaveButton.tsx';
 import { FocusIngredient, RowIngredient } from './PantryIngredient.tsx';
 import { asEuro, positive } from '../../Numbers/Numbers.ts'
-import './Pantry.css'
+import { downloadShoppingList } from '../ShoppingList/ShoppingList.tsx';
 
 interface Props {
     backend: Backend;
     globalState: State;
     onBackToMenu: () => void;
+    onComplete: () => void;
 }
 
 export default function Pantry(pp: Props) {
-    const total = new Total().compute(pp.globalState.shoppingList.ingredients)
+    const total = new Total().compute(pp.globalState.inNeed.ingredients)
 
     const [available, setAvailable] = useState(total.available)
     const [remaining, setRemaining] = useState(total.remaining)
@@ -26,19 +27,58 @@ export default function Pantry(pp: Props) {
     return (
         <>
             <TopBar
-                left={<button onClick={pp.onBackToMenu} key='go-back'>Tornar al menú</button>}
-                right={<SaveButton key='save' backend={pp.backend} globalState={pp.globalState} />}
+                left={<SaveButton
+                    key='save'
+
+                    baseTxt='Tornar'
+                    onSave={() => savePantry(pp.backend, pp.globalState)}
+                    onSaveTxt='Desant...'
+
+                    onAccept={() => pp.onBackToMenu()}
+                    onAcceptTxt='Desat'
+
+                    onRejectTxt='Error'
+                />}
+                right={<SaveButton
+                    key='save'
+                    baseTxt='Següent'
+
+                    onSave={() => Promise.all([
+                        savePantry(pp.backend, pp.globalState),
+                        downloadShoppingList(pp.backend, pp.globalState),
+                    ])}
+                    onSaveTxt='Desant...'
+
+                    onAccept={() => { pp.onComplete() }}
+                    onAcceptTxt='Desat'
+
+                    onReject={(reason: any) => console.log('Error saving pantry: ', reason || 'Unknown error')}
+                    onRejectTxt='Error'
+                />}
             />
             <PantryTable
-                shop={pp.globalState.shoppingList}
+                inNeed={pp.globalState.inNeed}
                 total={total}
             />
         </>
     )
 }
 
+export async function savePantry(backend: Backend, globalState: State): Promise<void> {
+    await backend
+        .Pantry()
+        .POST({
+            name: '', // Let the backend handle the name for now
+            contents: globalState.inNeed.ingredients
+                .filter(i => i.have > 0)
+                .map(i_1 => {
+                    return { name: i_1.name, amount: i_1.have };
+                })
+        });
+}
+
 class PantryTableProps {
-    shop: ShoppingList
+    inNeed: ShoppingNeeds
     total: Total
 }
 
@@ -51,7 +91,7 @@ function PantryTable(pp: PantryTableProps): JSX.Element {
     }
 
     return (
-        <div className='Pantry' key='pantry'>
+        <div className='scroll-table' key='pantry'>
             <table style={tableStyle}>
                 <thead>
                     <tr key='header' id='header1'>
@@ -62,7 +102,7 @@ function PantryTable(pp: PantryTableProps): JSX.Element {
                 </thead>
                 <tbody>
                     {
-                        pp.shop.ingredients.map((i: Ingredient, idx: number) => (
+                        pp.inNeed.ingredients.map((i: Ingredient, idx: number) => (
                             <RowIngredient
                                 key={i.name}
                                 id={idx % 2 === 0 ? 'even' : 'odd'}
@@ -70,7 +110,7 @@ function PantryTable(pp: PantryTableProps): JSX.Element {
                                 onChange={(value: number) => {
                                     i.have = value
                                     pp.total
-                                        .compute(pp.shop.ingredients)
+                                        .compute(pp.inNeed.ingredients)
                                         .commit()
                                 }}
                                 onClick={(ri: RowIngredient) => {
@@ -85,7 +125,7 @@ function PantryTable(pp: PantryTableProps): JSX.Element {
                     }
                 </tbody>
                 <tfoot id='header2'>
-                    <tr><td colSpan={3} id='header1'/></tr>
+                    <tr><td colSpan={3} id='header1' /></tr>
                     <tr>
                         <td colSpan={2} id='left'>Total a comprar</td>
                         <td id='right'>{asEuro(pp.total.purchased)}</td>
@@ -103,7 +143,7 @@ function PantryTable(pp: PantryTableProps): JSX.Element {
                     onChange={(value: number) => {
                         focussed.props.ingredient.have = value
                         pp.total
-                            .compute(pp.shop.ingredients)
+                            .compute(pp.inNeed.ingredients)
                             .commit()
                     }}
                 />

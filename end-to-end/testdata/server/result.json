@@ -31,7 +31,7 @@
 	{"batch_size": 1.00, "have": 0.00, "need": 0.30, "price": 2.49, "product": "Pa de motlle"},
 	{"batch_size": 10.00, "have": 0.00, "need": 4.00, "price": 1.75, "product": "Pastanaga"},
 	{"batch_size": 1.00, "have": 0.00, "need": 2.00, "price": 0.59, "product": "Patata"},
-	{"batch_size": 2.00, "have": 0.00, "need": 0.50, "price": 1.75, "product": "Patates fregides"},
+	{"batch_size": 2.00, "have": 0.00, "need": 0.50, "price": 1.79, "product": "Patates fregides"},
 	{"batch_size": 1.00, "have": 0.00, "need": 0.50, "price": 0.45, "product": "Pebrot verd"},
 	{"batch_size": 1.00, "have": 0.00, "need": 0.95, "price": 1.09, "product": "Pebrot vermell"},
 	{"batch_size": 3.00, "have": 0.00, "need": 2.00, "price": 2.25, "product": "Pollastre"},

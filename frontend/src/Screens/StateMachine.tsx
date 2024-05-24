@@ -4,7 +4,7 @@ import { State } from "../State/State.tsx";
 import MenuLoad from "./MenuLoad/MenuLoad.tsx";
 import RenderMenu from "./Menu/Menu.tsx";
 import Pantry from "./Pantry/Pantry.tsx";
-import PantryLoad from './PantryLoad/PantryLoad.tsx';
+import ShoppingList from './ShoppingList/ShoppingList.tsx';
 
 interface Props {
     backend: Backend;
@@ -87,26 +87,10 @@ class MenuScreen extends Screen {
         return <RenderMenu
             backend={this.backend}
             globalState={this.globalState}
-            onComplete={() => this.setScreen(new LoadPantryScreen(this))}
-        />
-    }
-}
-
-class LoadPantryScreen extends Screen {
-    constructor(pp: Screen) {
-        super(pp)
-        this.name = "LoadPantryScreen"
-    }
-
-    render(): JSX.Element {
-        return <PantryLoad
-            backend={this.backend}
-            state={this.globalState}
             onComplete={() => this.setScreen(new PantryScreen(this))}
         />
     }
 }
-
 
 class PantryScreen extends Screen {
     constructor(pp: Screen) {
@@ -118,7 +102,23 @@ class PantryScreen extends Screen {
         return <Pantry
             backend={this.backend}
             globalState={this.globalState}
-            onBackToMenu={() => this.setScreen(new LoadMenuScreen(this))}
+            onBackToMenu={() => this.setScreen(new MenuScreen(this))}
+            onComplete={() => this.setScreen(new ShoppingListScreen(this))}
+        />
+    }
+}
+
+class ShoppingListScreen extends Screen {
+    constructor(pp: Screen) {
+        super(pp)
+        this.name = "ShoppingListScreen";
+    }
+
+    render() {
+        return <ShoppingList
+            backend={this.backend}
+            globalState={this.globalState}
+            onBackToPantry={() => this.setScreen(new PantryScreen(this))}            
         />
     }
 }

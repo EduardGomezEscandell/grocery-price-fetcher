@@ -16,6 +16,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/pantry"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/pricing"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/recipes"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/shoppinglist"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/version"
 )
 
@@ -26,33 +27,36 @@ type Manager struct {
 	db  database.DB
 	log logger.Logger
 
-	helloworld *helloworld.Service
-	menu       *menu.Service
-	pantry     *pantry.Service
-	pricing    *pricing.Service
-	recipes    *recipes.Service
-	version    *version.Service
+	helloworld   *helloworld.Service
+	menu         *menu.Service
+	pantry       *pantry.Service
+	pricing      *pricing.Service
+	recipes      *recipes.Service
+	shoppingList *shoppinglist.Service
+	version      *version.Service
 }
 
 type Settings struct {
-	Database   database.Settings
-	HelloWorld helloworld.Settings
-	Menu       menu.Settings
-	Pantry     pantry.Settings
-	Pricing    pricing.Settings
-	Recipes    recipes.Settings
-	Version    version.Settings
+	Database     database.Settings
+	HelloWorld   helloworld.Settings
+	Menu         menu.Settings
+	Pantry       pantry.Settings
+	Pricing      pricing.Settings
+	Recipes      recipes.Settings
+	ShoppingList shoppinglist.Settings
+	Version      version.Settings
 }
 
 func (Settings) Defaults() Settings {
 	return Settings{
-		Database:   database.Settings{}.Defaults(),
-		HelloWorld: helloworld.Settings{}.Defaults(),
-		Menu:       menu.Settings{}.Defaults(),
-		Pantry:     pantry.Settings{}.Defaults(),
-		Pricing:    pricing.Settings{}.Defaults(),
-		Recipes:    recipes.Settings{}.Defaults(),
-		Version:    version.Settings{}.Defaults(),
+		Database:     database.Settings{}.Defaults(),
+		HelloWorld:   helloworld.Settings{}.Defaults(),
+		Menu:         menu.Settings{}.Defaults(),
+		Pantry:       pantry.Settings{}.Defaults(),
+		Pricing:      pricing.Settings{}.Defaults(),
+		Recipes:      recipes.Settings{}.Defaults(),
+		ShoppingList: shoppinglist.Settings{}.Defaults(),
+		Version:      version.Settings{}.Defaults(),
 	}
 }
 
@@ -75,12 +79,13 @@ func New(ctx context.Context, logger logger.Logger, settings Settings) (*Manager
 		db:  db,
 		log: logger,
 
-		helloworld: helloworld.New(settings.HelloWorld),
-		menu:       menu.New(settings.Menu, db),
-		pantry:     pantry.New(settings.Pantry, db),
-		pricing:    pricing.New(ctx, settings.Pricing, logger, db),
-		recipes:    recipes.New(settings.Recipes, db),
-		version:    version.New(settings.Version),
+		helloworld:   helloworld.New(settings.HelloWorld),
+		menu:         menu.New(settings.Menu, db),
+		pantry:       pantry.New(settings.Pantry, db),
+		pricing:      pricing.New(ctx, settings.Pricing, logger, db),
+		recipes:      recipes.New(settings.Recipes, db),
+		shoppingList: shoppinglist.New(settings.ShoppingList, db),
+		version:      version.New(settings.Version),
 	}, nil
 }
 
@@ -96,6 +101,7 @@ func (s *Manager) Register(registerer func(endpoint string, handler httputils.Ha
 		{path: "/api/menu", handler: s.menu},
 		{path: "/api/pantry", handler: s.pantry},
 		{path: "/api/recipes", handler: s.recipes},
+		{path: "/api/shopping-list", handler: s.shoppingList},
 		{path: "/api/version", handler: s.version},
 	} {
 		if !p.handler.Enabled() {

@@ -14,7 +14,7 @@ export class Ingredient {
     }
 
     name: string;
-    price: number;
+    price: number; // Price per batch
 
     batch_size: number;
     have: number;
@@ -55,9 +55,9 @@ export class Day {
     meals: Array<Meal>;
 }
 
-export class ShoppingList {
-    static fromJSON(json: any): ShoppingList {
-        let shoppingList = new ShoppingList()
+export class ShoppingNeeds {
+    static fromJSON(json: any): ShoppingNeeds {
+        let shoppingList = new ShoppingNeeds()
         shoppingList.ingredients = json.map((ingredient: any) => {
             return new Ingredient(
                 either(ingredient, 'product', 'Unnamed ingredient'),
@@ -164,6 +164,34 @@ export class Pantry {
     }
 }
 
+export class ShoppingListItem {
+    name: string
+    done: boolean
+    units: number
+    packs: number
+    cost: number
+}
+
+export class ShoppingList {
+    name: string = ''
+    timeStamp: string = ''
+    items: Array<ShoppingListItem> = []
+
+    static fromJSON(json: any): ShoppingList {
+        const shoppingList = new ShoppingList()
+        shoppingList.name = either(json, 'name', 'test')
+        shoppingList.timeStamp = either(json, 'time_stamp', '2000-01-01T00:00:00Z00:00')
+        shoppingList.items = either(json, 'items', []).map((name: string) => {
+            return {
+                name: name,
+                done: true,
+            } as ShoppingListItem
+        })
+        console.log(shoppingList)
+        return shoppingList
+    }
+}
+
 function either<T>(struct: any, key: string, val: T): T {
     return struct[key] || val
 }
@@ -171,7 +199,7 @@ function either<T>(struct: any, key: string, val: T): T {
 export class State {
     constructor() {
         this.dishes = []
-        this.shoppingList = new ShoppingList()
+        this.inNeed = new ShoppingNeeds()
     }
 
     attachMenu(menu: Menu, setMenu: (m: Menu) => void): State {
@@ -194,7 +222,8 @@ export class State {
         this._setMenu(menu)
     }
 
-dishes: Array<string>;
-shoppingList: ShoppingList;
+    dishes: Array<string>;
+    inNeed: ShoppingNeeds;
+    shoppingList: ShoppingList;
 }
 

@@ -3,7 +3,7 @@ export function positive(x: number): number {
 }
 
 export function asEuro(x: number): string {
-    return x.toFixed(2) + ' €'
+    return x.toFixed(2) + "\xa0€" // \xa0 == non-breaking space
 }
 
 export function roundUpTo(x: number, divisor: number): number {

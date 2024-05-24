@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"slices"
 	"sync"
 
@@ -15,15 +16,17 @@ import (
 )
 
 type JSON struct {
-	products []product.Product
-	recipes  []types.Recipe
-	menus    []types.Menu
-	pantries []types.Pantry
+	products      []product.Product
+	recipes       []types.Recipe
+	menus         []types.Menu
+	pantries      []types.Pantry
+	shoppingLists []types.ShoppingList
 
-	productsPath string
-	recipesPath  string
-	menusPath    string
-	pantriesPath string
+	productsPath      string
+	recipesPath       string
+	menusPath         string
+	pantriesPath      string
+	shoppingListsPath string
 
 	log logger.Logger
 	mu  sync.RWMutex
@@ -31,10 +34,11 @@ type JSON struct {
 
 func DefaultSettings() map[string]interface{} {
 	return map[string]interface{}{
-		"products": "/mnt/grocery-price-fetcher/products.json",
-		"recipes":  "/mnt/grocery-price-fetcher/recipes.json",
-		"menus":    "/mnt/grocery-price-fetcher/menus.json",
-		"pantries": "/mnt/grocery-price-fetcher/pantries.json",
+		"products":       "/mnt/grocery-price-fetcher/products.json",
+		"recipes":        "/mnt/grocery-price-fetcher/recipes.json",
+		"menus":          "/mnt/grocery-price-fetcher/menus.json",
+		"pantries":       "/mnt/grocery-price-fetcher/pantries.json",
+		"shopping-lists": "/mnt/grocery-price-fetcher/shoppingLists.json",
 	}
 }
 
@@ -43,18 +47,20 @@ func New(ctx context.Context, log logger.Logger, options map[string]interface{})
 	recs, errR := getStringOption(options, "recipes")
 	menus, errM := getStringOption(options, "menus")
 	pants, errX := getStringOption(options, "pantries")
+	shops, errS := getStringOption(options, "shopping-lists")
 
-	if err := errors.Join(errP, errR, errM, errX); err != nil {
+	if err := errors.Join(errP, errR, errM, errX, errS); err != nil {
 		return nil, fmt.Errorf("JSON database: %v", err)
 	}
 
 	db := &JSON{
 		log: log,
 
-		productsPath: prods,
-		recipesPath:  recs,
-		menusPath:    menus,
-		pantriesPath: pants,
+		productsPath:      prods,
+		recipesPath:       recs,
+		menusPath:         menus,
+		pantriesPath:      pants,
+		shoppingListsPath: shops,
 	}
 
 	return db, errors.Join(
@@ -62,6 +68,7 @@ func New(ctx context.Context, log logger.Logger, options map[string]interface{})
 		load(db.recipesPath, &db.recipes),
 		load(db.menusPath, &db.menus),
 		load(db.pantriesPath, &db.pantries),
+		load(db.shoppingListsPath, &db.shoppingLists),
 	)
 }
 
@@ -237,10 +244,62 @@ func (db *JSON) SetPantry(p types.Pantry) error {
 	return nil
 }
 
+func (db *JSON) ShoppingLists() []types.ShoppingList {
+	db.mu.RLock()
+	defer db.mu.RUnlock()
+
+	out := make([]types.ShoppingList, len(db.shoppingLists))
+	copy(out, db.shoppingLists)
+	return out
+}
+
+func (db *JSON) LookupShoppingList(name string) (types.ShoppingList, bool) {
+	db.mu.RLock()
+	defer db.mu.RUnlock()
+
+	i := slices.IndexFunc(db.shoppingLists, func(p types.ShoppingList) bool {
+		return p.Name == name
+	})
+
+	if i == -1 {
+		return types.ShoppingList{}, false
+	}
+
+	return db.shoppingLists[i], true
+}
+
+func (db *JSON) SetShoppingList(p types.ShoppingList) error {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	if p.Name == "" {
+		p.Name = "default"
+	}
+
+	i := slices.IndexFunc(db.shoppingLists, func(entry types.ShoppingList) bool {
+		return entry.Name == p.Name
+	})
+
+	if i == -1 {
+		db.shoppingLists = append(db.shoppingLists, p)
+	} else {
+		db.shoppingLists[i] = p
+	}
+
+	if err := db.save(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func getStringOption(options map[string]any, key string) (string, error) {
 	p, ok := options[key]
 	if !ok {
-		return "", fmt.Errorf("missing option %q", key)
+		def, ok := DefaultSettings()[key].(string)
+		if !ok {
+			return "", fmt.Errorf("option %q not found", key)
+		}
+		return def, nil
 	}
 
 	path, ok := p.(string)
@@ -271,6 +330,7 @@ func (db *JSON) save() error {
 		save(db.log, db.recipesPath, db.recipes),
 		save(db.log, db.menusPath, db.menus),
 		save(db.log, db.pantriesPath, db.pantries),
+		save(db.log, db.shoppingListsPath, db.shoppingLists),
 	)
 }
 
@@ -304,8 +364,21 @@ func newBackup(path string) (backup, error) {
 		tmp:  path + ".bak",
 	}
 
-	if err := os.Rename(b.path, b.tmp); err != nil {
-		return b, fmt.Errorf("could not create backup: %v", err)
+	err := os.Rename(b.path, b.tmp)
+	if err == nil {
+		return b, nil
+	}
+
+	if !errors.Is(err, os.ErrNotExist) {
+		return b, err
+	}
+
+	if err := os.MkdirAll(filepath.Dir(b.path), 0700); err != nil {
+		return b, fmt.Errorf("could not create directory: %v", err)
+	}
+
+	if err := os.WriteFile(b.path, nil, 0600); err != nil {
+		return b, fmt.Errorf("could not create file: %v", err)
 	}
 
 	return b, nil

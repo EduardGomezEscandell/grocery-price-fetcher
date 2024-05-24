@@ -26,6 +26,10 @@ type DB interface {
 	LookupPantry(name string) (types.Pantry, bool)
 	SetPantry(p types.Pantry) error
 
+	ShoppingLists() []types.ShoppingList
+	LookupShoppingList(name string) (types.ShoppingList, bool)
+	SetShoppingList(m types.ShoppingList) error
+
 	Close() error
 }
 
