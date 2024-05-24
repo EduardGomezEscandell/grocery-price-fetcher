@@ -1,7 +1,7 @@
 .PHONY: help tidy lint build test coverage
 
 VERSION ?= "dev"
-GO := go build -ldflags -X=github.com/EduardGomezEscandell/grocery-price-fetcher/pkg/services/version.Version=$(VERSION)
+GO := go build -ldflags -X=github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/version.Version=$(VERSION)
 BIN := ../bin
 COVDIR := $(BIN)/coverage
 
