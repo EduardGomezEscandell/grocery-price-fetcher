@@ -44,7 +44,7 @@ func (s *Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Reque
 		return httputils.Errorf(http.StatusMethodNotAllowed, "method %s not allowed", r.Method)
 	}
 
-	var names []string
+	names := make([]string, 0)
 	for _, r := range s.db.Recipes() {
 		names = append(names, r.Name)
 	}
