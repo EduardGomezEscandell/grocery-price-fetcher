@@ -1,6 +1,10 @@
 package logger
 
-import "github.com/sirupsen/logrus"
+import (
+	"io"
+
+	"github.com/sirupsen/logrus"
+)
 
 type Logger interface {
 	Trace(args ...interface{})
@@ -33,6 +37,7 @@ type Logger interface {
 
 	WithField(string, interface{}) Logger
 	SetLevel(int)
+	SetOutput(io.Writer)
 }
 
 func New() Logger {
@@ -56,6 +61,10 @@ func (l *l) SetLevel(level int) {
 	l.Logger.SetLevel(logrus.Level(level))
 }
 
+func (l *l) SetOutput(w io.Writer) {
+	l.Logger.SetOutput(w)
+}
+
 func (en *e) WithField(key string, value interface{}) Logger {
 	entry := en.Entry.Logger.WithField(key, value)
 	return &e{*entry}
@@ -63,4 +72,8 @@ func (en *e) WithField(key string, value interface{}) Logger {
 
 func (en *e) SetLevel(level int) {
 	en.Logger.SetLevel(logrus.Level(level))
+}
+
+func (en *e) SetOutput(w io.Writer) {
+	en.Logger.SetOutput(w)
 }

@@ -33,12 +33,16 @@ type JSON struct {
 }
 
 func DefaultSettings() map[string]interface{} {
+	return DefaultSettingsPath("/mnt/grocery-price-fetcher")
+}
+
+func DefaultSettingsPath(root string) map[string]interface{} {
 	return map[string]interface{}{
-		"products":       "/mnt/grocery-price-fetcher/products.json",
-		"recipes":        "/mnt/grocery-price-fetcher/recipes.json",
-		"menus":          "/mnt/grocery-price-fetcher/menus.json",
-		"pantries":       "/mnt/grocery-price-fetcher/pantries.json",
-		"shopping-lists": "/mnt/grocery-price-fetcher/shoppingLists.json",
+		"products":       filepath.Join(root, "products.json"),
+		"recipes":        filepath.Join(root, "recipes.json"),
+		"menus":          filepath.Join(root, "menus.json"),
+		"pantries":       filepath.Join(root, "pantries.json"),
+		"shopping-lists": filepath.Join(root, "shoppingLists.json"),
 	}
 }
 
@@ -150,6 +154,26 @@ func (db *JSON) LookupRecipe(name string) (types.Recipe, bool) {
 	}
 
 	return db.recipes[i], true
+}
+
+func (db *JSON) SetRecipe(r types.Recipe) error {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	i := slices.IndexFunc(db.recipes, func(entry types.Recipe) bool {
+		return entry.Name == r.Name
+	})
+
+	if i == -1 {
+		db.recipes = append(db.recipes, r)
+	} else {
+		db.recipes[i] = r
+	}
+
+	if err := db.save(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (db *JSON) Menus() []types.Menu {
@@ -316,6 +340,10 @@ func load(path string, ptr interface{}) error {
 		return nil
 	} else if err != nil {
 		return fmt.Errorf("JSON database: %v", err)
+	}
+
+	if len(out) == 0 {
+		return nil
 	}
 
 	if err := json.Unmarshal(out, ptr); err != nil {
