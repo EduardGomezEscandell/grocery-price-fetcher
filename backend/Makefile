@@ -21,7 +21,6 @@ lint: ## Run linter (installs golangci-lint if not found)
 
 build: ## Build Go binaries
 	mkdir -p $(BIN)
-	$(GO) -o $(BIN)/compra cmd/compra/main.go	
 	$(GO) -o $(BIN)/grocery-server cmd/server/main.go
 
 test: ## Run unit tests

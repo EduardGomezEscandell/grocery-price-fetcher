@@ -37,11 +37,6 @@ func (Settings) Defaults() Settings {
 	}
 }
 
-func OneShot(log logger.Logger, db database.DB, menu types.Menu, pantry []ProductData) ([]ProductData, error) {
-	s := New(Settings{}.Defaults(), db)
-	return s.ComputeShoppingList(log, menu.Days, pantry)
-}
-
 func New(s Settings, db database.DB) *Service {
 	if !s.Enable {
 		return nil
