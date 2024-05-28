@@ -33,11 +33,10 @@ func TestMain(m *testing.M) {
 	}
 }
 
-func TestServer(t *testing.T) {
+func TestHelloWorld(t *testing.T) {
 	const (
-		manifest = "testdata/server/manifest.yaml"
-		payload  = "testdata/server/payload.json"
-		golden   = "testdata/server/result.json"
+		payload = "testdata/payload.json"
+		golden  = "testdata/result.json"
 	)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
