@@ -1,0 +1,18 @@
+[
+    {
+        "name": "Apple",
+        "batch_size": 1,
+        "provider": "NoProvider",
+        "product_id": [
+            "0.99"
+        ]
+    },
+    {
+        "name": "Banana",
+        "batch_size": 7,
+        "provider": "NoProvider",
+        "product_id": [
+            "2.99"
+        ]
+    }
+]

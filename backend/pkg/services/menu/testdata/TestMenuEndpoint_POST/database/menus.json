@@ -1,0 +1,36 @@
+[{
+    "name": "testmenu1",
+    "days": [
+        {
+            "name": "monday",
+            "meals": [{
+                "name": "breakfast",
+                "dishes": [{
+                    "name": "cereal",
+                    "amount": 1
+                }, {
+                    "name": "OJ",
+                    "amount": 1
+                }]
+            },{
+                "name": "lunch",
+                "dishes": [{
+                    "name": "sandwich",
+                    "amount": 2
+                }, {
+                    "name": "apple",
+                    "amount": 2
+                }]
+            }]
+        },{
+            "name": "tuesday",
+            "meals": [{
+                "name": "breakfast",
+                "dishes": [{
+                    "name": "cereal",
+                    "amount": 5
+                }]
+            }]
+        }
+    ]
+}]

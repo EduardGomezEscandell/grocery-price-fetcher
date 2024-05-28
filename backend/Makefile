@@ -26,9 +26,13 @@ build: ## Build Go binaries
 
 test: ## Run unit tests
 	mkdir -p $(COVDIR)
-	go test ./... -shuffle=on -coverprofile=$(COVDIR)/.coverage -covermode=set
+	go test ./... -shuffle=on -race
 
-coverage: test ## Show test coverage
+update-golden: export UPDATE_GOLDEN = 1
+update-golden: test ## Update golden files
+
+coverage: ## Show test coverage
 	mkdir -p $(COVDIR)
+	go test ./... -coverprofile=$(COVDIR)/.coverage -covermode=set
 	go tool cover -html=$(COVDIR)/.coverage -o $(COVDIR)/index.html \
 		&& python3 -m http.server 8080 --directory $(COVDIR)

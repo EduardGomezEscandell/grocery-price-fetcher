@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/formatter"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
@@ -69,7 +68,11 @@ func (s *Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Reque
 	}
 }
 
-func (s *Service) handleGet(_ logger.Logger, w http.ResponseWriter, _ *http.Request) error {
+func (s *Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Request) error {
+	if r.Header.Get("Accept") != "application/json" {
+		return httputils.Errorf(http.StatusBadRequest, "unsupported format: %s", r.Header.Get("Accept"))
+	}
+
 	if err := json.NewEncoder(w).Encode(s.db.Menus()); err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "could not write menus to output: %w", err)
 	}
@@ -78,6 +81,14 @@ func (s *Service) handleGet(_ logger.Logger, w http.ResponseWriter, _ *http.Requ
 }
 
 func (s *Service) handlePost(log logger.Logger, w http.ResponseWriter, r *http.Request) error {
+	if r.Header.Get("Content-Type") != "application/json" {
+		return httputils.Errorf(http.StatusBadRequest, "unsupported content type: %s", r.Header.Get("Content-Type"))
+	}
+
+	if r.Header.Get("Accept") != "application/json" {
+		return httputils.Errorf(http.StatusBadRequest, "unsupported format: %s", r.Header.Get("Accept"))
+	}
+
 	out, err := io.ReadAll(r.Body)
 	if err != nil {
 		return httputils.Error(http.StatusBadRequest, "failed to read request")
@@ -91,69 +102,58 @@ func (s *Service) handlePost(log logger.Logger, w http.ResponseWriter, r *http.R
 
 	log.Debugf("Received request with %d days", len(menu.Days))
 
-	format := "table"
-	switch r.Header.Get("Accept") {
-	case "application/json":
-		format = "json"
-	case "text/csv":
-		format = "csv"
+	if err := s.UpdateMenu(log, menu); err != nil {
+		return httputils.Errorf(http.StatusInternalServerError, "failed to update menu: %v", err)
 	}
 
-	f, err := formatter.New(format)
-	if err != nil {
-		return httputils.Errorf(http.StatusBadRequest, "failed to create formatter: %v", err)
-	}
-
-	log.Debug("Selected formatter: ", format)
-
-	s.UpdateMenu(log, menu)
+	w.WriteHeader(http.StatusCreated)
 
 	shoppingList, err := s.ComputeShoppingList(log, menu.Days, nil)
 	if err != nil {
-		return httputils.Errorf(http.StatusBadRequest, "failed to compute shopping list: %v", err)
+		return httputils.Errorf(http.StatusInternalServerError, "failed to compute shopping list: %v", err)
 	}
 
-	log.Debug("Computed shopping list")
-
-	if err := f.PrintHead(w, "Product", "Need", "Have", "Price"); err != nil {
-		return httputils.Errorf(http.StatusInternalServerError, "could not write header to output: %w", err)
+	type responseItem struct {
+		Product   string  `json:"product"`
+		Need      float32 `json:"need"`
+		Have      float32 `json:"have"`
+		BatchSize float32 `json:"batch_size"`
+		Price     float32 `json:"price"`
 	}
 
-	i := 0
+	response := make([]responseItem, 0)
 	for _, p := range shoppingList {
 		if p.Need == 0 {
 			continue
 		}
 
-		if err := f.PrintRow(w, map[string]any{
-			"Product":    p.Name,
-			"Need":       p.Need,
-			"Have":       p.Have,
-			"Batch size": p.BatchSize,
-			"Price":      formatter.Euro(p.Price),
-		}); err != nil {
-			return httputils.Errorf(http.StatusInternalServerError, "could not write results to output: %w", err)
-		}
-		i++
+		response = append(response, responseItem{
+			Product:   p.Name,
+			Need:      p.Need,
+			Have:      p.Have,
+			BatchSize: p.BatchSize,
+			Price:     p.Price,
+		})
 	}
 
-	log.Debugf("Responded with %d items", i)
-
-	if err := f.PrintTail(w); err != nil {
-		return httputils.Errorf(http.StatusInternalServerError, "could not write footer to output: %w", err)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		return httputils.Errorf(http.StatusInternalServerError, "could not write menus to output: %w", err)
 	}
 
+	log.Debugf("Responded with %d items", len(response))
 	return nil
 }
 
-func (s Service) UpdateMenu(log logger.Logger, menu types.Menu) {
+func (s Service) UpdateMenu(log logger.Logger, menu types.Menu) error {
 	if menu.Name == "" {
 		menu.Name = "default"
 	}
 
 	if err := s.db.SetMenu(menu); err != nil {
-		log.Warnf("Could not update menu: %v", err)
+		return err
 	}
+
+	return nil
 }
 
 func (s Service) ComputeShoppingList(log logger.Logger, menu []types.Day, pantry []ProductData) ([]ProductData, error) {

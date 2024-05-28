@@ -17,6 +17,7 @@ type DB interface {
 
 	Recipes() []types.Recipe
 	LookupRecipe(name string) (types.Recipe, bool)
+	SetRecipe(r types.Recipe) error
 
 	Menus() []types.Menu
 	LookupMenu(name string) (types.Menu, bool)
