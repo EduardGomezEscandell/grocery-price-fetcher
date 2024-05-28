@@ -52,7 +52,11 @@ func (s *Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Reque
 	}
 }
 
-func (s *Service) handleGet(_ logger.Logger, w http.ResponseWriter, _ *http.Request) error {
+func (s *Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Request) error {
+	if r.Header.Get("Accept") != "application/json" {
+		return httputils.Errorf(http.StatusBadRequest, "unsupported format: %s", r.Header.Get("Accept"))
+	}
+
 	if err := json.NewEncoder(w).Encode(s.db.Pantries()); err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "could not write menus to output: %w", err)
 	}
@@ -60,7 +64,15 @@ func (s *Service) handleGet(_ logger.Logger, w http.ResponseWriter, _ *http.Requ
 	return nil
 }
 
-func (s *Service) handlePost(_ logger.Logger, _ http.ResponseWriter, r *http.Request) error {
+func (s *Service) handlePost(_ logger.Logger, w http.ResponseWriter, r *http.Request) error {
+	if r.Header.Get("Content-Type") != "application/json" {
+		return httputils.Errorf(http.StatusBadRequest, "unsupported content type: %s", r.Header.Get("Content-Type"))
+	}
+
+	if r.Header.Get("Accept") != "application/json" {
+		return httputils.Errorf(http.StatusBadRequest, "unsupported format: %s", r.Header.Get("Accept"))
+	}
+
 	out, err := io.ReadAll(r.Body)
 	if err != nil {
 		return httputils.Error(http.StatusBadRequest, "failed to read request")
@@ -75,6 +87,8 @@ func (s *Service) handlePost(_ logger.Logger, _ http.ResponseWriter, r *http.Req
 	if err := s.db.SetPantry(pantry); err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "could not set pantry: %w", err)
 	}
+
+	w.WriteHeader(http.StatusCreated)
 
 	return nil
 }

@@ -1,0 +1,24 @@
+[
+    {
+        "Name": "Cereal",
+        "Ingredients": [
+            {
+                "name": "Cereal",
+                "amount": 0.1
+            },
+            {
+                "name": "Milk",
+                "amount": 0.5
+            }
+        ]
+    },
+    {
+        "Name": "OJ",
+        "Ingredients": [
+            {
+                "name": "Orange Juice",
+                "amount": 330
+            }
+        ]
+    }
+]
