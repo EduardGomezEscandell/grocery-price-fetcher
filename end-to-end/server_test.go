@@ -47,11 +47,8 @@ func TestServer(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://localhost/api/menu", f)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost/api/helloworld", f)
 	require.NoError(t, err)
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
 
 	client := http.Client{}
 	resp, err := client.Do(req)
