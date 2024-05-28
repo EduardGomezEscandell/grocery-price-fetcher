@@ -75,6 +75,7 @@ func ProductsTest(t *testing.T, openDB func() database.DB) {
 	require.NoError(t, db.Close())
 }
 
+//nolint:dupl // This is a test file, so it's normal to have similar functions
 func RecipesTest(t *testing.T, openDB func() database.DB) {
 	t.Helper()
 
@@ -214,6 +215,7 @@ func MenuTest(t *testing.T, openDB func() database.DB) {
 	require.NoError(t, db.Close())
 }
 
+//nolint:dupl // This is a test file, so it's normal to have similar functions
 func PantriesTest(t *testing.T, openDB func() database.DB) {
 	t.Helper()
 

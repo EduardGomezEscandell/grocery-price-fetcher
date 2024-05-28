@@ -20,7 +20,6 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/pricing"
-
 	"github.com/stretchr/testify/require"
 )
 
@@ -41,8 +40,8 @@ func TestEndpoint(t *testing.T, opt ResponseTestOptions) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	addr, close := HTTPServer(ctx, t, opt.Path, opt.Endpoint)
-	defer close()
+	addr, stop := HTTPServer(ctx, t, opt.Path, opt.Endpoint)
+	defer stop()
 
 	resp := MakeRequest(t, opt.Method, addr, opt.Body)
 	defer resp.Body.Close()
@@ -83,6 +82,7 @@ func MakeRequest(t *testing.T, method, url string, body string) *http.Response {
 const PingEndpoint = "/test_utils_api/ping"
 
 func NewLogger(t *testing.T) logger.Logger {
+	t.Helper()
 	log := logger.New()
 
 	r, w := io.Pipe()
@@ -116,11 +116,13 @@ func HTTPServer(ctx context.Context, t *testing.T, p string, handler httputils.H
 
 	ch := make(chan error)
 	go func() {
+		//nolint:gosec // this is a test helper
 		ch <- http.Serve(lis, server)
 	}()
 
 	require.Eventually(t, func() bool {
 		url := fmt.Sprintf("http://%s%s", lis.Addr().String(), PingEndpoint)
+		//nolint:gosec // this is a test helper
 		resp, err := http.Get(url)
 		if err != nil {
 			return false
@@ -141,11 +143,14 @@ func HTTPServer(ctx context.Context, t *testing.T, p string, handler httputils.H
 }
 
 func CopyDir(t *testing.T, from, to string) {
+	t.Helper()
+	//nolint:gosec // this is a test helper
 	out, err := exec.Command("rsync", "-r", from+"/", to).CombinedOutput()
 	require.NoError(t, err, "failed to copy directory: %s", out)
 }
 
 func Database(t *testing.T, from string) database.DB {
+	t.Helper()
 	dir := t.TempDir()
 
 	if from != "" {

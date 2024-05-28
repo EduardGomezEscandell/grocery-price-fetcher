@@ -36,20 +36,21 @@ func TestHelloWorld(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
 			db := testutils.Database(t, "")
 			if !tc.emptyDB {
-				db.SetRecipe(types.Recipe{Name: "Water", Ingredients: []types.Ingredient{
+				err := db.SetRecipe(types.Recipe{Name: "Water", Ingredients: []types.Ingredient{
 					{Name: "Hydrogen", Amount: 2},
 					{Name: "Oxygen", Amount: 1},
 				}})
+				require.NoError(t, err)
 
-				db.SetRecipe(types.Recipe{Name: "Juice", Ingredients: []types.Ingredient{
+				err = db.SetRecipe(types.Recipe{Name: "Juice", Ingredients: []types.Ingredient{
 					{Name: "Orange", Amount: 2.12},
 				}})
+				require.NoError(t, err)
 			}
 
 			sv := recipes.New(recipes.Settings{}.Defaults(), db)
