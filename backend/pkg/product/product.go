@@ -12,12 +12,12 @@ type Product struct {
 	BatchSize float32
 	Price     float32
 
-	provider  providers.Provider
-	productID providers.ProductID
+	Provider  providers.Provider
+	ProductID providers.ProductID
 }
 
 func (p *Product) FetchPrice(ctx context.Context) error {
-	price, err := p.provider.FetchPrice(ctx, p.productID)
+	price, err := p.Provider.FetchPrice(ctx, p.ProductID)
 	if err != nil {
 		return fmt.Errorf("could not get price for %s: %w", p.Name, err)
 	}

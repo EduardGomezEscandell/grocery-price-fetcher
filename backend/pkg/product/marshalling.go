@@ -32,7 +32,7 @@ func (p *Product) UnmarshalTSV(args []string) (err error) {
 	}
 
 	if prov, ok := providers.Lookup(args[fieldProvider]); ok {
-		p.provider = prov
+		p.Provider = prov
 	} else {
 		return fmt.Errorf("could not find provider %q", args[fieldProvider])
 	}
@@ -43,10 +43,10 @@ func (p *Product) UnmarshalTSV(args []string) (err error) {
 		p.BatchSize = float32(s)
 	}
 
-	if pid := args[fieldArgv:]; p.provider.ValidateID(pid) != nil {
+	if pid := args[fieldArgv:]; p.Provider.ValidateID(pid) != nil {
 		return fmt.Errorf("invalid product ID %q", pid)
 	} else {
-		p.productID = pid
+		p.ProductID = pid
 	}
 
 	return nil
@@ -55,6 +55,7 @@ func (p *Product) UnmarshalTSV(args []string) (err error) {
 type jsonHelper struct {
 	Name      string   `json:"name"`
 	BatchSize float32  `json:"batch_size"`
+	Price     float32  `json:"price"`
 	Provider  string   `json:"provider"`
 	ProductID []string `json:"product_id"`
 }
@@ -68,28 +69,35 @@ func (p *Product) UnmarshalJSON(b []byte) (err error) {
 	defer decorate.OnError(&err, "could not unmarshal product %+v", p)
 	p.Name = helper.Name
 	p.BatchSize = helper.BatchSize
+	p.Price = helper.Price
 
 	if prov, ok := providers.Lookup(helper.Provider); ok {
-		p.provider = prov
+		p.Provider = prov
 	} else {
 		return fmt.Errorf("could not find provider %q", helper.Provider)
 	}
 
-	if p.provider.ValidateID(helper.ProductID) != nil {
+	if p.Provider.ValidateID(helper.ProductID) != nil {
 		return fmt.Errorf("invalid product ID %q", helper.ProductID)
 	} else {
-		p.productID = helper.ProductID
+		p.ProductID = helper.ProductID
 	}
 
 	return nil
 }
 
 func (p *Product) MarshalJSON() (b []byte, err error) {
+	providerName := "NoProvider"
+	if p.Provider != nil {
+		providerName = p.Provider.Name()
+	}
+
 	helper := jsonHelper{
 		Name:      p.Name,
 		BatchSize: p.BatchSize,
-		Provider:  p.provider.Name(),
-		ProductID: p.productID,
+		Price:     p.Price,
+		Provider:  providerName,
+		ProductID: p.ProductID,
 	}
 
 	return json.Marshal(helper)
