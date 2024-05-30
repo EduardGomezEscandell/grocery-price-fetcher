@@ -32,10 +32,6 @@ func (p Provider) Name() string {
 }
 
 func (p Provider) FetchPrice(ctx context.Context, pid providers.ProductID) (float32, error) {
-	if len(pid) != pidNFields {
-		return 0, fmt.Errorf("expected 1 field in product ID, got %d", len(pid))
-	}
-
 	url := fmt.Sprintf(
 		"https://tienda.mercadona.es/api/products/%s/?lang=es&wh=%s",
 		pid[pidProductCode],
@@ -85,16 +81,16 @@ func (p Provider) FetchPrice(ctx context.Context, pid providers.ProductID) (floa
 }
 
 func (p Provider) ValidateID(pid providers.ProductID) error {
-	if len(pid) != pidNFields {
-		return fmt.Errorf("expected %d fields, got %d", pidNFields, len(pid))
-	}
-
 	if pid[pidProductCode] == "" {
-		return errors.New("product code is empty")
+		return errors.New("product code (ID 0) should not be empty")
 	}
 
 	if pid[pidZoneCode] == "" {
-		return errors.New("zone code is empty")
+		return errors.New("zone code (ID 1) should not be empty")
+	}
+
+	if pid[2] != "" {
+		return fmt.Errorf("unexpected field at index 2: %q", pid[2])
 	}
 
 	return nil

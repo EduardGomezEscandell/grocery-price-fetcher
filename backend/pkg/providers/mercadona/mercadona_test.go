@@ -17,7 +17,7 @@ func TestMercadonaBadID(t *testing.T) {
 
 	p := mercadona.New(testLogger())
 
-	_, err := p.FetchPrice(ctx, providers.ProductID{"0", "bcn1"})
+	_, err := p.FetchPrice(ctx, providers.ProductID{"0", "bcn1", ""})
 	require.Error(t, err, "Product with ID 0 should not be found")
 }
 
@@ -27,7 +27,7 @@ func TestMercadonaGoodID(t *testing.T) {
 
 	p := mercadona.New(testLogger())
 
-	price, err := p.FetchPrice(ctx, providers.ProductID{"3852", "bcn1"})
+	price, err := p.FetchPrice(ctx, providers.ProductID{"3852", "bcn1", ""})
 	require.NoError(t, err, "Product with ID 3852 should be found")
 	require.Greater(t, price, float32(0), "expected price to be greater than 0")
 }

@@ -43,7 +43,10 @@ func (p *Product) UnmarshalTSV(args []string) (err error) {
 		p.BatchSize = float32(s)
 	}
 
-	if pid := args[fieldArgv:]; p.Provider.ValidateID(pid) != nil {
+	var pid providers.ProductID
+	copy(pid[:], args[fieldArgv:])
+
+	if p.Provider.ValidateID(pid) != nil {
 		return fmt.Errorf("invalid product ID %q", pid)
 	} else {
 		p.ProductID = pid
@@ -53,11 +56,11 @@ func (p *Product) UnmarshalTSV(args []string) (err error) {
 }
 
 type jsonHelper struct {
-	Name      string   `json:"name"`
-	BatchSize float32  `json:"batch_size"`
-	Price     float32  `json:"price"`
-	Provider  string   `json:"provider"`
-	ProductID []string `json:"product_id"`
+	Name      string    `json:"name"`
+	BatchSize float32   `json:"batch_size"`
+	Price     float32   `json:"price"`
+	Provider  string    `json:"provider"`
+	ProductID [3]string `json:"product_id"`
 }
 
 func (p *Product) UnmarshalJSON(b []byte) (err error) {

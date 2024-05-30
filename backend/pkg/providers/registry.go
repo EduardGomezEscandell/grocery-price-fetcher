@@ -10,7 +10,7 @@ type Provider interface {
 	FetchPrice(ctx context.Context, pid ProductID) (float32, error)
 	ValidateID(pid ProductID) error
 }
-type ProductID []string
+type ProductID [3]string
 
 var Default = &Registry{}
 
