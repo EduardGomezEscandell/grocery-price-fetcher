@@ -68,6 +68,7 @@ func (s *SQL) createTables() error {
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
 	err = errors.Join(
+		s.createProducts(tx),
 	)
 
 	if err != nil {

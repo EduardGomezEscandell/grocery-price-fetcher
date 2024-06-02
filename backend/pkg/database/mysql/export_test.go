@@ -20,6 +20,7 @@ func ClearDB(t *testing.T, ctx context.Context, log logger.Logger, options map[s
 	require.NoError(t, err, "could not begin transaction: %v", err)
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
+	require.NoError(t, db.clearProducts(tx), "could not clear products")
 
 	require.NoError(t, tx.Commit(), "could not commit transaction")
 }

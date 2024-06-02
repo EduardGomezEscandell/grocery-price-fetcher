@@ -46,3 +46,51 @@ func TestMain(m *testing.M) {
 
 	m.Run()
 }
+
+func TestDBProducts(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	log := testutils.NewLogger(t)
+	log.SetLevel(int(logrus.DebugLevel))
+
+	options := mysql.DefaultSettings()
+	mysql.ClearDB(t, ctx, log, options)
+
+	db, err := mysql.New(ctx, log, options)
+	require.NoError(t, err)
+	defer db.Close()
+
+	products, err := db.Products()
+	require.NoError(t, err)
+	require.Empty(t, products)
+
+	p := product.Product{
+		Name:      "test",
+		BatchSize: 1.163,
+		Price:     111.84,
+		Provider:  blank.Provider{},
+		ProductID: [3]string{"1"},
+	}
+
+	_, ok := db.LookupProduct(p.Name)
+	require.False(t, ok)
+
+	err = db.SetProduct(p)
+	require.NoError(t, err)
+
+	got, ok := db.LookupProduct(p.Name)
+	require.True(t, ok)
+	require.Equal(t, p, got)
+
+	products, err = db.Products()
+	require.NoError(t, err)
+	require.ElementsMatch(t, []product.Product{p}, products)
+
+	err = db.DeleteProduct(p.Name)
+	require.NoError(t, err)
+
+	products, err = db.Products()
+	require.NoError(t, err)
+	require.Empty(t, products)
+}
