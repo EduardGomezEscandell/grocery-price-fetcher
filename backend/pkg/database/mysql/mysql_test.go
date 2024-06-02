@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"testing"
 
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtestutils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/mysql"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers"
@@ -45,6 +47,35 @@ func TestMain(m *testing.M) {
 	}
 
 	m.Run()
+}
+
+func TestBattery(t *testing.T) {
+	testCases := map[string]func(*testing.T, func() database.DB){
+		"Products": dbtestutils.ProductsTest,
+		"Recipes":  dbtestutils.RecipesTest,
+		"Menus":    dbtestutils.MenuTest,
+		"Pantries": dbtestutils.PantriesTest,
+		"Shopping": dbtestutils.ShoppingListsTest,
+	}
+
+	for name, test := range testCases {
+		t.Run(name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			log := testutils.NewLogger(t)
+			log.SetLevel(int(logrus.DebugLevel))
+
+			options := mysql.DefaultSettings()
+			mysql.ClearDB(t, ctx, log, options)
+
+			test(t, func() database.DB {
+				db, err := mysql.New(context.Background(), log, options)
+				require.NoError(t, err)
+				return db
+			})
+		})
+	}
 }
 
 func TestDBProducts(t *testing.T) {
