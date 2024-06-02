@@ -11,25 +11,30 @@ import (
 )
 
 type DB interface {
-	Products() []product.Product
+	Products() ([]product.Product, error)
 	LookupProduct(name string) (product.Product, bool)
 	SetProduct(p product.Product) error
+	DeleteProduct(name string) error
 
-	Recipes() []types.Recipe
+	Recipes() ([]types.Recipe, error)
 	LookupRecipe(name string) (types.Recipe, bool)
 	SetRecipe(r types.Recipe) error
+	DeleteRecipe(name string) error
 
-	Menus() []types.Menu
+	Menus() ([]types.Menu, error)
 	LookupMenu(name string) (types.Menu, bool)
 	SetMenu(m types.Menu) error
+	DeleteMenu(name string) error
 
-	Pantries() []types.Pantry
+	Pantries() ([]types.Pantry, error)
 	LookupPantry(name string) (types.Pantry, bool)
 	SetPantry(p types.Pantry) error
+	DeletePantry(name string) error
 
-	ShoppingLists() []types.ShoppingList
+	ShoppingLists() ([]types.ShoppingList, error)
 	LookupShoppingList(name string) (types.ShoppingList, bool)
 	SetShoppingList(m types.ShoppingList) error
+	DeleteShoppingList(name string) error
 
 	Close() error
 }
