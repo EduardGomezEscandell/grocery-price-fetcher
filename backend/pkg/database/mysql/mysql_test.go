@@ -172,3 +172,125 @@ func TestDBRecipes(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, recs)
 }
+
+func TestDBMenus(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	log := testutils.NewLogger(t)
+	log.SetLevel(int(logrus.DebugLevel))
+
+	options := mysql.DefaultSettings()
+	mysql.ClearDB(t, ctx, log, options)
+
+	db, err := mysql.New(ctx, log, options)
+	require.NoError(t, err)
+	defer db.Close()
+
+	p := []product.Product{
+		{
+			Name:      "Hydrogen",
+			BatchSize: 1,
+			Price:     1,
+			Provider:  blank.Provider{},
+		},
+		{
+			Name:      "Oxygen",
+			BatchSize: 16,
+			Price:     14,
+			Provider:  blank.Provider{},
+		},
+	}
+
+	r := []types.Recipe{
+		{
+			Name: "Water",
+			Ingredients: []types.Ingredient{
+				{Name: "Hydrogen", Amount: 2},
+				{Name: "Oxygen", Amount: 1},
+			},
+		},
+		{
+			Name: "Hydrogen Peroxide",
+			Ingredients: []types.Ingredient{
+				{Name: "Hydrogen", Amount: 2},
+				{Name: "Oxygen", Amount: 2},
+			},
+		},
+		{
+			Name: "Oxygen Gas",
+			Ingredients: []types.Ingredient{
+				{Name: "Oxygen", Amount: 2},
+			},
+		},
+	}
+
+	for _, product := range p {
+		err := db.SetProduct(product)
+		require.NoErrorf(t, err, "could not set product %s", product.Name)
+	}
+
+	for _, recipe := range r {
+		err := db.SetRecipe(recipe)
+		require.NoErrorf(t, err, "could not set recipe %s", recipe.Name)
+	}
+
+	menus, err := db.Menus()
+	require.NoError(t, err)
+	require.Empty(t, menus)
+
+	m := types.Menu{
+		Name: "Test Menu",
+		Days: []types.Day{
+			{
+				Name: "Monday",
+				Meals: []types.Meal{
+					{Name: "Lunch", Dishes: []types.Dish{
+						{Name: "Water", Amount: 1.12},
+					}},
+					{Name: "Dinner", Dishes: []types.Dish{
+						{Name: "Hydrogen Peroxide", Amount: 3},
+						{Name: "Oxygen Gas", Amount: 4}}},
+				},
+			},
+			{
+				Name: "Saturday",
+				Meals: []types.Meal{
+					{Name: "Lunch", Dishes: []types.Dish{
+						{Name: "Water", Amount: 1}}},
+					{Name: "Dinner", Dishes: []types.Dish{
+						{Name: "Hydrogen Peroxide", Amount: 3}}},
+				},
+			},
+		},
+	}
+
+	_, ok := db.LookupMenu(m.Name)
+	require.False(t, ok)
+
+	err = db.SetMenu(m)
+	require.NoError(t, err)
+
+	got, ok := db.LookupMenu(m.Name)
+	require.True(t, ok)
+	require.Equal(t, m, got)
+
+	menus, err = db.Menus()
+	require.NoError(t, err)
+	require.ElementsMatch(t, []types.Menu{m}, menus)
+
+	m.Days[0].Meals[0].Dishes[0].Amount = 2.34
+	err = db.SetMenu(m)
+	require.NoError(t, err)
+
+	menus, err = db.Menus()
+	require.NoError(t, err)
+	require.ElementsMatch(t, []types.Menu{m}, menus)
+
+	err = db.DeleteMenu(m.Name)
+	require.NoError(t, err)
+
+	menus, err = db.Menus()
+	require.NoError(t, err)
+	require.Empty(t, menus)
+}

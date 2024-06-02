@@ -70,6 +70,7 @@ func (s *SQL) createTables() error {
 	err = errors.Join(
 		s.createProducts(tx),
 		s.createRecipes(tx),
+		s.createMenus(tx),
 	)
 
 	if err != nil {

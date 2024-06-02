@@ -22,6 +22,7 @@ func ClearDB(t *testing.T, ctx context.Context, log logger.Logger, options map[s
 
 	require.NoError(t, db.clearProducts(tx), "could not clear products")
 	require.NoError(t, db.clearRecipes(tx), "could not clear recipes")
+	require.NoError(t, db.clearMenus(tx), "could not clear menus")
 
 	require.NoError(t, tx.Commit(), "could not commit transaction")
 }
