@@ -53,7 +53,12 @@ func (s *Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Reque
 }
 
 func (s *Service) handleGet(_ logger.Logger, w http.ResponseWriter, _ *http.Request) error {
-	if err := json.NewEncoder(w).Encode(s.db.ShoppingLists()); err != nil {
+	sl, err := s.db.ShoppingLists()
+	if err != nil {
+		return httputils.Errorf(http.StatusInternalServerError, "could not get shopping lists: %v", err)
+	}
+
+	if err := json.NewEncoder(w).Encode(sl); err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "could not encode response: %v", err)
 	}
 	return nil

@@ -57,7 +57,12 @@ func (s *Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 		return httputils.Errorf(http.StatusBadRequest, "unsupported format: %s", r.Header.Get("Accept"))
 	}
 
-	if err := json.NewEncoder(w).Encode(s.db.Pantries()); err != nil {
+	pantries, err := s.db.Pantries()
+	if err != nil {
+		return httputils.Errorf(http.StatusInternalServerError, "could not get pantries: %w", err)
+	}
+
+	if err := json.NewEncoder(w).Encode(pantries); err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "could not write menus to output: %w", err)
 	}
 

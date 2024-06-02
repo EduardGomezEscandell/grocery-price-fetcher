@@ -68,7 +68,12 @@ func (s *Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 		return httputils.Errorf(http.StatusBadRequest, "unsupported format: %s", r.Header.Get("Accept"))
 	}
 
-	if err := json.NewEncoder(w).Encode(s.db.Menus()); err != nil {
+	menus, err := s.db.Menus()
+	if err != nil {
+		return httputils.Errorf(http.StatusInternalServerError, "could not get menus: %v", err)
+	}
+
+	if err := json.NewEncoder(w).Encode(menus); err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "could not write menus to output: %w", err)
 	}
 
