@@ -94,3 +94,81 @@ func TestDBProducts(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, products)
 }
+
+//nolint:dupl // This is a test file, duplication is expected
+func TestDBRecipes(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	log := testutils.NewLogger(t)
+	log.SetLevel(int(logrus.DebugLevel))
+
+	options := mysql.DefaultSettings()
+	mysql.ClearDB(t, ctx, log, options)
+
+	db, err := mysql.New(ctx, log, options)
+	require.NoError(t, err)
+	defer db.Close()
+
+	p := []product.Product{
+		{
+			Name:      "Hydrogen",
+			BatchSize: 1,
+			Price:     1,
+			Provider:  blank.Provider{},
+		},
+		{
+			Name:      "Oxygen",
+			BatchSize: 16,
+			Price:     14,
+			Provider:  blank.Provider{},
+		},
+	}
+
+	err = db.SetProduct(p[0])
+	require.NoError(t, err)
+
+	err = db.SetProduct(p[1])
+	require.NoError(t, err)
+
+	rec := types.Recipe{
+		Name: "Water",
+		Ingredients: []types.Ingredient{
+			{Name: "Hydrogen", Amount: 2},
+			{Name: "Oxygen", Amount: 1},
+		},
+	}
+
+	recs, err := db.Recipes()
+	require.NoError(t, err)
+	require.Empty(t, recs)
+
+	_, ok := db.LookupRecipe(rec.Name)
+	require.False(t, ok)
+
+	err = db.SetRecipe(rec)
+	require.NoError(t, err)
+
+	got, ok := db.LookupRecipe(rec.Name)
+	require.True(t, ok)
+	require.Equal(t, rec, got)
+
+	recs, err = db.Recipes()
+	require.NoError(t, err)
+	require.ElementsMatch(t, []types.Recipe{rec}, recs)
+
+	rec.Ingredients[0].Amount = 3
+	err = db.SetRecipe(rec)
+	require.NoError(t, err)
+
+	recs, err = db.Recipes()
+	require.NoError(t, err)
+	require.ElementsMatch(t, []types.Recipe{rec}, recs)
+
+	err = db.DeleteRecipe(rec.Name)
+	require.NoError(t, err)
+
+	recs, err = db.Recipes()
+	require.NoError(t, err)
+	require.Empty(t, recs)
+}

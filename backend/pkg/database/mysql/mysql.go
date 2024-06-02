@@ -69,6 +69,7 @@ func (s *SQL) createTables() error {
 
 	err = errors.Join(
 		s.createProducts(tx),
+		s.createRecipes(tx),
 	)
 
 	if err != nil {
