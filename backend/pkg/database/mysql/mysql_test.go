@@ -294,3 +294,81 @@ func TestDBMenus(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, menus)
 }
+
+//nolint:dupl // This is a test file, duplication is expected
+func TestDBPantries(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	log := testutils.NewLogger(t)
+	log.SetLevel(int(logrus.DebugLevel))
+
+	options := mysql.DefaultSettings()
+	mysql.ClearDB(t, ctx, log, options)
+
+	db, err := mysql.New(ctx, log, options)
+	require.NoError(t, err)
+	defer db.Close()
+
+	p := []product.Product{
+		{
+			Name:      "Hydrogen",
+			BatchSize: 1,
+			Price:     1,
+			Provider:  blank.Provider{},
+		},
+		{
+			Name:      "Oxygen",
+			BatchSize: 16,
+			Price:     14,
+			Provider:  blank.Provider{},
+		},
+	}
+
+	err = db.SetProduct(p[0])
+	require.NoError(t, err)
+
+	err = db.SetProduct(p[1])
+	require.NoError(t, err)
+
+	pantry := types.Pantry{
+		Name: "Test Pantry",
+		Contents: []types.Ingredient{
+			{Name: "Hydrogen", Amount: 2165},
+			{Name: "Oxygen", Amount: 100},
+		},
+	}
+
+	pantries, err := db.Pantries()
+	require.NoError(t, err)
+	require.Empty(t, pantries)
+
+	_, ok := db.LookupPantry(pantry.Name)
+	require.False(t, ok)
+
+	err = db.SetPantry(pantry)
+	require.NoError(t, err)
+
+	got, ok := db.LookupPantry(pantry.Name)
+	require.True(t, ok)
+	require.Equal(t, pantry, got)
+
+	pantries, err = db.Pantries()
+	require.NoError(t, err)
+	require.ElementsMatch(t, []types.Pantry{pantry}, pantries)
+
+	pantry.Contents[0].Amount = 1
+	err = db.SetPantry(pantry)
+	require.NoError(t, err)
+
+	pantries, err = db.Pantries()
+	require.NoError(t, err)
+	require.ElementsMatch(t, []types.Pantry{pantry}, pantries)
+
+	err = db.DeletePantry(pantry.Name)
+	require.NoError(t, err)
+
+	pantries, err = db.Pantries()
+	require.NoError(t, err)
+	require.Empty(t, pantries)
+}
