@@ -372,3 +372,80 @@ func TestDBPantries(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, pantries)
 }
+
+func TestDBShoopingLists(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	log := testutils.NewLogger(t)
+	log.SetLevel(int(logrus.DebugLevel))
+
+	options := mysql.DefaultSettings()
+	mysql.ClearDB(t, ctx, log, options)
+
+	db, err := mysql.New(ctx, log, options)
+	require.NoError(t, err)
+	defer db.Close()
+
+	p := []product.Product{
+		{
+			Name:      "Hydrogen",
+			BatchSize: 1,
+			Price:     1,
+			Provider:  blank.Provider{},
+		},
+		{
+			Name:      "Oxygen",
+			BatchSize: 16,
+			Price:     14,
+			Provider:  blank.Provider{},
+		},
+	}
+
+	err = db.SetProduct(p[0])
+	require.NoError(t, err)
+
+	err = db.SetProduct(p[1])
+	require.NoError(t, err)
+
+	sl := types.ShoppingList{
+		Name:      "Test Shopping List",
+		TimeStamp: "2021-01-01T00:00:00Z",
+		Items: []string{
+			"Hydrogen",
+		},
+	}
+
+	pantries, err := db.ShoppingLists()
+	require.NoError(t, err)
+	require.Empty(t, pantries)
+
+	_, ok := db.LookupShoppingList(sl.Name)
+	require.False(t, ok)
+
+	err = db.SetShoppingList(sl)
+	require.NoError(t, err)
+
+	got, ok := db.LookupShoppingList(sl.Name)
+	require.True(t, ok)
+	require.Equal(t, sl, got)
+
+	pantries, err = db.ShoppingLists()
+	require.NoError(t, err)
+	require.ElementsMatch(t, []types.ShoppingList{sl}, pantries)
+
+	sl.Items = append(sl.Items, "Oxygen")
+	err = db.SetShoppingList(sl)
+	require.NoError(t, err)
+
+	pantries, err = db.ShoppingLists()
+	require.NoError(t, err)
+	require.ElementsMatch(t, []types.ShoppingList{sl}, pantries)
+
+	err = db.DeleteShoppingList(sl.Name)
+	require.NoError(t, err)
+
+	pantries, err = db.ShoppingLists()
+	require.NoError(t, err)
+	require.Empty(t, pantries)
+}

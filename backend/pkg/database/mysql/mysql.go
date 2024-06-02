@@ -72,6 +72,7 @@ func (s *SQL) createTables() error {
 		s.createRecipes(tx),
 		s.createMenus(tx),
 		s.createPantries(tx),
+		s.createShoppingLists(tx),
 	)
 
 	if err != nil {
