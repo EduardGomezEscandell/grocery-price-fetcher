@@ -45,6 +45,9 @@ stop: ## Stop the service
 
 purge: stop ## Stop and remove all service files and data
 	sudo docker compose rm -fsv          || true
+	sudo docker container rm -f $(PKG)-grocery-1   || true
+	sudo docker container rm -f $(PKG)-database-1   || true
+	sudo docker container rm -f $(PKG)-prepopulate-1   || true
 	sudo docker volume rm -f $(PKG)_data || true
 	sudo rm -rf "$(SERVICE)"             || true
 	sudo rm -rf "$(ETC)" 	             || true

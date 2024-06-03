@@ -5,12 +5,12 @@ frontend: /usr/share/grocery-price-fetcher/frontend
 address: '[::]:3000'
 services:
     database:
-        type: json
+        type: mysql
         options:
-            menus: /mnt/grocery-price-fetcher/menus.json
-            pantries: /mnt/grocery-price-fetcher/pantries.json
-            products: /mnt/grocery-price-fetcher/products.json
-            recipes: /mnt/grocery-price-fetcher/recipes.json
+            user:     root
+            password: example
+            host:     database
+            port:     '3306'
     helloworld:
         enable: true
     menu:
