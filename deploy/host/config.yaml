@@ -4,24 +4,14 @@ verbosity: 1
 frontend: /usr/share/grocery-price-fetcher/frontend
 address: '[::]:3000'
 services:
-    database:
-        type: mysql
-        options:
-            user:     root
-            password: example
-            host:     database
-            port:     '3306'
-    helloworld:
-        enable: true
-    menu:
-        enable: true
-    pantry:
-        enable: true
-    pricing:
-        enable: true
-        refreshrate: 6h0m0s
-    recipes:
-        enable: true
-    version:
-        enable: true
+  database:
+    type: mysql
+    options:
+      user: root
+      passwordfile: /run/secrets/db_root_password
+      host: database
+      port: '3306'
+  pricing:
+    enable: true
+    refreshrate: 6h0m0s
 

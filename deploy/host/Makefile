@@ -21,13 +21,19 @@ install: ## Install the service
 	sudo cp ./config.yaml "$(ETC)/config.yaml"
 	sudo cp -r ./sample-data "$(ETC)/sample-data"
 
+	sudo touch      "$(ETC)/db_root_password.txt"
+	sudo chmod 0600 "$(ETC)/db_root_password.txt"
+	echo "$$(openssl rand -hex 32)" | sudo tee "$(ETC)/db_root_password.txt" > /dev/null
+
 	sudo systemctl daemon-reload
 
-	@echo "Service installed. To start run:"
-	@echo
-	@echo make start
-	@echo
-	@echo "You can modify the configuration in $(ETC)/config.yaml, then restart the service."
+	@echo ""
+	@echo "Service installed. To start:"
+	@echo "  1. Set your password in $(ETC)/db_root_password.txt"
+	@echo "  2. Validate or change the configuration in $(ETC)/config.yaml and $(ETC)/compose.yaml"
+	@echo "     You may also do this after starting the service, but changes will not take effect until the service is restarted"
+	@echo "  3. Run command 'make start' to start the service"
+	@echo ""
 
 start: ## Start the service
 	sudo systemctl daemon-reload

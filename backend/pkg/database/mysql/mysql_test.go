@@ -58,7 +58,7 @@ func TestUnmarshal(t *testing.T) {
 type: mysql
 options:
   user: joe
-  password: secret!
+  passwordfile: /etc/secret
   host: hostboy
   port: 1234
 `)
@@ -67,7 +67,7 @@ options:
 		Type: "mysql",
 		Options: mysql.Settings{
 			User:            "joe",
-			Password:        "secret!",
+			PasswordFile:    "/etc/secret",
 			Host:            "hostboy",
 			Port:            "1234",
 			ConnectTimeout:  time.Minute,
@@ -100,6 +100,7 @@ func TestBattery(t *testing.T) {
 			log.SetLevel(int(logrus.DebugLevel))
 
 			options := mysql.DefaultSettings()
+			options.PasswordFile = "./testdata/db_root_password.txt"
 			mysql.ClearDB(t, ctx, log, options)
 
 			test(t, func() database.DB {
@@ -119,6 +120,7 @@ func TestDBProducts(t *testing.T) {
 	log.SetLevel(int(logrus.DebugLevel))
 
 	options := mysql.DefaultSettings()
+	options.PasswordFile = "./testdata/db_root_password.txt"
 	mysql.ClearDB(t, ctx, log, options)
 
 	db, err := mysql.New(ctx, log, options)
@@ -168,6 +170,7 @@ func TestDBRecipes(t *testing.T) {
 	log.SetLevel(int(logrus.DebugLevel))
 
 	options := mysql.DefaultSettings()
+	options.PasswordFile = "./testdata/db_root_password.txt"
 	mysql.ClearDB(t, ctx, log, options)
 
 	db, err := mysql.New(ctx, log, options)
@@ -245,6 +248,7 @@ func TestDBMenus(t *testing.T) {
 	log.SetLevel(int(logrus.DebugLevel))
 
 	options := mysql.DefaultSettings()
+	options.PasswordFile = "./testdata/db_root_password.txt"
 	mysql.ClearDB(t, ctx, log, options)
 
 	db, err := mysql.New(ctx, log, options)
@@ -368,6 +372,7 @@ func TestDBPantries(t *testing.T) {
 	log.SetLevel(int(logrus.DebugLevel))
 
 	options := mysql.DefaultSettings()
+	options.PasswordFile = "./testdata/db_root_password.txt"
 	mysql.ClearDB(t, ctx, log, options)
 
 	db, err := mysql.New(ctx, log, options)
@@ -445,6 +450,7 @@ func TestDBShoopingLists(t *testing.T) {
 	log.SetLevel(int(logrus.DebugLevel))
 
 	options := mysql.DefaultSettings()
+	options.PasswordFile = "./testdata/db_root_password.txt"
 	mysql.ClearDB(t, ctx, log, options)
 
 	db, err := mysql.New(ctx, log, options)

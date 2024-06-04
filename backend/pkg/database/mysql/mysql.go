@@ -1,11 +1,13 @@
 package mysql
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
 	"net"
+	"os"
 	"time"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
@@ -24,7 +26,7 @@ type SQL struct {
 
 type Settings struct {
 	User            string
-	Password        string
+	PasswordFile    string
 	Host            string
 	Port            string
 	ConnectTimeout  time.Duration
@@ -34,7 +36,7 @@ type Settings struct {
 func DefaultSettings() Settings {
 	return Settings{
 		User:            "root",
-		Password:        "example",
+		PasswordFile:    "",
 		Host:            "localhost",
 		Port:            "3306",
 		ConnectTimeout:  time.Minute,
@@ -49,7 +51,6 @@ func New(ctx context.Context, log logger.Logger, sett Settings) (*SQL, error) {
 	}
 
 	log = log.WithField("database", "mysql")
-	log.Tracef("connecting to %s", datasource)
 
 	db, err := sql.Open("mysql", datasource)
 	if err != nil {
@@ -152,7 +153,7 @@ func getDatasource(s Settings) (string, error) {
 	if s.User == "" {
 		return "", errors.New("user is empty")
 	}
-	if s.Password == "" {
+	if s.PasswordFile == "" {
 		return "", errors.New("password is empty")
 	}
 	if s.Host == "" {
@@ -162,5 +163,17 @@ func getDatasource(s Settings) (string, error) {
 		return "", errors.New("port is empty")
 	}
 
-	return fmt.Sprintf("%s:%s@tcp(%s)/grocery-price-fetcher", s.User, s.Password, net.JoinHostPort(s.Host, s.Port)), nil
+	pass, err := os.ReadFile(s.PasswordFile)
+	if err != nil {
+		return "", fmt.Errorf("could not read password file: %w", err)
+	} else if len(pass) == 0 {
+		return "", errors.New("password file is empty")
+	}
+
+	return fmt.Sprintf(
+			"%s:%s@tcp(%s)/grocery-price-fetcher",
+			s.User,
+			string(bytes.TrimSpace(pass)),
+			net.JoinHostPort(s.Host, s.Port)),
+		nil
 }

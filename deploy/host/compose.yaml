@@ -8,8 +8,10 @@ services:
     volumes:
       - data:/var/lib/mysql:rw
     environment:
-      MYSQL_ROOT_PASSWORD: example
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
       MYSQL_DATABASE: grocery-price-fetcher
+    secrets:
+      - db_root_password
   prepopulate:
     image: grocery-price-fetcher
     entrypoint: []
@@ -25,6 +27,8 @@ services:
     depends_on:
       database:
         condition: service_started
+    secrets:
+      - db_root_password
   grocery:
     image: grocery-price-fetcher
     ports:
@@ -40,6 +44,11 @@ services:
         condition: service_completed_successfully
       database:
         condition: service_started
+    secrets:
+      - db_root_password
 volumes:
   data:
     driver: local
+secrets:
+  db_root_password:
+    file: /etc/grocery-price-fetcher/db_root_password.txt

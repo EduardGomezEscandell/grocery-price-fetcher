@@ -8,8 +8,8 @@ input:
 output:
   type: mysql
   options:
-    user:     root
-    password: example
-    host:     database
-    port:     '3306'
+    user: root
+    passwordfile: /run/secrets/db_root_password
+    host: database
+    port: '3306'
 verbosity: 6
