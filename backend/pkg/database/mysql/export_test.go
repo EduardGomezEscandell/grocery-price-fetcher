@@ -9,7 +9,7 @@ import (
 )
 
 //nolint:revive // Testing T goes first
-func ClearDB(t *testing.T, ctx context.Context, log logger.Logger, options map[string]any) {
+func ClearDB(t *testing.T, ctx context.Context, log logger.Logger, options Settings) {
 	t.Helper()
 
 	db, err := New(ctx, log, options)

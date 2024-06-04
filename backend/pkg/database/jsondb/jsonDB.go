@@ -32,39 +32,36 @@ type JSON struct {
 	mu  sync.RWMutex
 }
 
-func DefaultSettings() map[string]interface{} {
+type Settings struct {
+	Products      string
+	Recipes       string
+	Menus         string
+	Pantries      string
+	ShoppingLists string
+}
+
+func DefaultSettings() Settings {
 	return DefaultSettingsPath("/mnt/grocery-price-fetcher")
 }
 
-func DefaultSettingsPath(root string) map[string]interface{} {
-	return map[string]interface{}{
-		"products":       filepath.Join(root, "products.json"),
-		"recipes":        filepath.Join(root, "recipes.json"),
-		"menus":          filepath.Join(root, "menus.json"),
-		"pantries":       filepath.Join(root, "pantries.json"),
-		"shopping-lists": filepath.Join(root, "shoppingLists.json"),
+func DefaultSettingsPath(root string) Settings {
+	return Settings{
+		Products:      filepath.Join(root, "products.json"),
+		Recipes:       filepath.Join(root, "recipes.json"),
+		Menus:         filepath.Join(root, "menus.json"),
+		Pantries:      filepath.Join(root, "pantries.json"),
+		ShoppingLists: filepath.Join(root, "shoppingLists.json"),
 	}
 }
 
-func New(ctx context.Context, log logger.Logger, options map[string]interface{}) (*JSON, error) {
-	prods, errP := getStringOption(options, "products")
-	recs, errR := getStringOption(options, "recipes")
-	menus, errM := getStringOption(options, "menus")
-	pants, errX := getStringOption(options, "pantries")
-	shops, errS := getStringOption(options, "shopping-lists")
-
-	if err := errors.Join(errP, errR, errM, errX, errS); err != nil {
-		return nil, fmt.Errorf("JSON database: %v", err)
-	}
-
+func New(ctx context.Context, log logger.Logger, s Settings) (*JSON, error) {
 	db := &JSON{
-		log: log,
-
-		productsPath:      prods,
-		recipesPath:       recs,
-		menusPath:         menus,
-		pantriesPath:      pants,
-		shoppingListsPath: shops,
+		log:               log,
+		productsPath:      s.Products,
+		recipesPath:       s.Recipes,
+		menusPath:         s.Menus,
+		pantriesPath:      s.Pantries,
+		shoppingListsPath: s.ShoppingLists,
 	}
 
 	log = log.WithField("database", "json")
@@ -422,24 +419,6 @@ func (db *JSON) DeleteShoppingList(name string) error {
 	}
 
 	return nil
-}
-
-func getStringOption(options map[string]any, key string) (string, error) {
-	p, ok := options[key]
-	if !ok {
-		def, ok := DefaultSettings()[key].(string)
-		if !ok {
-			return "", fmt.Errorf("option %q not found", key)
-		}
-		return def, nil
-	}
-
-	path, ok := p.(string)
-	if !ok {
-		return "", fmt.Errorf("option %q is not a string", key)
-	}
-
-	return path, nil
 }
 
 func load(path string, ptr interface{}) error {

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	// Import the MySQL driver.
@@ -21,17 +22,28 @@ type SQL struct {
 	db *sql.DB
 }
 
-func DefaultSettings() map[string]interface{} {
-	return map[string]interface{}{
-		"user":     "root",
-		"password": "example",
-		"host":     "localhost",
-		"port":     "3306",
+type Settings struct {
+	User            string
+	Password        string
+	Host            string
+	Port            string
+	ConnectTimeout  time.Duration
+	ConnectCooldown time.Duration
+}
+
+func DefaultSettings() Settings {
+	return Settings{
+		User:            "root",
+		Password:        "example",
+		Host:            "localhost",
+		Port:            "3306",
+		ConnectTimeout:  time.Minute,
+		ConnectCooldown: 5 * time.Second,
 	}
 }
 
-func New(ctx context.Context, log logger.Logger, options map[string]interface{}) (*SQL, error) {
-	datasource, err := getDatasource(options)
+func New(ctx context.Context, log logger.Logger, sett Settings) (*SQL, error) {
+	datasource, err := getDatasource(sett)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse options: %w", err)
 	}
@@ -93,44 +105,6 @@ func (s *SQL) Close() error {
 	return s.db.Close()
 }
 
-func getDatasource(options map[string]any) (string, error) {
-	user, err := getStringOption(options, "user")
-	if err != nil {
-		return "", err
-	}
-
-	pass, err := getStringOption(options, "password")
-	if err != nil {
-		return "", err
-	}
-
-	host, err := getStringOption(options, "host")
-	if err != nil {
-		return "", err
-	}
-
-	port, err := getStringOption(options, "port")
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf("%s:%s@tcp(%s)/grocery-price-fetcher", user, pass, net.JoinHostPort(host, port)), nil
-}
-
-func getStringOption(options map[string]any, key string) (string, error) {
-	p, ok := options[key]
-	if !ok {
-		def, ok := DefaultSettings()[key].(string)
-		if !ok {
-			return "", fmt.Errorf("option %q not found", key)
-		}
-		return def, nil
-	}
-
-	path, ok := p.(string)
-	if !ok {
-		return "", fmt.Errorf("option %q is not a string", key)
-	}
-
-	return path, nil
+func getDatasource(s Settings) (string, error) {
+	return fmt.Sprintf("%s:%s@tcp(%s)/grocery-price-fetcher", s.User, s.Password, net.JoinHostPort(s.Host, s.Port)), nil
 }
