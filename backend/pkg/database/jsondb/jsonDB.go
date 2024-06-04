@@ -67,6 +67,9 @@ func New(ctx context.Context, log logger.Logger, options map[string]interface{})
 		shoppingListsPath: shops,
 	}
 
+	log = log.WithField("database", "json")
+	log.Tracef("Loading database")
+
 	return db, errors.Join(
 		load(db.productsPath, &db.products),
 		load(db.recipesPath, &db.recipes),

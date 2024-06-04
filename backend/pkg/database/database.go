@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/jsondb"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/mysql"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/types"
@@ -55,6 +56,12 @@ func New(ctx context.Context, logger logger.Logger, s Settings) (DB, error) {
 	switch s.Type {
 	case "json":
 		db, err := jsondb.New(ctx, logger, s.Options)
+		if err != nil {
+			return nil, err
+		}
+		return db, nil
+	case "mysql":
+		db, err := mysql.New(ctx, logger, s.Options)
 		if err != nil {
 			return nil, err
 		}
