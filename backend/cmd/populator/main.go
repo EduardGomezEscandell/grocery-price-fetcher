@@ -12,7 +12,6 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers/blank"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers/bonpreu"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers/mercadona"
-	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
 
@@ -48,12 +47,7 @@ func main() {
 		os.Exit(ExitBadInput)
 	}
 
-	s := Settings{
-		Input:     database.Settings{}.Defaults(),
-		Output:    database.Settings{}.Defaults(),
-		Verbosity: int(logrus.InfoLevel),
-	}
-
+	var s Settings
 	if err := yaml.Unmarshal(out, &s); err != nil {
 		fmt.Fprintf(os.Stderr, "Could not unmarshal settings: %v\n", err)
 		os.Exit(ExitBadInput)
@@ -74,11 +68,7 @@ func run(s Settings) int {
 	log := logger.New()
 	log.SetLevel(s.Verbosity)
 
-	if s.Verbosity > int(logrus.InfoLevel) {
-		if out, err := yaml.Marshal(s); err == nil {
-			log.Debugf("Running with options:\n%s", string(out))
-		}
-	}
+	log.Debugf("Running with options:\n%+#v", s)
 
 	providers.Register(blank.Provider{})
 	providers.Register(bonpreu.New(log))

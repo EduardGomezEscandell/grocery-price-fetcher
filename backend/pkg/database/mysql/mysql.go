@@ -106,5 +106,18 @@ func (s *SQL) Close() error {
 }
 
 func getDatasource(s Settings) (string, error) {
+	if s.User == "" {
+		return "", errors.New("user is empty")
+	}
+	if s.Password == "" {
+		return "", errors.New("password is empty")
+	}
+	if s.Host == "" {
+		return "", errors.New("host is empty")
+	}
+	if s.Port == "" {
+		return "", errors.New("port is empty")
+	}
+
 	return fmt.Sprintf("%s:%s@tcp(%s)/grocery-price-fetcher", s.User, s.Password, net.JoinHostPort(s.Host, s.Port)), nil
 }

@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"testing"
+	"time"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtestutils"
@@ -19,6 +20,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
 )
 
 func TestMain(m *testing.M) {
@@ -47,6 +49,37 @@ func TestMain(m *testing.M) {
 	}
 
 	m.Run()
+}
+
+func TestUnmarshal(t *testing.T) {
+	t.Parallel()
+
+	input := []byte(`
+type: mysql
+options:
+  user: joe
+  password: secret!
+  host: hostboy
+  port: 1234
+`)
+
+	want := database.Settings{
+		Type: "mysql",
+		Options: mysql.Settings{
+			User:            "joe",
+			Password:        "secret!",
+			Host:            "hostboy",
+			Port:            "1234",
+			ConnectTimeout:  time.Minute,
+			ConnectCooldown: 5 * time.Second,
+		},
+	}
+
+	var got database.Settings
+	err := yaml.Unmarshal(input, &got)
+	require.NoError(t, err)
+
+	require.Equal(t, want, got)
 }
 
 func TestBattery(t *testing.T) {

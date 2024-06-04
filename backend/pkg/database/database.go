@@ -46,22 +46,6 @@ type Settings struct {
 	Options any
 }
 
-func options[T any](s Settings) T {
-	var t T
-
-	if s.Options == nil {
-		return t
-	}
-
-	switch s.Options.(type) {
-	case T:
-		return s.Options.(T)
-	default:
-		// Default to empty struct.
-		return t
-	}
-}
-
 func (s Settings) Defaults() Settings {
 	return Settings{
 		Type: "json",
@@ -100,16 +84,18 @@ func (s *Settings) UnmarshalYAML(node *yaml.Node) error {
 	switch raw.Type {
 	case "json":
 		s.Type = raw.Type
-		s.Options = jsondb.DefaultSettings()
-		if err := raw.Options.Decode(&s.Options); err != nil {
+		opt := jsondb.DefaultSettings()
+		if err := raw.Options.Decode(&opt); err != nil {
 			return err
 		}
+		s.Options = opt
 	case "mysql":
 		s.Type = raw.Type
-		s.Options = mysql.DefaultSettings()
-		if err := raw.Options.Decode(&s.Options); err != nil {
+		opt := mysql.DefaultSettings()
+		if err := raw.Options.Decode(&opt); err != nil {
 			return err
 		}
+		s.Options = opt
 	default:
 		return errors.New("unknown database type")
 	}
