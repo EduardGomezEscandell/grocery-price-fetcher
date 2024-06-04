@@ -6,8 +6,6 @@ stand-up:
 	sudo rm -rf $(MY_SQL_DATA_DIR)
 	mkdir -p $(MY_SQL_DATA_DIR)
 	sudo MY_SQL_DATA_DIR=$(MY_SQL_DATA_DIR) docker compose -f ./testdata/compose.yaml up -d
-	@echo "Waiting for MySQL to start..."
-	sleep 10
 
 stand-down:
 	sudo MY_SQL_DATA_DIR=$(MY_SQL_DATA_DIR) docker compose -f ./testdata/compose.yaml down || true

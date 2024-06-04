@@ -64,6 +64,11 @@ func New(ctx context.Context, log logger.Logger, sett Settings) (*SQL, error) {
 		db:     db,
 	}
 
+	if err := sql.waitConnection(sett); err != nil {
+		sql.Close()
+		return nil, fmt.Errorf("could not connect to database: %w", err)
+	}
+
 	if err := sql.createTables(); err != nil {
 		sql.Close()
 		return nil, fmt.Errorf("could not create tables: %v", err)
@@ -98,6 +103,44 @@ func (s *SQL) createTables() error {
 	}
 
 	return nil
+}
+
+func (s *SQL) waitConnection(sett Settings) error {
+	ctx, cancel := context.WithTimeout(s.ctx, sett.ConnectTimeout)
+	defer cancel()
+
+	tk := time.NewTicker(sett.ConnectCooldown)
+	defer tk.Stop()
+
+	// First tick must not wait
+	tick := func() <-chan time.Time {
+		ch := make(chan time.Time)
+		close(ch)
+		return ch
+	}()
+
+	var i int
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("timed out after %d attempts", i)
+		case <-tick:
+		}
+
+		// Further ticks will wait
+		tick = tk.C
+		i++
+
+		s.log.Info("Connecting to database")
+
+		if err := s.db.PingContext(ctx); err != nil {
+			s.log.Infof("Attempt %d: could not connect to database: %v", i, err)
+			continue
+		}
+
+		s.log.Info("Connected to database")
+		return nil
+	}
 }
 
 func (s *SQL) Close() error {
