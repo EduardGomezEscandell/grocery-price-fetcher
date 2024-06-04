@@ -2,16 +2,16 @@ package bonpreu
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"io"
+	"math"
 	"net/http"
-	"regexp"
+	"strconv"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers"
+	"golang.org/x/exp/maps"
 )
-
-var regex = regexp.MustCompile(`<span class="[^"]*price__StyledText[^"]*">([0-9]+,[0-9]{2}).€</span>`)
 
 type Provider struct {
 	log logger.Logger
@@ -36,7 +36,7 @@ func (p Provider) FetchPrice(ctx context.Context, pid providers.ProductID) (floa
 	}
 
 	url := fmt.Sprintf(
-		"https://www.compraonline.bonpreuesclat.cat/products/%s/details",
+		"https://www.compraonline.bonpreuesclat.cat/api/v5/products/search?&term=%s",
 		pid[pidProductCode],
 	)
 	p.log.Trace("Fetching price from ", url)
@@ -56,40 +56,40 @@ func (p Provider) FetchPrice(ctx context.Context, pid providers.ProductID) (floa
 		return 0, fmt.Errorf("unexpected status code: %d", r.StatusCode)
 	}
 
-	content, err := io.ReadAll(r.Body)
+	var data struct {
+		Entities struct {
+			Product map[string]struct {
+				RetailerProductID string `json:"retailerProductId"`
+				Price             struct {
+					Current struct {
+						Amount string `json:"amount"`
+					} `json:"current"`
+				} `json:"price"`
+			} `json:"product"`
+		} `json:"entities"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		return 0, fmt.Errorf("could not decode response: %v", err)
+	}
+
+	if len(data.Entities.Product) == 0 {
+		return 0, fmt.Errorf("product not found")
+	}
+
+	v := maps.Values(data.Entities.Product)[0]
+	if v.RetailerProductID != pid[pidProductCode] {
+		return 0, fmt.Errorf("product not found")
+	}
+
+	batchPrice, err := strconv.ParseFloat(v.Price.Current.Amount, 32)
 	if err != nil {
-		return 0, fmt.Errorf("could not read response: %w", err)
+		return 0, fmt.Errorf("could not parse price: %v", err)
 	}
 
-	matches := regex.FindAllSubmatch(content, -1)
-
-	switch len(matches) {
-	case 0:
-		return 0, fmt.Errorf("could not find price in response")
-	case 1:
-		break
-	default:
-		return 0, fmt.Errorf("found multiple prices in response")
-	}
-
-	var euro uint
-	var cent uint
-
-	m := string(matches[0][1])
-	_, err = fmt.Sscanf(m, "%d,%d", &euro, &cent)
-	if err != nil {
-		return 0, fmt.Errorf("could not parse price %q: %w", m, err)
-	}
-
-	if cent > 99 {
-		return 0, fmt.Errorf("invalid price: %s", m)
-	}
-
-	batchPrice := float32(euro) + float32(cent)/100
-
-	p.log.Tracef("Got price from %s", url)
-
-	return batchPrice, nil
+	ret := float32(math.Round(batchPrice*100) / 100)
+	p.log.Tracef("Got price from %s: %g", url, ret)
+	return ret, nil
 }
 
 func (p Provider) ValidateID(pid providers.ProductID) error {
