@@ -1,0 +1,8 @@
+services:
+  populator:
+    image: grocery-price-fetcher
+    entrypoint: []
+    command: ["/usr/bin/grocery-price-fetcher-populator", "--settings", "/mnt/input/populator-settings.yaml"]
+    volumes:
+      - ./input:/mnt/input/:ro
+      - ${OUTPUT_DIR}:/mnt/output/:rw
