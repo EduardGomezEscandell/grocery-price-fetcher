@@ -21,9 +21,15 @@ install: ## Install the service
 	sudo cp ./config.yaml "$(ETC)/config.yaml"
 	sudo cp -r ./sample-data "$(ETC)/sample-data"
 
-	sudo touch      "$(ETC)/db_root_password.txt"
-	sudo chmod 0600 "$(ETC)/db_root_password.txt"
-	echo "$$(openssl rand -hex 32)" | sudo tee "$(ETC)/db_root_password.txt" > /dev/null
+	[ -f "$(ETC)/db_root_password.txt" ]                              \
+		&& echo "Root password file already exists"                   \
+		|| (                                                          \
+			sudo touch      "$(ETC)/db_root_password.txt"             \
+			&& sudo chmod 0600 "$(ETC)/db_root_password.txt"          \
+			&& echo "$$(openssl rand -hex 32)"                        \
+			   | sudo tee "$(ETC)/db_root_password.txt" > /dev/null   \
+			&& echo "Root password file created"                      \
+		)
 
 	sudo systemctl daemon-reload
 
