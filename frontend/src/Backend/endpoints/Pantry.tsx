@@ -48,7 +48,7 @@ export class MockPantryEndpoint extends PantryEndpoint {
             .then(() =>
                 [
                     Pantry.fromJSON({
-                        name: "test", contents: [
+                        name: "default", contents: [
                             { name: "Albercocs", amount: 7 },
                             { name: "Pastanaga", amount: 3 },
                             { name: "Iogurt", amount: 2 },

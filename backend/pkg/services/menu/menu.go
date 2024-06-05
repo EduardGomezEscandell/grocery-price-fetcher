@@ -95,7 +95,10 @@ func (s *Service) handlePost(log logger.Logger, w http.ResponseWriter, r *http.R
 	}
 	r.Body.Close()
 
-	var menu types.Menu
+	menu := types.Menu{
+		Name: "default",
+	}
+
 	if err := json.Unmarshal(out, &menu); err != nil {
 		return httputils.Errorf(http.StatusBadRequest, "failed to unmarshal request: %v:\n%s", err, string(out))
 	}

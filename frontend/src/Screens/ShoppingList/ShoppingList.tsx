@@ -127,7 +127,7 @@ function saveShoppingList(backend: Backend, globalState: State): Promise<void> {
     return backend
         .Shopping()
         .POST({
-            name: globalState.shoppingList.name, // Let the backend handle the name for now
+            name: globalState.shoppingList.name,
             items: globalState.shoppingList.items
                 .filter(i => i.done)
                 .map(i => i.name)

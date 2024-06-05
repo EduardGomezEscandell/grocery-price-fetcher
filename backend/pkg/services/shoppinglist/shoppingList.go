@@ -71,7 +71,10 @@ func (s *Service) handlePost(_ logger.Logger, w http.ResponseWriter, r *http.Req
 	}
 	r.Body.Close()
 
-	var sl types.ShoppingList
+	sl := types.ShoppingList{
+		Name: "default",
+	}
+
 	if err := json.Unmarshal(out, &sl); err != nil {
 		return httputils.Errorf(http.StatusBadRequest, "failed to unmarshal request: %v:\n%s", err, string(out))
 	}
