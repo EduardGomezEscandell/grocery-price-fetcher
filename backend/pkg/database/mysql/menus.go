@@ -241,7 +241,9 @@ type menuBuilder struct {
 }
 
 func newMenuBuilder(names []string) menuBuilder {
-	var p menuBuilder
+	p := menuBuilder{
+		menus: make([]types.Menu, 0, len(names)),
+	}
 	for _, n := range names {
 		p.menus = append(p.menus, types.Menu{Name: n})
 	}

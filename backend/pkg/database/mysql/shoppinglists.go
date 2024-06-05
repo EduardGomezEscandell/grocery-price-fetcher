@@ -94,7 +94,7 @@ func (s *SQL) queryShoppingLists(tx *sql.Tx) ([]types.ShoppingList, error) {
 		return nil, fmt.Errorf("could not query shopping lists: %v", err)
 	}
 
-	var lists []types.ShoppingList
+	lists := make([]types.ShoppingList, 0)
 	for r.Next() {
 		var sl types.ShoppingList
 		if err := r.Scan(&sl.Name, &sl.TimeStamp); err != nil {

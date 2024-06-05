@@ -71,7 +71,7 @@ func (s *SQL) Pantries() ([]types.Pantry, error) {
 		return nil, fmt.Errorf("could not query pantries: %v", err)
 	}
 
-	var pantries []types.Pantry
+	pantries := make([]types.Pantry, 0, len(names))
 	for _, name := range names {
 		contents, err := s.queryPantryContents(tx, name)
 		if err != nil {

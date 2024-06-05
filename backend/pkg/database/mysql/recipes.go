@@ -58,7 +58,7 @@ func (s *SQL) createRecipes(tx *sql.Tx) error {
 	return nil
 }
 
-func (s *SQL) Recipes() (recipes []types.Recipe, err error) {
+func (s *SQL) Recipes() ([]types.Recipe, error) {
 	tx, err := s.db.BeginTx(s.ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
 		return nil, fmt.Errorf("could not begin transaction: %v", err)
@@ -70,6 +70,7 @@ func (s *SQL) Recipes() (recipes []types.Recipe, err error) {
 		return nil, fmt.Errorf("could not query recipes: %v", err)
 	}
 
+	recipes := make([]types.Recipe, 0, len(recs))
 	for _, name := range recs {
 		rec, err := s.queryIngredients(tx, name)
 		if err != nil {

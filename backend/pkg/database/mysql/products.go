@@ -71,7 +71,7 @@ func (s *SQL) Products() ([]product.Product, error) {
 		return nil, fmt.Errorf("could not query products: %v", err)
 	}
 
-	var products []product.Product
+	products := make([]product.Product, 0)
 	for r.Next() {
 		p, err := parseProduct(s.log, r)
 		if err != nil {
