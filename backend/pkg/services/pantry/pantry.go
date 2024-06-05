@@ -84,7 +84,10 @@ func (s *Service) handlePost(_ logger.Logger, w http.ResponseWriter, r *http.Req
 	}
 	r.Body.Close()
 
-	var pantry types.Pantry
+	pantry := types.Pantry{
+		Name: "default",
+	}
+
 	if err := json.Unmarshal(out, &pantry); err != nil {
 		return httputils.Errorf(http.StatusBadRequest, "could not unmarshal pantry: %w", err)
 	}

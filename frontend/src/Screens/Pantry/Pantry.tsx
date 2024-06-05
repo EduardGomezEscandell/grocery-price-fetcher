@@ -68,7 +68,7 @@ export async function savePantry(backend: Backend, globalState: State): Promise<
     await backend
         .Pantry()
         .POST({
-            name: '', // Let the backend handle the name for now
+            name: 'default',
             contents: globalState.inNeed.ingredients
                 .filter(i => i.have > 0)
                 .map(i_1 => {

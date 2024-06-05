@@ -18,7 +18,7 @@ export default function MenuLoad(props: Props) {
         props.backend
             .Menu()
             .GET()
-            .then((m: Menu[]) => m[0])
+            .then((m: Menu[]) => m[0] || new Menu())
             .then((m: Menu) => props.globalState.menu = m)
         ]).finally(props.onComplete)
     })

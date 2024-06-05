@@ -74,8 +74,8 @@ export class ShoppingNeeds {
 }
 
 export class Menu {
-    days: Array<Day>;
-    name: string;
+    days: Array<Day> = [];
+    name: string = 'default';
 
     static fromJSON(json: any): Menu {
         let menu = new Menu()
@@ -140,7 +140,7 @@ export class Menu {
 }
 
 export class Pantry {
-    name: string = ''
+    name: string = 'default'
     contents: Array<Ingredient> = []
 
     static fromJSON(json: any) {
@@ -173,13 +173,13 @@ export class ShoppingListItem {
 }
 
 export class ShoppingList {
-    name: string = ''
+    name: string = 'default'
     timeStamp: string = ''
     items: Array<ShoppingListItem> = []
 
     static fromJSON(json: any): ShoppingList {
         const shoppingList = new ShoppingList()
-        shoppingList.name = either(json, 'name', 'test')
+        shoppingList.name = either(json, 'name', 'default')
         shoppingList.timeStamp = either(json, 'time_stamp', '2000-01-01T00:00:00Z00:00')
         shoppingList.items = either(json, 'items', []).map((name: string) => {
             return {
