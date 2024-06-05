@@ -45,6 +45,11 @@ start: ## Start the service
 	@echo journalctl -u \"$(PKG).service\" --since \"$(NOW)\"
 	@echo
 
+db-shell: ## Open a shell in the database container
+	sudo docker exec \
+		-it $(PKG)-database-1 \
+		bash -c 'mysql -u root -p$$(cat /run/secrets/db_root_password)'
+
 stop: ## Stop the service
 	sudo systemctl stop "$(PKG).service"    || true
 	sudo systemctl disable "$(PKG).service" || true
