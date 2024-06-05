@@ -58,3 +58,4 @@ clean: ## Clean up build artifacts, Docker containers, and images
 	rm -r bin || true
 	cd deploy/container && make clean
 	cd deploy/host && make purge
+	cd backend && make clean

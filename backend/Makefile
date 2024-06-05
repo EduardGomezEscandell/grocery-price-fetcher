@@ -22,6 +22,7 @@ lint: ## Run linter (installs golangci-lint if not found)
 build: ## Build Go binaries
 	mkdir -p $(BIN)
 	$(GO) -o $(BIN)/grocery-server cmd/server/main.go
+	$(GO) -o $(BIN)/populator cmd/populator/main.go
 
 test: ## Run unit tests
 	mkdir -p $(COVDIR)
@@ -35,3 +36,8 @@ coverage: ## Show test coverage
 	go test ./... -coverprofile=$(COVDIR)/.coverage -covermode=set
 	go tool cover -html=$(COVDIR)/.coverage -o $(COVDIR)/index.html \
 		&& python3 -m http.server 8080 --directory $(COVDIR)
+
+clean: ## Clean up build artifacts
+	rm -rf $(BIN)
+	rm -rf $(COVDIR)
+	cd pkg/database/mysql && make stand-down

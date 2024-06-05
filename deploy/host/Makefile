@@ -21,13 +21,25 @@ install: ## Install the service
 	sudo cp ./config.yaml "$(ETC)/config.yaml"
 	sudo cp -r ./sample-data "$(ETC)/sample-data"
 
+	[ -f "$(ETC)/db_root_password.txt" ]                              \
+		&& echo "Root password file already exists"                   \
+		|| (                                                          \
+			sudo touch      "$(ETC)/db_root_password.txt"             \
+			&& sudo chmod 0600 "$(ETC)/db_root_password.txt"          \
+			&& echo "$$(openssl rand -hex 32)"                        \
+			   | sudo tee "$(ETC)/db_root_password.txt" > /dev/null   \
+			&& echo "Root password file created"                      \
+		)
+
 	sudo systemctl daemon-reload
 
-	@echo "Service installed. To start run:"
-	@echo
-	@echo make start
-	@echo
-	@echo "You can modify the configuration in $(ETC)/config.yaml, then restart the service."
+	@echo ""
+	@echo "Service installed. To start:"
+	@echo "  1. Set your password in $(ETC)/db_root_password.txt"
+	@echo "  2. Validate or change the configuration in $(ETC)/config.yaml and $(ETC)/compose.yaml"
+	@echo "     You may also do this after starting the service, but changes will not take effect until the service is restarted"
+	@echo "  3. Run command 'make start' to start the service"
+	@echo ""
 
 start: ## Start the service
 	sudo systemctl daemon-reload
@@ -39,12 +51,20 @@ start: ## Start the service
 	@echo journalctl -u \"$(PKG).service\" --since \"$(NOW)\"
 	@echo
 
+db-shell: ## Open a shell in the database container
+	sudo docker exec \
+		-it $(PKG)-database-1 \
+		bash -c 'mysql -u root -p$$(cat /run/secrets/db_root_password)'
+
 stop: ## Stop the service
 	sudo systemctl stop "$(PKG).service"    || true
 	sudo systemctl disable "$(PKG).service" || true
 
 purge: stop ## Stop and remove all service files and data
 	sudo docker compose rm -fsv          || true
+	sudo docker container rm -f $(PKG)-grocery-1   || true
+	sudo docker container rm -f $(PKG)-database-1   || true
+	sudo docker container rm -f $(PKG)-prepopulate-1   || true
 	sudo docker volume rm -f $(PKG)_data || true
 	sudo rm -rf "$(SERVICE)"             || true
 	sudo rm -rf "$(ETC)" 	             || true

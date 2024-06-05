@@ -9,6 +9,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers/blank"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers/bonpreu"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers/mercadona"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/helloworld"
@@ -63,6 +64,7 @@ func (Settings) Defaults() Settings {
 func New(ctx context.Context, logger logger.Logger, settings Settings) (*Manager, error) {
 	ctx, cancel := context.WithCancel(ctx)
 
+	providers.Register(blank.Provider{})
 	providers.Register(bonpreu.New(logger))
 	providers.Register(mercadona.New(logger))
 

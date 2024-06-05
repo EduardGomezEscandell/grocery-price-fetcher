@@ -16,6 +16,7 @@ build: ## Create directories, copy files, and build Docker image
 
 	# Artefacts
 	cp    "../../bin/grocery-server" "$(ROOT)/usr/bin/$(PKG)"
+	cp    "../../bin/populator"      "$(ROOT)/usr/bin/$(PKG)-populator"
 	cp -R "../../frontend/build/."   "$(ROOT)/usr/share/$(PKG)/frontend/"
 
 	# Build

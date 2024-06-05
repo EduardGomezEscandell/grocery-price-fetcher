@@ -32,40 +32,40 @@ type JSON struct {
 	mu  sync.RWMutex
 }
 
-func DefaultSettings() map[string]interface{} {
+type Settings struct {
+	Products      string
+	Recipes       string
+	Menus         string
+	Pantries      string
+	ShoppingLists string
+}
+
+func DefaultSettings() Settings {
 	return DefaultSettingsPath("/mnt/grocery-price-fetcher")
 }
 
-func DefaultSettingsPath(root string) map[string]interface{} {
-	return map[string]interface{}{
-		"products":       filepath.Join(root, "products.json"),
-		"recipes":        filepath.Join(root, "recipes.json"),
-		"menus":          filepath.Join(root, "menus.json"),
-		"pantries":       filepath.Join(root, "pantries.json"),
-		"shopping-lists": filepath.Join(root, "shoppingLists.json"),
+func DefaultSettingsPath(root string) Settings {
+	return Settings{
+		Products:      filepath.Join(root, "products.json"),
+		Recipes:       filepath.Join(root, "recipes.json"),
+		Menus:         filepath.Join(root, "menus.json"),
+		Pantries:      filepath.Join(root, "pantries.json"),
+		ShoppingLists: filepath.Join(root, "shoppingLists.json"),
 	}
 }
 
-func New(ctx context.Context, log logger.Logger, options map[string]interface{}) (*JSON, error) {
-	prods, errP := getStringOption(options, "products")
-	recs, errR := getStringOption(options, "recipes")
-	menus, errM := getStringOption(options, "menus")
-	pants, errX := getStringOption(options, "pantries")
-	shops, errS := getStringOption(options, "shopping-lists")
-
-	if err := errors.Join(errP, errR, errM, errX, errS); err != nil {
-		return nil, fmt.Errorf("JSON database: %v", err)
-	}
-
+func New(ctx context.Context, log logger.Logger, s Settings) (*JSON, error) {
 	db := &JSON{
-		log: log,
-
-		productsPath:      prods,
-		recipesPath:       recs,
-		menusPath:         menus,
-		pantriesPath:      pants,
-		shoppingListsPath: shops,
+		log:               log,
+		productsPath:      s.Products,
+		recipesPath:       s.Recipes,
+		menusPath:         s.Menus,
+		pantriesPath:      s.Pantries,
+		shoppingListsPath: s.ShoppingLists,
 	}
+
+	log = log.WithField("database", "json")
+	log.Tracef("Loading database")
 
 	return db, errors.Join(
 		load(db.productsPath, &db.products),
@@ -87,13 +87,13 @@ func (db *JSON) Close() error {
 	return nil
 }
 
-func (db *JSON) Products() []product.Product {
+func (db *JSON) Products() ([]product.Product, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
 	out := make([]product.Product, len(db.products))
 	copy(out, db.products)
-	return out
+	return out, nil
 }
 
 func (db *JSON) LookupProduct(name string) (product.Product, bool) {
@@ -132,13 +132,34 @@ func (db *JSON) SetProduct(p product.Product) error {
 	return nil
 }
 
-func (db *JSON) Recipes() []types.Recipe {
+func (db *JSON) DeleteProduct(name string) error {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	i := slices.IndexFunc(db.products, func(p product.Product) bool {
+		return p.Name == name
+	})
+
+	if i == -1 {
+		return fmt.Errorf("product %q not found", name)
+	}
+
+	db.products = append(db.products[:i], db.products[i+1:]...)
+
+	if err := db.save(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db *JSON) Recipes() ([]types.Recipe, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
 	out := make([]types.Recipe, len(db.recipes))
 	copy(out, db.recipes)
-	return out
+	return out, nil
 }
 
 func (db *JSON) LookupRecipe(name string) (types.Recipe, bool) {
@@ -176,13 +197,34 @@ func (db *JSON) SetRecipe(r types.Recipe) error {
 	return nil
 }
 
-func (db *JSON) Menus() []types.Menu {
+func (db *JSON) DeleteRecipe(name string) error {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	i := slices.IndexFunc(db.recipes, func(p types.Recipe) bool {
+		return p.Name == name
+	})
+
+	if i == -1 {
+		return fmt.Errorf("recipe %q not found", name)
+	}
+
+	db.recipes = append(db.recipes[:i], db.recipes[i+1:]...)
+
+	if err := db.save(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db *JSON) Menus() ([]types.Menu, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
 	out := make([]types.Menu, len(db.menus))
 	copy(out, db.menus)
-	return out
+	return out, nil
 }
 
 func (db *JSON) LookupMenu(name string) (types.Menu, bool) {
@@ -220,13 +262,34 @@ func (db *JSON) SetMenu(m types.Menu) error {
 	return nil
 }
 
-func (db *JSON) Pantries() []types.Pantry {
+func (db *JSON) DeleteMenu(name string) error {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	i := slices.IndexFunc(db.menus, func(p types.Menu) bool {
+		return p.Name == name
+	})
+
+	if i == -1 {
+		return fmt.Errorf("menu %q not found", name)
+	}
+
+	db.menus = append(db.menus[:i], db.menus[i+1:]...)
+
+	if err := db.save(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db *JSON) Pantries() ([]types.Pantry, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
 	out := make([]types.Pantry, len(db.pantries))
 	copy(out, db.pantries)
-	return out
+	return out, nil
 }
 
 func (db *JSON) LookupPantry(name string) (types.Pantry, bool) {
@@ -268,13 +331,34 @@ func (db *JSON) SetPantry(p types.Pantry) error {
 	return nil
 }
 
-func (db *JSON) ShoppingLists() []types.ShoppingList {
+func (db *JSON) DeletePantry(name string) error {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	i := slices.IndexFunc(db.pantries, func(p types.Pantry) bool {
+		return p.Name == name
+	})
+
+	if i == -1 {
+		return fmt.Errorf("pantry %q not found", name)
+	}
+
+	db.pantries = append(db.pantries[:i], db.pantries[i+1:]...)
+
+	if err := db.save(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db *JSON) ShoppingLists() ([]types.ShoppingList, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
 	out := make([]types.ShoppingList, len(db.shoppingLists))
 	copy(out, db.shoppingLists)
-	return out
+	return out, nil
 }
 
 func (db *JSON) LookupShoppingList(name string) (types.ShoppingList, bool) {
@@ -316,22 +400,25 @@ func (db *JSON) SetShoppingList(p types.ShoppingList) error {
 	return nil
 }
 
-func getStringOption(options map[string]any, key string) (string, error) {
-	p, ok := options[key]
-	if !ok {
-		def, ok := DefaultSettings()[key].(string)
-		if !ok {
-			return "", fmt.Errorf("option %q not found", key)
-		}
-		return def, nil
+func (db *JSON) DeleteShoppingList(name string) error {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	i := slices.IndexFunc(db.shoppingLists, func(p types.ShoppingList) bool {
+		return p.Name == name
+	})
+
+	if i == -1 {
+		return fmt.Errorf("shopping list %q not found", name)
 	}
 
-	path, ok := p.(string)
-	if !ok {
-		return "", fmt.Errorf("option %q is not a string", key)
+	db.shoppingLists = append(db.shoppingLists[:i], db.shoppingLists[i+1:]...)
+
+	if err := db.save(); err != nil {
+		return err
 	}
 
-	return path, nil
+	return nil
 }
 
 func load(path string, ptr interface{}) error {

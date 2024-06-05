@@ -1,4 +1,34 @@
 services:
+  database:
+    image: mysql
+    expose:
+      - "3306"
+    ports:
+      - "3306:3306"
+    volumes:
+      - data:/var/lib/mysql:rw
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MYSQL_DATABASE: grocery-price-fetcher
+    secrets:
+      - db_root_password
+  prepopulate:
+    image: grocery-price-fetcher
+    entrypoint: []
+    command: ["/usr/bin/grocery-price-fetcher-populator", "--settings", "/mnt/sample-data/populator-settings.yaml"]
+    volumes:
+      - data:/mnt/grocery-price-fetcher/
+      - ./sample-data:/mnt/sample-data/:ro
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+      MYSQL_DATABASE: grocery-price-fetcher
+    links:
+      - database
+    depends_on:
+      database:
+        condition: service_started
+    secrets:
+      - db_root_password
   grocery:
     image: grocery-price-fetcher
     ports:
@@ -8,15 +38,17 @@ services:
       - /etc/grocery-price-fetcher/config.yaml:/etc/grocery-price-fetcher/config.yaml:ro
     links:
       - prepopulate
+      - database
     depends_on:
       prepopulate:
         condition: service_completed_successfully
-  prepopulate:
-    image: ubuntu
-    command: ["/mnt/sample-data/prepopulate.sh", "/mnt/sample-data/data", "/mnt/grocery-price-fetcher"]
-    volumes:
-      - data:/mnt/grocery-price-fetcher/
-      - ./sample-data:/mnt/sample-data/:ro
+      database:
+        condition: service_started
+    secrets:
+      - db_root_password
 volumes:
   data:
     driver: local
+secrets:
+  db_root_password:
+    file: /etc/grocery-price-fetcher/db_root_password.txt

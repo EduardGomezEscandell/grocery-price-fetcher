@@ -15,23 +15,26 @@ func (Provider) Name() string {
 }
 
 func (Provider) FetchPrice(ctx context.Context, pid providers.ProductID) (float32, error) {
-	switch len(pid) {
-	case 0:
+	if pid[0] == "" {
 		return 0, nil
-	case 1:
-		price, err := strconv.ParseFloat(pid[0], 32)
-		if err != nil {
-			return 0, fmt.Errorf("could not parse price: %v", err)
-		}
-		return float32(price), nil
-	default:
-		return 0, fmt.Errorf("expected 0 or 1 field in product ID, got %d", len(pid))
 	}
+
+	price, err := strconv.ParseFloat(pid[0], 32)
+	if err != nil {
+		return 0, fmt.Errorf("could not parse price: %v", err)
+	}
+
+	return float32(price), nil
 }
 
 func (Provider) ValidateID(pid providers.ProductID) error {
-	if len(pid) > 1 {
-		return fmt.Errorf("expected 0 or 1 field in product ID, got %d", len(pid))
+	if pid[1] != "" {
+		return fmt.Errorf("unexpected field at index 1: %q", pid[2])
 	}
+
+	if pid[2] != "" {
+		return fmt.Errorf("unexpected field at index 2: %q", pid[2])
+	}
+
 	return nil
 }

@@ -44,8 +44,13 @@ func (s *Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Reque
 		return httputils.Errorf(http.StatusMethodNotAllowed, "method %s not allowed", r.Method)
 	}
 
+	recs, err := s.db.Recipes()
+	if err != nil {
+		return httputils.Errorf(http.StatusInternalServerError, "failed to get recipes: %v", err)
+	}
+
 	names := make([]string, 0)
-	for _, r := range s.db.Recipes() {
+	for _, r := range recs {
 		names = append(names, r.Name)
 	}
 

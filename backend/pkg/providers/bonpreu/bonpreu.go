@@ -23,7 +23,6 @@ func New(log logger.Logger) providers.Provider {
 
 const (
 	pidProductCode = iota
-	pidNFields
 )
 
 func (p Provider) Name() string {
@@ -31,10 +30,6 @@ func (p Provider) Name() string {
 }
 
 func (p Provider) FetchPrice(ctx context.Context, pid providers.ProductID) (float32, error) {
-	if len(pid) != pidNFields {
-		return 0, fmt.Errorf("expected 1 field in product ID, got %d", len(pid))
-	}
-
 	url := fmt.Sprintf(
 		"https://www.compraonline.bonpreuesclat.cat/api/v5/products/search?&term=%s",
 		pid[pidProductCode],
@@ -93,12 +88,16 @@ func (p Provider) FetchPrice(ctx context.Context, pid providers.ProductID) (floa
 }
 
 func (p Provider) ValidateID(pid providers.ProductID) error {
-	if len(pid) != pidNFields {
-		return fmt.Errorf("expected %d fields, got %d", pidNFields, len(pid))
+	if pid[pidProductCode] == "" {
+		return fmt.Errorf("product code (index 0) is empty")
 	}
 
-	if pid[pidProductCode] == "" {
-		return fmt.Errorf("product code is empty")
+	if pid[1] != "" {
+		return fmt.Errorf("unexpected field at index 1: %q", pid[2])
+	}
+
+	if pid[2] != "" {
+		return fmt.Errorf("unexpected field at index 2: %q", pid[2])
 	}
 
 	return nil

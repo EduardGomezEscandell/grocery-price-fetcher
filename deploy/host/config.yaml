@@ -4,24 +4,14 @@ verbosity: 1
 frontend: /usr/share/grocery-price-fetcher/frontend
 address: '[::]:3000'
 services:
-    database:
-        type: json
-        options:
-            menus: /mnt/grocery-price-fetcher/menus.json
-            pantries: /mnt/grocery-price-fetcher/pantries.json
-            products: /mnt/grocery-price-fetcher/products.json
-            recipes: /mnt/grocery-price-fetcher/recipes.json
-    helloworld:
-        enable: true
-    menu:
-        enable: true
-    pantry:
-        enable: true
-    pricing:
-        enable: true
-        refreshrate: 6h0m0s
-    recipes:
-        enable: true
-    version:
-        enable: true
+  database:
+    type: mysql
+    options:
+      user: root
+      passwordfile: /run/secrets/db_root_password
+      host: database
+      port: '3306'
+  pricing:
+    enable: true
+    refreshrate: 6h0m0s
 

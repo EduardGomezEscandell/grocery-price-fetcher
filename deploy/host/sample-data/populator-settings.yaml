@@ -1,0 +1,15 @@
+input:
+  type: json
+  options:
+    menus: /mnt/sample-data/data/menus.json
+    pantries: /mnt/sample-data/data/pantries.json
+    products: /mnt/sample-data/data/products.json
+    recipes: /mnt/sample-data/data/recipes.json
+output:
+  type: mysql
+  options:
+    user: root
+    passwordfile: /run/secrets/db_root_password
+    host: database
+    port: '3306'
+verbosity: 4

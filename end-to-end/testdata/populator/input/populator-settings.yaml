@@ -1,0 +1,15 @@
+verbosity: 6
+input:
+  type: json
+  options:
+    menus: /mnt/input/data/menus.json
+    pantries: /mnt/input/data/pantries.json
+    products: /mnt/input/data/products.json
+    recipes: /mnt/input/data/recipes.json
+output:
+  type: json
+  options:
+    menus: /mnt/output/menus.json
+    pantries: /mnt/output/pantries.json
+    products: /mnt/output/products.json
+    recipes: /mnt/output/recipes.json

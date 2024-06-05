@@ -1,0 +1,20 @@
+services:
+  mysql:
+    image: mysql
+    expose:
+      - "3306"
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MYSQL_DATABASE: grocery-price-fetcher
+    volumes:
+      - type: bind
+        source: ${MY_SQL_DATA_DIR}
+        target: /var/lib/mysql
+    secrets:
+      - db_root_password
+
+secrets:
+  db_root_password:
+    file: db_root_password.txt
