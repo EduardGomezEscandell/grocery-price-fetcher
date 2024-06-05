@@ -1,7 +1,7 @@
 import React from 'react'
 import Backend from "../Backend/Backend.tsx";
 import { State } from "../State/State.tsx";
-import MenuLoad from "./MenuLoad/MenuLoad.tsx";
+import LandingPage from "./LandingPage/LandingPage.tsx";
 import RenderMenu from "./Menu/Menu.tsx";
 import Pantry from "./Pantry/Pantry.tsx";
 import ShoppingList from './ShoppingList/ShoppingList.tsx';
@@ -22,7 +22,7 @@ export default class StateMachine extends React.Component<Props> {
         })
 
         this.state = {
-            screen: new LoadMenuScreen(baseScreen)
+            screen: new MainScreen(baseScreen)
         }
     }
 
@@ -62,17 +62,17 @@ class Screen extends React.Component<ScreenProps> {
     }
 }
 
-class LoadMenuScreen extends Screen {
+class MainScreen extends Screen {
     constructor(pp: Screen) {
         super(pp)
         this.name = "LoadingScreen"
     }
 
     render(): JSX.Element {
-        return <MenuLoad
+        return <LandingPage
             backend={this.backend}
             globalState={this.globalState}
-            onComplete={() => this.setScreen(new MenuScreen(this))}
+            onGotoMenu={() => this.setScreen(new MenuScreen(this))}
         />
     }
 }
