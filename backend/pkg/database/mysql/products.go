@@ -121,8 +121,6 @@ func (s *SQL) SetProduct(p product.Product) error {
 
 	argv := []any{p.Name, p.BatchSize, p.Price, p.Provider.Name(), p.ProductID[0], p.ProductID[1], p.ProductID[2]}
 
-	s.log.Debugf("Inserting product %q", argv)
-
 	if _, err := s.db.ExecContext(s.ctx, query, argv...); err != nil {
 		return fmt.Errorf("could not insert into table products: %v", err)
 	}
