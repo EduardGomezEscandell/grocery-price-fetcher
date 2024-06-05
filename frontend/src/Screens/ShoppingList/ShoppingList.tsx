@@ -77,7 +77,7 @@ export default function Shopping(props: Props): JSX.Element {
                     <tfoot id='header2'>
                         <tr>
                             <td colSpan={4}>
-                             Gràcies per utilitzar El Rebost!
+                             Gràcies per utilitzar La compra de l'Edu!
                             </td>
                         </tr>
                     </tfoot>

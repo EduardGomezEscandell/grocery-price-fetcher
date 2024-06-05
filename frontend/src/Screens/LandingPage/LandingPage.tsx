@@ -21,7 +21,7 @@ export default function LandingPage(props: Props) {
         <div className='LandingPage'>
             <div id="title" style={tableStyle}>
                 <img src='/logo1024.png' alt='logo' className="Logo" />
-                <h1>El&nbsp;rebost</h1>
+                <h1>La&nbsp;compra de&nbsp;l'Edu</h1>
             </div>
             <div id="content" style={tableStyle}>
                 <button onClick={() => {
@@ -59,7 +59,7 @@ export default function LandingPage(props: Props) {
             )}
             <div id="footer" style={tableStyle}>
                 <p>
-                    El rebost és un projecte de codi obert desenvolupat
+                    La compra de l'Edu és un projecte de codi obert desenvolupat
                     per <a href='https://www.linkedin.com/in/eduard-gomez' target="_blank" rel="noreferrer">Eduard&nbsp;Gómez&nbsp;Escandell</a> i
                     disponible a <a href="https://www.github.com/EduardGomezEscandell/grocery-price-fetcher" target="_blank" rel="noreferrer">GitHub</a></p>
             </div>
