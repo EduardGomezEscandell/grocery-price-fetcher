@@ -13,6 +13,7 @@ interface Props {
     backend: Backend;
     globalState: State;
     onComplete: () => void
+    onGotoHome: () => void
 }
 
 class MealMetadata {
@@ -73,12 +74,24 @@ export default class MenuTable extends React.Component<Props> {
         return (
             <>
                 <TopBar
-                    left={<p key='2' className='Text'>Menu</p>}
+                    left={<SaveButton
+                        key='goback'
+
+                        baseTxt='Tornar'
+
+                        onSave={() => saveMenu(this.props.backend, this.props.globalState)}
+                        onSaveTxt='Desant...'
+
+                        onAcceptTxt='Desat'
+                        onAccept={this.props.onGotoHome}
+
+                        onRejectTxt='Error'
+                    />}
                     right={<SaveButton
                         key='save'
 
                         baseTxt='Següent'
-                        
+
                         onSave={() => DownloadPantry(this.props.backend, this.props.globalState)}
                         onSaveTxt='Desant...'
 
@@ -255,4 +268,8 @@ function DishItem(pp: { name: string, amount: number, id: string, onMouseEnter: 
             <span id='name' key='Name'>{pp.name}</span>
         </div>
     )
+}
+
+async function saveMenu(backend: Backend, globalState: State): Promise<void> {
+    backend.Menu().POST(globalState.menu)
 }

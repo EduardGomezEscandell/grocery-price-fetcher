@@ -48,6 +48,10 @@ button {
   cursor: pointer;
 }
 
+button:hover {
+  background-color: #f0f0f0;
+}
+
 dialog {
   justify-self: center;
   display: flex;

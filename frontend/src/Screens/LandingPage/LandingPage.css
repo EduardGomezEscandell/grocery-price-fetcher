@@ -1,0 +1,38 @@
+.LandingPage {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    height: 100vh;
+}
+
+.LandingPage #title {
+    font: inherit;
+    text-align: center;
+    max-height: 40%;
+    margin: auto;
+    
+    img {
+        margin: 0 auto;
+        display: block;
+        margin: auto;
+        border-radius: 100%;
+        max-height: 80%;
+        max-width: 80%;
+    }
+}
+
+.LandingPage #content {
+    text-align: center;
+    margin-top: 50px;
+    margin: auto;
+}
+
+.LandingPage #content button {
+    width: 80%;   
+}
+
+.LandingPage #footer {
+    text-align: center;
+}
