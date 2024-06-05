@@ -25,6 +25,16 @@ export default function LandingPage(props: Props) {
             </div>
             <div id="content" style={tableStyle}>
                 <button onClick={() => {
+                    setCommingSoon(true)
+                }}>
+                    Els meus productes
+                </button>
+                <button onClick={() => {
+                    setCommingSoon(true)
+                }}>
+                    Les meves receptes
+                </button>
+                <button onClick={() => {
                     Promise.all([
                         props.backend
                             .Dishes()
@@ -38,16 +48,6 @@ export default function LandingPage(props: Props) {
                     ]).finally(props.onGotoMenu)
                 }}>
                     La meva compra
-                </button>
-                <button onClick={() => {
-                    setCommingSoon(true)
-                }}>
-                    Les teves receptes
-                </button>
-                <button onClick={() => {
-                    setCommingSoon(true)
-                }}>
-                    Els meus productes
                 </button>
             </div>
             {commingSoon && (

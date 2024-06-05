@@ -22,7 +22,7 @@ export default class StateMachine extends React.Component<Props> {
         })
 
         this.state = {
-            screen: new MainScreen(baseScreen)
+            screen: new HomeScreen(baseScreen)
         }
     }
 
@@ -62,7 +62,7 @@ class Screen extends React.Component<ScreenProps> {
     }
 }
 
-class MainScreen extends Screen {
+class HomeScreen extends Screen {
     constructor(pp: Screen) {
         super(pp)
         this.name = "LoadingScreen"
@@ -88,6 +88,7 @@ class MenuScreen extends Screen {
             backend={this.backend}
             globalState={this.globalState}
             onComplete={() => this.setScreen(new PantryScreen(this))}
+            onGotoHome={() => this.setScreen(new HomeScreen(this))}
         />
     }
 }
