@@ -132,7 +132,7 @@ deploy: package ## Deploy the package to a remote server (requires GCLOUD_VM, GC
 	
 	@echo "Deployment sanity-test..."
 
-	URL="http://$$(                       \
+	URL="https://$$(                      \
 		gcloud compute instances describe \
 		  $(GCLOUD_VM)                    \
 		  --project=$(GCLOUD_PROJECT)     \
