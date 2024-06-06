@@ -32,7 +32,7 @@ services:
   grocery:
     image: grocery-price-fetcher
     ports:
-      - 80:3000
+      - 443:443
     volumes:
       - data:/mnt/grocery-price-fetcher/
       - /etc/grocery-price-fetcher/config.yaml:/etc/grocery-price-fetcher/config.yaml:ro
@@ -46,9 +46,15 @@ services:
         condition: service_started
     secrets:
       - db_root_password
+      - cert
+      - key
 volumes:
   data:
     driver: local
 secrets:
   db_root_password:
     file: /etc/grocery-price-fetcher/db_root_password.txt
+  cert:
+    file: /etc/grocery-price-fetcher/certificates/cert.pem
+  key:
+    file: /etc/grocery-price-fetcher/certificates/key.pem

@@ -2,7 +2,10 @@
 # All paths and ports are as seen from inside the container.
 verbosity: 1
 frontend: /usr/share/grocery-price-fetcher/frontend
-address: '[::]:3000'
+daemon:
+  address: '[::]:443'
+  certfile: /run/secrets/cert
+  keyfile: /run/secrets/key
 services:
   database:
     type: mysql
