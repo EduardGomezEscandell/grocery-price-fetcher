@@ -76,7 +76,7 @@ func Setup(ctx context.Context) error {
 			if err != nil {
 				return false, fmt.Errorf("could not access journalctl: %v: %s", err, out)
 			}
-			if !bytes.Contains(out, []byte("Server: serving on [::]:3000")) {
+			if !bytes.Contains(out, []byte("Listening on [::]:443")) {
 				return false, nil
 			}
 			return true, nil
