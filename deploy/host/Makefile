@@ -131,11 +131,15 @@ deploy: package ## Deploy the package to a remote server (requires GCLOUD_VM, GC
 		--command="journalctl -u '$(PKG).service' --since '$(NOW_UTC)' --no-pager -l"
 	
 	@echo "Deployment sanity-test..."
-	curl --fail http://$$(                \
+
+	URL="http://$$(                       \
 		gcloud compute instances describe \
 		  $(GCLOUD_VM)                    \
 		  --project=$(GCLOUD_PROJECT)     \
 		  --zone=$(GCLOUD_ZONE)           \
 		  | grep natIP                    \
 		  | sed 's#^.*natIP: \(.*\)#\1#'  \
-		)/api/version
+		)/api/version";                   \
+	curl --retry 20 --retry-delay 5 --retry-all-errors -k "$$URL"
+
+	
