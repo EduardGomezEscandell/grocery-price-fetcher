@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"net"
 	"os"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/daemon"
@@ -31,20 +30,11 @@ func main() {
 	s.Run()
 	defer s.Stop()
 
-	lis, err := net.Listen("tcp", sett.Address)
-	if err != nil {
-		log.Fatalf("Could not listen: %v", err)
-	}
-	defer lis.Close()
-
-	log.Info("Listening on ", lis.Addr().String())
-
-	daemon := daemon.New(log)
-
+	daemon := daemon.New(log, sett.Daemon)
 	daemon.RegisterStaticEndpoint("/", sett.FrontEnd)
 	s.Register(daemon.RegisterDynamicEndpoint)
 
-	if err := daemon.Serve(lis); err != nil {
+	if err := daemon.Serve(ctx); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
 	}
 

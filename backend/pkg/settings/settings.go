@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/daemon"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services"
 	"gopkg.in/yaml.v3"
 )
@@ -8,8 +9,8 @@ import (
 type Settings struct {
 	Verbosity int
 	FrontEnd  string
-	Address   string
 
+	Daemon   daemon.Settings
 	Services services.Settings
 }
 
@@ -17,9 +18,8 @@ func Defaults() Settings {
 	return Settings{
 		Verbosity: 1,
 		FrontEnd:  "/usr/share/grocery-price-fetcher/frontend",
-		Address:   "http://localhost:3000",
-
-		Services: services.Settings{}.Defaults(),
+		Daemon:    daemon.Settings{}.Defaults(),
+		Services:  services.Settings{}.Defaults(),
 	}
 }
 
