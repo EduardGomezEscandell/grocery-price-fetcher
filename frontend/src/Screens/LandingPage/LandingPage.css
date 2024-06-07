@@ -36,3 +36,12 @@
 .LandingPage #footer {
     text-align: center;
 }
+
+.LandingPage button {
+    border: 1px solid black;
+}
+
+.LandingPage button#inactive {
+    border: 1px solid black;
+    background-color: lightgrey;
+}

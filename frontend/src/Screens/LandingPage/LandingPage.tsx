@@ -12,24 +12,24 @@ interface Props {
 export default function LandingPage(props: Props) {
     const [commingSoon, setCommingSoon] = React.useState(false)
 
-    const tableStyle: React.CSSProperties = {}
+    const baseStyle: React.CSSProperties = {}
     if (commingSoon) {
-        tableStyle.filter = 'blur(5px)'
+        baseStyle.filter = 'blur(5px)'
     }
 
     return (
         <div className='LandingPage'>
-            <div id="title" style={tableStyle}>
+            <div id="title" style={baseStyle}>
                 <img src='/logo1024.png' alt='logo' className="Logo" />
                 <h1>La&nbsp;compra de&nbsp;l'Edu</h1>
             </div>
-            <div id="content" style={tableStyle}>
-                <button onClick={() => {
+            <div id="content" style={baseStyle}>
+                <button id="inactive" onClick={() => {
                     setCommingSoon(true)
                 }}>
                     Els meus productes
                 </button>
-                <button onClick={() => {
+                <button id="inactive" onClick={() => {
                     setCommingSoon(true)
                 }}>
                     Les meves receptes
@@ -57,7 +57,7 @@ export default function LandingPage(props: Props) {
                     <div id='footer'><button onClick={() => setCommingSoon(false)}>Entesos</button></div>
                 </dialog>
             )}
-            <div id="footer" style={tableStyle}>
+            <div id="footer" style={baseStyle}>
                 <p>
                     La compra de l'Edu és un projecte de codi obert desenvolupat
                     per <a href='https://www.linkedin.com/in/eduard-gomez' target="_blank" rel="noreferrer">Eduard&nbsp;Gómez&nbsp;Escandell</a> i
