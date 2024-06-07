@@ -460,46 +460,25 @@ func (s *SQL) setMenu(tx *sql.Tx, name string) error {
 }
 
 func (s *SQL) setDays(tx *sql.Tx, rows []dayMenuRow) error {
-	for _, row := range rows {
-		_, err := tx.ExecContext(s.ctx, `
-			INSERT INTO menu_days (menu_name, pos, name)
-			VALUES (?, ?, ?)`,
-			row.Menu, row.Pos, row.Name,
-		)
-		if err != nil {
-			return fmt.Errorf("could not insert menu day: %v", err)
-		}
-	}
-
-	return nil
+	return bulkInsert(s, tx,
+		"menu_days (menu_name, pos, name)", rows,
+		func(row dayMenuRow) []any {
+			return []any{row.Menu, row.Pos, row.Name}
+		})
 }
 
 func (s *SQL) setMeals(tx *sql.Tx, rows []mealMenuRow) error {
-	for _, row := range rows {
-		_, err := tx.ExecContext(s.ctx, `
-			INSERT INTO menu_day_meals (menu_name, day_pos, pos, name)
-			VALUES (?, ?, ?, ?)`,
-			row.Menu, row.DayPos, row.Pos, row.Name,
-		)
-		if err != nil {
-			return fmt.Errorf("could not insert menu meal: %v", err)
-		}
-	}
-
-	return nil
+	return bulkInsert(s, tx,
+		"menu_day_meals (menu_name, day_pos, pos, name)", rows,
+		func(row mealMenuRow) []any {
+			return []any{row.Menu, row.DayPos, row.Pos, row.Name}
+		})
 }
 
 func (s *SQL) setItems(tx *sql.Tx, rows []mealItemRow) error {
-	for _, row := range rows {
-		_, err := tx.ExecContext(s.ctx, `
-			INSERT INTO menu_day_meal_recipes (menu_name, day_pos, meal_pos, pos, recipe_name, amount)
-			VALUES (?, ?, ?, ?, ?, ?)`,
-			row.Menu, row.DayPos, row.MealPos, row.Pos, row.Recipe, row.Amount,
-		)
-		if err != nil {
-			return fmt.Errorf("could not insert meal item: %v", err)
-		}
-	}
-
-	return nil
+	return bulkInsert(s, tx,
+		"menu_day_meal_recipes (menu_name, day_pos, meal_pos, pos, recipe_name, amount)", rows,
+		func(row mealItemRow) []any {
+			return []any{row.Menu, row.DayPos, row.MealPos, row.Pos, row.Recipe, row.Amount}
+		})
 }

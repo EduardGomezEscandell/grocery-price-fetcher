@@ -175,14 +175,12 @@ func (s *SQL) SetShoppingList(list types.ShoppingList) error {
 		return fmt.Errorf("could not insert shopping list: %v", err)
 	}
 
-	for _, item := range list.Items {
-		query := `REPLACE INTO shopping_list_items (shopping_list_name, product_name) VALUES (?, ?)`
-		s.log.Trace(query)
 
-		_, err = tx.ExecContext(s.ctx, query, list.Name, item)
-		if err != nil {
-			return fmt.Errorf("could not insert shopping list item: %v", err)
-		}
+	err = bulkInsert(s, tx, "shopping_list_items(shopping_list_name, product_name)", list.Items, func(s string) []any {
+		return []any{list.Name, s}
+	})
+	if err != nil {
+		return fmt.Errorf("could not insert shopping list items: %v", err)
 	}
 
 	if err := tx.Commit(); err != nil {
