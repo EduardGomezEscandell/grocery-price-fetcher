@@ -39,6 +39,7 @@
 
 .LandingPage button {
     border: 1px solid black;
+    cursor: inherit;
 }
 
 .LandingPage button#inactive {
