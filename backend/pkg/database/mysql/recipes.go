@@ -3,7 +3,6 @@ package mysql
 import (
 	"database/sql"
 	"fmt"
-	"strings"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/types"
 )
@@ -186,29 +185,17 @@ func (s *SQL) SetRecipe(r types.Recipe) error {
 		return fmt.Errorf("could not insert recipe: %v", err)
 	}
 
-	if len(r.Ingredients) > 1000 {
-		// This is an arbitrary limit to prevent abuse
-		return fmt.Errorf("too many ingredients")
+	if err := s.deleteRecipeIngredients(tx, r.Name); err != nil {
+		return fmt.Errorf("could not delete old ingredients: %v", err)
 	}
 
-	if len(r.Ingredients) != 0 {
-		//nolint:gosec // The query is constructed by the code, not user input
-		queryIngredients := `
-		REPLACE INTO
-		recipe_ingredients (recipe_name, ingredient_name, amount)
-		VALUES
-		` + repeatString("(?, ?, ?)", ", ", len(r.Ingredients))
-
-		s.log.Tracef(queryIngredients)
-
-		var argv []any
-		for _, i := range r.Ingredients {
-			argv = append(argv, r.Name, i.Name, i.Amount)
-		}
-
-		if _, err := tx.ExecContext(s.ctx, queryIngredients, argv...); err != nil {
-			return fmt.Errorf("could not insert ingredients: %v", err)
-		}
+	err = bulkInsert(s, tx,
+		"recipe_ingredients(recipe_name, ingredient_name, amount)",
+		r.Ingredients, func(i types.Ingredient) []interface{} {
+			return []interface{}{r.Name, i.Name, i.Amount}
+		})
+	if err != nil {
+		return fmt.Errorf("could not insert ingredients: %v", err)
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -262,23 +249,4 @@ func (s *SQL) deleteRecipeIngredients(tx *sql.Tx, name string) error {
 	}
 
 	return nil
-}
-
-func repeatString(str string, sep string, n int) string {
-	switch n {
-	case 0:
-		return ""
-	case 1:
-		return str
-	}
-
-	var b strings.Builder
-	b.Grow(len(str)*n + len(sep)*(n-1))
-	b.WriteString(str)
-	for range n - 1 {
-		b.WriteString(sep)
-		b.WriteString(str)
-	}
-
-	return b.String()
 }

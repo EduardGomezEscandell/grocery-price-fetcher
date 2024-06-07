@@ -157,11 +157,20 @@ func (s *SQL) SetPantry(p types.Pantry) error {
 		return fmt.Errorf("could not insert pantry: %v", err)
 	}
 
-	for _, item := range p.Contents {
-		_, err = tx.ExecContext(s.ctx, "REPLACE INTO pantry_items (pantry_name, product_name, amount) VALUES (?, ?, ?)", p.Name, item.Name, item.Amount)
-		if err != nil {
-			return fmt.Errorf("could not insert pantry item: %v", err)
-		}
+	// Remove all items from the pantry
+	_, err = tx.ExecContext(s.ctx, "DELETE FROM pantry_items WHERE pantry_name = ?", p.Name)
+	if err != nil {
+		return fmt.Errorf("could not delete old pantry items: %v", err)
+	}
+
+	err = bulkInsert(s, tx,
+		"pantry_items (pantry_name, product_name, amount)",
+		p.Contents,
+		func(i types.Ingredient) []any {
+			return []any{p.Name, i.Name, i.Amount}
+		})
+	if err != nil {
+		return fmt.Errorf("could not insert new pantry items: %v", err)
 	}
 
 	if err := tx.Commit(); err != nil {

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
@@ -176,4 +177,71 @@ func getDatasource(s Settings) (string, error) {
 			string(bytes.TrimSpace(pass)),
 			net.JoinHostPort(s.Host, s.Port)),
 		nil
+}
+
+// bulkInsert inserts multiple rows into a table.
+// INSERT INTO ${into} VALUES (?, ?, ...), (?, ?, ...), ...
+// The data is flattened into a single slice of arguments.
+// The get function is used to extract the arguments from each element.
+//
+// DO NOT USE THIS FUNCTION WITH USER INPUT.
+func bulkInsert[T any](s *SQL, tx *sql.Tx, into string, data []T, get func(t T) []any) error {
+	nRows := len(data)
+	if nRows == 0 {
+		return nil
+	} else if nRows > 1000 {
+		// This is a safety measure to prevent accidental large inserts
+		return fmt.Errorf("too many rows: %d", nRows)
+	}
+
+	//nolint:gosec // The query is constructed by the code, not user input
+	query := fmt.Sprintf(`
+		INSERT INTO
+			%s
+		VALUES
+			`, into)
+
+	// Get first element to know how many columns to expect
+	first := get(data[0])
+	nCols := len(first)
+
+	// Build (?, ?, ...) string
+	valueStr := fmt.Sprintf("(%s)", repeatStringWithSeparator("?", ", ", nCols))
+
+	// Build (?, ?, ...), (?, ?, ...), ... string
+	query += repeatStringWithSeparator(valueStr, ", ", nRows)
+
+	// Flatten data
+	argv := make([]any, 0, nCols*nRows)
+	argv = append(argv, first...)
+	for _, item := range data[1:] {
+		argv = append(argv, get(item)...)
+	}
+
+	// Insert
+	s.log.Trace(query)
+	if _, err := tx.ExecContext(s.ctx, query, argv...); err != nil {
+		return fmt.Errorf("could not insert: %v", err)
+	}
+
+	return nil
+}
+
+func repeatStringWithSeparator(str string, sep string, n int) string {
+	switch n {
+	case 0:
+		return ""
+	case 1:
+		return str
+	}
+
+	var b strings.Builder
+	b.Grow(len(str)*n + len(sep)*(n-1))
+	b.WriteString(str)
+	for range n - 1 {
+		b.WriteString(sep)
+		b.WriteString(str)
+	}
+
+	return b.String()
 }
