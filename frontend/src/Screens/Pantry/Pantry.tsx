@@ -11,6 +11,7 @@ interface Props {
     backend: Backend;
     globalState: State;
     onBackToMenu: () => void;
+    onGotoHome: () => void;
     onComplete: () => void;
 }
 
@@ -39,6 +40,7 @@ export default function Pantry(pp: Props) {
 
                     onRejectTxt='Error'
                 />}
+                logoOnClick={() => { savePantry(pp.backend, pp.globalState).then(pp.onGotoHome) }}
                 right={<SaveButton
                     key='save'
                     baseTxt='Següent'

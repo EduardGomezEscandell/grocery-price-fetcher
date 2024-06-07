@@ -105,6 +105,7 @@ class PantryScreen extends Screen {
             globalState={this.globalState}
             onBackToMenu={() => this.setScreen(new MenuScreen(this))}
             onComplete={() => this.setScreen(new ShoppingListScreen(this))}
+            onGotoHome={() => this.setScreen(new HomeScreen(this))}
         />
     }
 }
@@ -120,6 +121,7 @@ class ShoppingListScreen extends Screen {
             backend={this.backend}
             globalState={this.globalState}
             onBackToPantry={() => this.setScreen(new PantryScreen(this))}            
+            onGotoHome={() => this.setScreen(new HomeScreen(this))}
         />
     }
 }

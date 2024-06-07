@@ -4,6 +4,7 @@ import './TopBar.css'
 interface Props {
     left: JSX.Element
     right: JSX.Element
+    logoOnClick?: () => void
 }
 
 export default function TopBar(pp: Props): JSX.Element {
@@ -12,12 +13,16 @@ export default function TopBar(pp: Props): JSX.Element {
         display: 'flex',
     }
 
+    if (pp.logoOnClick == null) {
+        pp.logoOnClick = () => {}
+    }
+
     return (
         <div className='TopBar'>
             <div style={{...style, justifyContent: 'flex-start'}}>
                 {pp.left}
             </div>
-            <div style={{...style, justifyContent: 'center'}}>
+            <div style={{...style, justifyContent: 'center'}} onClick={pp.logoOnClick}>
                 <Title />
             </div>
             <div style={{...style, justifyContent: 'flex-end'}}>

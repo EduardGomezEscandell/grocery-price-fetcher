@@ -87,6 +87,7 @@ export default class MenuTable extends React.Component<Props> {
 
                         onRejectTxt='Error'
                     />}
+                    logoOnClick={() => { saveMenu(this.props.backend, this.props.globalState).then(this.props.onGotoHome) }}
                     right={<SaveButton
                         key='save'
 

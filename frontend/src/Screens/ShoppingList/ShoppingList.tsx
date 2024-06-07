@@ -9,6 +9,7 @@ interface Props {
     backend: Backend;
     globalState: State;
     onBackToPantry: () => void;
+    onGotoHome: () => void;    
 }
 
 enum Dialog {
@@ -43,6 +44,7 @@ export default function Shopping(props: Props): JSX.Element {
 
                     onRejectTxt='Error'
                 />}
+                logoOnClick={() => { saveShoppingList(props.backend, props.globalState).then(props.onGotoHome) }}
                 right={<SaveButton
                     key='save'
 

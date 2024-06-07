@@ -17,6 +17,7 @@
     .Title {
         display: flex;
         align-items: center;
+        cursor: pointer;
 
         .Text {
             font-weight: bold;
