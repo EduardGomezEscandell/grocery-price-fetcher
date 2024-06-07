@@ -60,7 +60,7 @@ export class FocusIngredient extends PantryIngredient<FocusIngredientProps> {
                 <h2 id="header">{this.props.ingredient.name}</h2>
                 <div id="body">
                     <p>
-                        Tens <b>{round2(this.props.ingredient.have)}</b> {makePlural(this.state.storage, "unitat", "unitats")} al teu rebost. En necessites{' '}
+                        Has indicat que tens <b>{round2(this.props.ingredient.have)}</b> {makePlural(this.state.storage, "unitat", "unitats")} al teu rebost. En necessites{' '}
                         <b>{round2(this.props.ingredient.need)}</b>, i per tant te'n falten {' '}
                         <b>{round2(this.state.deficit)}</b>. Aquest producte es ven en
                         paquets de <b>{round2(this.props.ingredient.batch_size)}</b> {makePlural(this.props.ingredient.batch_size, "unitat", "unitats")},
@@ -109,7 +109,7 @@ export class RowIngredient extends PantryIngredient<RowIngredientProps, RowIngre
                 }}
             >
                 <td id='left' key='name'> {this.props.ingredient.name}  </td>
-                <td key='have'>
+                <td id='right' key='have'>
                     <input 
                         type="number"
                         value={this.state.storage}
@@ -118,7 +118,6 @@ export class RowIngredient extends PantryIngredient<RowIngredientProps, RowIngre
                         datatype='number'
                     />
                 </td>
-                <td id='right' key='price-total'> {asEuro(this.state.cost)} </td>
             </tr>
         )
     }
