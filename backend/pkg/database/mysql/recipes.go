@@ -185,6 +185,9 @@ func (s *SQL) SetRecipe(r types.Recipe) error {
 		return fmt.Errorf("could not insert recipe: %v", err)
 	}
 
+	if err := s.deleteRecipeIngredients(tx, r.Name); err != nil {
+		return fmt.Errorf("could not delete old ingredients: %v", err)
+	}
 
 	err = bulkInsert(s, tx,
 		"recipe_ingredients(recipe_name, ingredient_name, amount)",

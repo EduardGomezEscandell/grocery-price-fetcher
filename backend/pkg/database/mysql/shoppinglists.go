@@ -175,6 +175,10 @@ func (s *SQL) SetShoppingList(list types.ShoppingList) error {
 		return fmt.Errorf("could not insert shopping list: %v", err)
 	}
 
+	_, err = tx.ExecContext(s.ctx, "DELETE FROM shopping_list_items WHERE shopping_list_name = ?", list.Name)
+	if err != nil {
+		return fmt.Errorf("could not delete old shopping list items: %v", err)
+	}
 
 	err = bulkInsert(s, tx, "shopping_list_items(shopping_list_name, product_name)", list.Items, func(s string) []any {
 		return []any{list.Name, s}
