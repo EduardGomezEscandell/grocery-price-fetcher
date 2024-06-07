@@ -26,6 +26,7 @@ export default class MenuTable extends React.Component<Props> {
         days: string[],
         meals: MealMetadata[]
         focus: { day: Day, meal: Meal } | undefined
+        help: boolean
         hover: string | undefined
     }
 
@@ -34,6 +35,7 @@ export default class MenuTable extends React.Component<Props> {
         this.state = {
             focus: undefined,
             hover: undefined,
+            help: false,
             days: props.globalState.menu.days.map(d => d.name),
             meals: props.globalState.menu.days.map((day: Day, i: number) => {
                 return day.meals.map(meal => {
@@ -67,7 +69,7 @@ export default class MenuTable extends React.Component<Props> {
 
     render(): JSX.Element {
         const tableStyle: React.CSSProperties = {}
-        if (this.state.focus !== undefined) {
+        if (this.state.focus !== undefined || this.state.help) {
             tableStyle.filter = 'blur(5px)'
         }
 
@@ -87,6 +89,9 @@ export default class MenuTable extends React.Component<Props> {
 
                         onRejectTxt='Error'
                     />}
+                    logoOnClick={() => saveMenu(this.props.backend, this.props.globalState).then(this.props.onGotoHome)}
+                    titleOnClick={() => this.DisplayHelp()}
+                    titleText='El&nbsp;meu menú'
                     right={<SaveButton
                         key='save'
 
@@ -118,10 +123,77 @@ export default class MenuTable extends React.Component<Props> {
                         </tbody>
                     </table>
                     {this.RenderFocus()}
+                    {this.RenderHelp()}
                 </div>
             </>
         )
     }
+
+    private Focus(day: Day, meal: Meal) {
+        this.setState({
+            ...this.state,
+            help: false,
+            focus: {
+                day: day,
+                meal: meal
+            }
+        })
+    }
+
+    private Unfocus() {
+        this.setState({
+            ...this.state,
+            focus: undefined
+        })
+    }
+
+    private Highlight(dish: Dish) {
+        if (this.state.focus !== undefined) {
+            return
+        }
+        if (this.state.help) {
+            return
+        }
+        this.setState({
+            ...this.state,
+            hover: dish.name
+        })
+    }
+
+    private Unhighlight() {
+        if (this.state.focus !== undefined) {
+            return
+        }
+        if (this.state.help) {
+            return
+        }
+        this.setState({
+            ...this.state,
+            hover: undefined
+        })
+    }
+
+    private DisplayHelp() {
+        if (this.state.focus !== undefined) {
+            return
+        }
+        this.setState({
+            ...this.state,
+            highlight: undefined,
+            help: true
+        })
+    }
+
+    private HideHelp() {
+        if (this.state.focus !== undefined) {
+            return
+        }
+        this.setState({
+            ...this.state,
+            help: false
+        })
+    }
+
 
     private DayCol(day: Day): JSX.Element {
         return (
@@ -135,15 +207,7 @@ export default class MenuTable extends React.Component<Props> {
                             if (this.state.focus !== undefined) {
                                 return
                             }
-
-                            this.setState({
-                                ...this.state,
-                                hover: undefined,
-                                focus: {
-                                    day: day,
-                                    meal: meal
-                                }
-                            })
+                            this.Focus(day, meal)
                         }}>
                             <div className='MealHeader' key='MealName' id='header2'>
                                 {meal.name}
@@ -164,24 +228,8 @@ export default class MenuTable extends React.Component<Props> {
                                                 i % 2 === 0
                                                     ? 'odd' : 'even'
                                             }
-                                            onMouseEnter={() => {
-                                                if (this.state.focus !== undefined) {
-                                                    return
-                                                }
-                                                this.setState({
-                                                    ...this.state,
-                                                    hover: dish.name
-                                                })
-                                            }}
-                                            onMouseLeave={() => {
-                                                if (this.state.focus !== undefined) {
-                                                    return
-                                                }
-                                                this.setState({
-                                                    ...this.state,
-                                                    hover: undefined
-                                                })
-                                            }}
+                                            onMouseEnter={() => this.Highlight(dish)}
+                                            onMouseLeave={() => this.Unhighlight()}
                                         />
                                     )
                                 }
@@ -243,12 +291,33 @@ export default class MenuTable extends React.Component<Props> {
                 <div id='footer'>
                     <button onClick={() => {
                         this.props.globalState.setMenu(this.props.globalState.menu) // Trigger a cleanup
-                        this.setState({
-                            ...this.state,
-                            focus: undefined
-                        })
+                        this.Unfocus()
                     }
                     }>Tancar</button>
+                </div>
+            </dialog>
+        )
+
+    }
+    private RenderHelp(): JSX.Element {
+        if (!this.state.help) {
+            return <></>
+        }
+
+        return (
+            <dialog open>
+                <h2 id='header'>
+                    Menú
+                </h2>
+                <div id="body">
+                    <p>Aquesta pàgina et permet planificar els àpats de la setmana.</p>
+                    <p>Pots clicar sobre qualsevol àpat per editar els seus continguts</p>
+                    <p>Quan estigui llest, clica següent!</p>
+                </div>
+                <div id='footer'>
+                    <button onClick={() => this.HideHelp()}>
+                        D'acord
+                    </button>
                 </div>
             </dialog>
         )

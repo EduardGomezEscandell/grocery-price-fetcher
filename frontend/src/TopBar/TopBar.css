@@ -17,6 +17,7 @@
     .Title {
         display: flex;
         align-items: center;
+        cursor: pointer;
 
         .Text {
             font-weight: bold;
@@ -32,6 +33,7 @@
             margin: auto;
             padding: auto;
             vertical-align: middle;
+            border-radius: 100%;
         }
     }
 }

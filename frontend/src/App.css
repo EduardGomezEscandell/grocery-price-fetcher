@@ -53,6 +53,8 @@ button:hover {
 }
 
 dialog {
+  z-index: 99;
+
   justify-self: center;
   display: flex;
   flex-direction: column;

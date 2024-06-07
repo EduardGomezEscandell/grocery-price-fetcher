@@ -9,11 +9,13 @@ interface Props {
     backend: Backend;
     globalState: State;
     onBackToPantry: () => void;
+    onGotoHome: () => void;    
 }
 
 enum Dialog {
     OFF,
-    ON,
+    RESTORE,
+    HELP,
     CLOSING,
 }
 
@@ -26,6 +28,11 @@ export default function Shopping(props: Props): JSX.Element {
         if (dialog === Dialog.CLOSING) return false
         _setDialog(d)
         return true
+    }
+
+    const tableStyle: React.CSSProperties = {}
+    if (dialog !== Dialog.OFF) {
+        tableStyle.filter = 'blur(5px)'
     }
 
     return (
@@ -43,6 +50,9 @@ export default function Shopping(props: Props): JSX.Element {
 
                     onRejectTxt='Error'
                 />}
+                logoOnClick={() => { saveShoppingList(props.backend, props.globalState).then(props.onGotoHome) }}
+                titleOnClick={() => setDialog(Dialog.HELP)}
+                titleText="La&nbsp;meva compra"
                 right={<SaveButton
                     key='save'
 
@@ -54,12 +64,12 @@ export default function Shopping(props: Props): JSX.Element {
                 />}
             />
             <div className='scroll-table'>
-                <table>
+                <table style={tableStyle}>
                     <thead id='header1'>
                         <tr>
                             <th>
                                 <button id='clear' onClick={() => {
-                                    setDialog(Dialog.ON)
+                                    setDialog(Dialog.RESTORE)
                                 }}>x</button>
                             </th>
                             <th id='left'>Ingredient</th>
@@ -82,7 +92,7 @@ export default function Shopping(props: Props): JSX.Element {
                         </tr>
                     </tfoot>
                 </table>
-                {dialog !== Dialog.OFF &&
+                {(dialog === Dialog.RESTORE || dialog === Dialog.CLOSING) &&
                     <ResetDialog
                         onReset={() => {
                             if (!setDialog(Dialog.CLOSING)) {
@@ -94,6 +104,11 @@ export default function Shopping(props: Props): JSX.Element {
                                 .then(() => setDialog(Dialog.OFF))
                         }}
                         onExit={() => setDialog(Dialog.OFF)}
+                    />
+                }{
+                    dialog === Dialog.HELP &&
+                    <HelpDialog
+                        onClose={() => setDialog(Dialog.OFF)}
                     />
                 }
             </div>
@@ -117,6 +132,39 @@ function ResetDialog(props: {
             <div id='footer'>
                 <button id='dialog-left' onClick={props.onExit}>Tornar</button>
                 <button id='dialog-right' onClick={props.onReset}>Restaurar</button>
+            </div>
+        </dialog>
+    )
+}
+
+function HelpDialog(props: {
+    onClose: () => void
+}): JSX.Element {
+    return (
+        <dialog open>
+            <h2 id="header">La meva compra</h2>
+            <div id="body">
+                <p>
+                    Aquesta pàgina mostra una llista dels ingredients que necessites comprar per al
+                    teu menú setmanal, descomptant-li el que ja tens al teu rebost.
+                </p>
+                <p>
+                    Per a cada ingredient, t'indica quantes unitats necessites i quants paquets has
+                    de comprar.
+                </p>
+                <p>
+                    <b>Per exemple</b>, si necessitessis 9&nbsp;ous que es venen en paquets de 
+                    mitja&nbsp;dotzena, hauríes de comprar dos paquets (ja que no pots comprar-ne
+                    un&nbsp;i&nbsp;mig), i a la llista apareixeria 9&nbsp;unitats i 2&nbsp;paquets.
+                </p>
+                <p>
+                    Pots marcar els ingredients que ja hagis comprat. La compra es desa quan premis el
+                    botó de desar o quan naveguis a qualseveol altra pàgina d'aquest web. Pots desmarcar
+                    tots els elements marcats amb el botó <i>x</i> de la capçalera.
+                </p>
+            </div>
+            <div id="footer">
+                <button onClick={props.onClose}>Tancar</button>
             </div>
         </dialog>
     )
