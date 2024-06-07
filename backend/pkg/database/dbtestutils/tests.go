@@ -42,7 +42,7 @@ func ProductsTest(t *testing.T, openDB func() database.DB) {
 
 	require.NoError(t, db.SetProduct(product1), "Could not override Product")
 	p, ok = db.LookupProduct(product1.Name)
-	require.True(t, ok, "Could not find Product just overridden created")
+	require.True(t, ok, "Could not find Product just overridden")
 	require.Equal(t, product1, p, "Product does not match the one just overridden")
 
 	require.NoError(t, db.SetProduct(product2), "Could not set Product")
@@ -114,7 +114,14 @@ func RecipesTest(t *testing.T, openDB func() database.DB) {
 
 	require.NoError(t, db.SetRecipe(recipe1), "Could not override Recipe")
 	p, ok = db.LookupRecipe(recipe1.Name)
-	require.True(t, ok, "Could not find Recipe just overridden created")
+	require.True(t, ok, "Could not find Recipe just overridden")
+	require.Equal(t, recipe1, p, "Recipe does not match the one just overridden")
+
+	// Test implicit deletion of ingredients
+	recipe1.Ingredients = recipe1.Ingredients[:1]
+	require.NoError(t, db.SetRecipe(recipe1), "Could not override Recipe")
+	p, ok = db.LookupRecipe(recipe1.Name)
+	require.True(t, ok, "Could not find Recipe just overridden")
 	require.Equal(t, recipe1, p, "Recipe does not match the one just overridden")
 
 	require.NoError(t, db.SetRecipe(recipe2), "Could not set Recipe")
@@ -192,7 +199,15 @@ func MenuTest(t *testing.T, openDB func() database.DB) {
 
 	require.NoError(t, db.SetMenu(myMenu), "Could not override Menu")
 	m, ok = db.LookupMenu(myMenu.Name)
-	require.True(t, ok, "Could not find Menu just overridden created")
+	require.True(t, ok, "Could not find Menu just overridden")
+	require.Equal(t, myMenu, m, "Menu does not match the one just overridden")
+
+	// Test implicit deletion of dishes
+	myMenu.Days[0].Meals[0].Dishes = nil
+
+	require.NoError(t, db.SetMenu(myMenu), "Could not override Menu")
+	m, ok = db.LookupMenu(myMenu.Name)
+	require.True(t, ok, "Could not find Menu just overridden")
 	require.Equal(t, myMenu, m, "Menu does not match the one just overridden")
 
 	emptyMenu := types.Menu{
@@ -268,7 +283,14 @@ func PantriesTest(t *testing.T, openDB func() database.DB) {
 
 	require.NoError(t, db.SetPantry(pantry1), "Could not override Pantry")
 	p, ok = db.LookupPantry(pantry1.Name)
-	require.True(t, ok, "Could not find Pantry just overridden created")
+	require.True(t, ok, "Could not find Pantry just overridden")
+	require.Equal(t, pantry1, p, "Pantry does not match the one just overridden")
+
+	// Test implicit deletion of ingredients
+	pantry1.Contents = pantry1.Contents[:1]
+	require.NoError(t, db.SetPantry(pantry1), "Could not override Pantry")
+	p, ok = db.LookupPantry(pantry1.Name)
+	require.True(t, ok, "Could not find Pantry just overridden")
 	require.Equal(t, pantry1, p, "Pantry does not match the one just overridden")
 
 	require.NoError(t, db.SetPantry(pantry2), "Could not set Pantry")
@@ -341,7 +363,14 @@ func ShoppingListsTest(t *testing.T, openDB func() database.DB) {
 
 	require.NoError(t, db.SetShoppingList(list1), "Could not override ShoppingList")
 	p, ok = db.LookupShoppingList(list1.Name)
-	require.True(t, ok, "Could not find ShoppingList just overridden created")
+	require.True(t, ok, "Could not find ShoppingList just overridden")
+	require.Equal(t, list1, p, "ShoppingList does not match the one just overridden")
+
+	// Test implicit deletion of items
+	list1.Items = list1.Items[:1]
+	require.NoError(t, db.SetShoppingList(list1), "Could not override ShoppingList")
+	p, ok = db.LookupShoppingList(list1.Name)
+	require.True(t, ok, "Could not find ShoppingList just overridden")
 	require.Equal(t, list1, p, "ShoppingList does not match the one just overridden")
 
 	require.NoError(t, db.SetShoppingList(list2), "Could not set ShoppingList")
