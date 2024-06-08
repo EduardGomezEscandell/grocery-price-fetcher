@@ -4,8 +4,9 @@ import Backend from '../../Backend/Backend.tsx';
 import TopBar from '../../TopBar/TopBar.tsx';
 import SaveButton from '../../SaveButton/SaveButton.tsx';
 import { FocusIngredient, RowIngredient } from './PantryIngredient.tsx';
-import { asEuro, positive } from '../../Numbers/Numbers.ts'
+import { asEuro } from '../../Numbers/Numbers.ts'
 import { downloadShoppingList } from '../ShoppingList/ShoppingList.tsx';
+import { IngredientUsage } from '../../Backend/endpoints/IngredientUse.tsx';
 
 interface Props {
     backend: Backend;
@@ -16,19 +17,23 @@ interface Props {
 }
 
 export default function Pantry(pp: Props) {
-    const total = new Total().compute(pp.globalState.inNeed.ingredients)
-
-    const [available, setAvailable] = useState(total.available)
-    const [remaining, setRemaining] = useState(total.remaining)
-    total
-        .withAvailable(available, setAvailable)
-        .withRemaining(remaining, setRemaining)
-
+    const [savings, setSavings] = useState(computeSavings(pp.globalState.inNeed.ingredients))
     const [help, setHelp] = useState(false)
-    const [focussed, setFocussed] = useState<RowIngredient | undefined>(undefined)
-    const tableStyle: React.CSSProperties = {}
+
+    const [focussed, setFocussed] = useState<{
+        ingredient: Ingredient
+        usage: IngredientUsage[]
+     } | undefined>(undefined)
+
+
+     const tableStyle: React.CSSProperties = {}
     if (focussed || help) {
         tableStyle.filter = 'blur(5px)'
+    }
+
+    const ingr = pp.globalState.inNeed.ingredients
+    const updateSavings = () => {
+        setSavings(computeSavings(ingr))
     }
 
     return (
@@ -82,16 +87,24 @@ export default function Pantry(pp: Props) {
                                     id={idx % 2 === 0 ? 'even' : 'odd'}
                                     ingredient={i}
                                     onChange={(value: number) => {
-                                        i.have = value
-                                        total
-                                            .compute(pp.globalState.inNeed.ingredients)
-                                            .commit()
+                                        pp.globalState.inNeed.ingredients[idx].have = value
+                                        updateSavings()
                                     }}
-                                    onClick={(ri: RowIngredient) => {
+                                    onClick={() => {
                                         if (focussed) {
                                             setFocussed(undefined)
                                         } else {
-                                            setFocussed(ri)
+                                            pp.backend.IngredientUse().POST({
+                                                MenuName: pp.globalState.menu.name,
+                                                IngredientName: i.name
+                                            }).then((usage) => {
+                                                setFocussed({
+                                                    ingredient: i,
+                                                    usage: usage
+                                                })
+                                            }).catch((reason) => {
+                                                console.log('Error getting ingredient usage: ', reason || 'Unknown error')
+                                            })
                                         }
                                     }}
                                 />
@@ -101,24 +114,19 @@ export default function Pantry(pp: Props) {
                     <tfoot id='header2'>
                         <tr><td colSpan={2} id='header1' /></tr>
                         <tr>
-                            <td id='left'>Total a comprar</td>
-                            <td id='right'>{asEuro(total.purchased)}</td>
-                        </tr>
-                        <tr>
-                            <td id='left'>Cost del menjar consumit</td>
-                            <td id='right'>{asEuro(total.consumed)}</td>
+                            <td id='left'>T'estalvies</td>
+                            <td id='right'>{asEuro(savings)}</td>
                         </tr>
                     </tfoot>
                 </table>
                 {
                     focussed && <FocusIngredient
-                        ingredient={focussed.props.ingredient}
+                        ingredient={focussed.ingredient}
+                        usage={focussed.usage}
                         onClose={() => setFocussed(undefined)}
                         onChange={(value: number) => {
-                            focussed.props.ingredient.have = value
-                            total
-                                .compute(pp.globalState.inNeed.ingredients)
-                                .commit()
+                            focussed.ingredient.have = value
+                            updateSavings()
                         }}
                     />
                 }
@@ -132,6 +140,9 @@ export default function Pantry(pp: Props) {
                             <p>
                                 Per a cada ingredient, indica quant en tens al teu rebost i 
                                 així <i>La compra de l'Edu</i> podrà calcular quant en necessites comprar.
+                            </p>
+                            <p>
+                                Si fas clic en un ingredient, veuràs quins dies, àpats i receptes l'utilitzen en el teu menu.
                             </p>
                         </div>
                         <div id="footer">
@@ -160,49 +171,8 @@ export async function savePantry(backend: Backend, globalState: State): Promise<
         });
 }
 
-class Total {
-    purchased: number;
-    setPurchased: (x: number) => void
-
-    available: number;
-    setAvailable: (x: number) => void
-
-    consumed: number;
-    setConsumed: (x: number) => void
-
-    remaining: number;
-    setRemaining: (x: number) => void
-
-    withAvailable(a: number, update: (x: number) => void): Total {
-        this.available = a
-        this.setAvailable = update
-        return this
-    }
-
-    withRemaining(r: number, update: (x: number) => void): Total {
-        this.remaining = r
-        this.setRemaining = update
-        return this
-    }
-
-    compute(i: Ingredient[]): Total {
-        this.consumed = i
-            .map(i => positive(i.need) * i.price / i.batch_size)
-            .reduce((acc, x) => acc + x, 0)
-        this.available = i
-            .map(i => positive(i.have) * i.price / i.batch_size)
-            .reduce((acc, x) => acc + x, 0)
-        this.purchased = i
-            .map(i => Math.ceil(positive(i.need - i.have) / i.batch_size) * i.price)
-            .reduce((acc, x) => acc + x, 0)
-        this.remaining = this.purchased + this.available - this.consumed
-
-        return this
-    }
-
-    commit(): Total {
-        this.setAvailable(this.available)
-        this.setRemaining(this.remaining)
-        return this
-    }
+function computeSavings(ingredients: Ingredient[]): number {
+    return ingredients
+        .map(i => Math.min(i.have, i.need) * i.price / i.batch_size)
+        .reduce((acc, x) => acc + x, 0)
 }
