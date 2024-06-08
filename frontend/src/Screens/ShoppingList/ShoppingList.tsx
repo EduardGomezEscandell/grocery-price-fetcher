@@ -154,7 +154,7 @@ function HelpDialog(props: {
                 </p>
                 <p>
                     <b>Per exemple</b>, si necessitessis 9&nbsp;ous que es venen en paquets de 
-                    mitja&nbsp;dotzena, hauríes de comprar dos paquets (ja que no pots comprar-ne
+                    mitja&nbsp;dotzena, hauries de comprar dos paquets (ja que no pots comprar-ne
                     un&nbsp;i&nbsp;mig), i a la llista apareixeria 9&nbsp;unitats i 2&nbsp;paquets.
                 </p>
                 <p>
