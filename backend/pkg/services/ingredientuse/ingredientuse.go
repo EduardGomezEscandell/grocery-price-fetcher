@@ -101,7 +101,7 @@ func (s *Service) compute(b reqBody) ([]respBodyItem, error) {
 							Day:    day.Name,
 							Meal:   meal.Name,
 							Dish:   dish.Name,
-							Amount: ingredient.Amount,
+							Amount: ingredient.Amount * dish.Amount,
 						})
 					}
 				}
