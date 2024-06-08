@@ -1,6 +1,8 @@
 import React from 'react'
-import { Ingredient } from '../../State/State.js'
-import { asEuro, positive, round2, makePlural } from '../../Numbers/Numbers.ts'
+import { Ingredient } from '../../State/State.tsx'
+import { positive } from '../../Numbers/Numbers.ts'
+import { IngredientUsage } from '../../Backend/endpoints/IngredientUse.tsx';
+import './Pantry.css'
 
 interface Props {
     ingredient: Ingredient;
@@ -50,26 +52,34 @@ class PantryIngredient<T extends Props, S extends State = State> extends React.C
 }
 
 interface FocusIngredientProps extends Props {
+    usage: IngredientUsage[];
     onClose: () => void;
 }
 
 export class FocusIngredient extends PantryIngredient<FocusIngredientProps> {
     render(): JSX.Element {
         return (
-            <dialog open>
+            <dialog open id='pantry-ingredient'>
                 <h2 id="header">{this.props.ingredient.name}</h2>
                 <div id="body">
                     <p>
-                        Has indicat que tens <b>{round2(this.props.ingredient.have)}</b> {makePlural(this.state.storage, "unitat", "unitats")} al teu rebost. En necessites{' '}
-                        <b>{round2(this.props.ingredient.need)}</b>, i per tant te'n falten {' '}
-                        <b>{round2(this.state.deficit)}</b>. Aquest producte es ven en
-                        paquets de <b>{round2(this.props.ingredient.batch_size)}</b> {makePlural(this.props.ingredient.batch_size, "unitat", "unitats")},
-                        i per tant has de comprar  <b>{round2(this.state.packs)}</b> {makePlural(this.state.packs, "paquet", "paquets")}.
+                        L'ingredient <b>{this.props.ingredient.name}</b> apareix en els següents plats:
                     </p>
-                    <p>
-                        Cada paquet costa <b>{asEuro(this.props.ingredient.price)}</b>, i per
-                        tant et costarà <b>{asEuro(this.state.cost)}</b>
-                    </p>
+                    <div className='vert-scroll'>
+                        <div className='scroll-table'>
+                            <table>
+                                <tbody>
+                                    {this.props.usage.map((u, idx) =>
+                                        <tr key={u.day + u.meal + u.dish} id={idx%2===0 ? 'even' : 'odd'}>
+                                            <td id="left">{u.meal} de {u.day}</td>
+                                            <td id="left">{u.dish}</td>
+                                            <td id="right">{u.amount}</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
                 <div id="footer">
                     <button onClick={this.props.onClose}>OK</button>
@@ -81,7 +91,7 @@ export class FocusIngredient extends PantryIngredient<FocusIngredientProps> {
 
 interface RowIngredientProps extends Props {
     id: string;
-    onClick: (self: RowIngredient) => void;
+    onClick: () => void;
 }
 
 class RowIngredientState extends State {
@@ -105,12 +115,12 @@ export class RowIngredient extends PantryIngredient<RowIngredientProps, RowIngre
                 onMouseLeave={() => this.setState({ ...this.state, id: this.defaultID })}
                 onClick={(e) => {
                     if (e.target instanceof HTMLInputElement) return
-                    this.props.onClick(this)
+                    this.props.onClick()
                 }}
             >
                 <td id='left' key='name'> {this.props.ingredient.name}  </td>
                 <td id='right' key='have'>
-                    <input 
+                    <input
                         type="number"
                         value={this.state.storage}
                         onClick={(e) => { e.target instanceof HTMLInputElement && e.target.select() }}
