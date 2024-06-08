@@ -221,6 +221,7 @@ export default class MenuTable extends React.Component<Props> {
                                 {
                                     meal.dishes.map((dish, i) =>
                                         <DishItem
+                                            key={dish.name}
                                             name={dish.name}
                                             amount={dish.amount}
                                             id={dish.name === this.state.hover
