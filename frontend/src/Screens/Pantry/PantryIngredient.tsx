@@ -69,8 +69,8 @@ export class FocusIngredient extends PantryIngredient<FocusIngredientProps> {
                         <div className='scroll-table'>
                             <table>
                                 <tbody>
-                                    {this.props.usage.map(u =>
-                                        <tr key={u.day + u.meal + u.dish}>
+                                    {this.props.usage.map((u, idx) =>
+                                        <tr key={u.day + u.meal + u.dish} id={idx%2===0 ? 'even' : 'odd'}>
                                             <td id="left">{u.meal} de {u.day}</td>
                                             <td id="left">{u.dish}</td>
                                             <td id="right">{u.amount}</td>
