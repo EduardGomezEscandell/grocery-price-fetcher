@@ -17,7 +17,9 @@ func HandleRequest(log logger.Logger, handle Handler) func(w http.ResponseWriter
 		log := log.WithField("request_id", id.String())
 
 		log.Infof("Server: handling request %s %s", r.Method, r.URL.Path)
-		err := handle(log, w, r)
+		err := withRecover(func() error {
+			return handle(log, w, r)
+		})
 		if e := (RequestError{}); errors.As(err, &e) {
 			log.Infof("Server: request error: %v", err)
 			http.Error(w, e.Error(), e.Code)
@@ -31,6 +33,16 @@ func HandleRequest(log logger.Logger, handle Handler) func(w http.ResponseWriter
 
 		log.Infof("Server: request handled successfully")
 	}
+}
+
+func withRecover(f func() error) (err error) {
+	defer func(err *error) {
+		if r := recover(); r != nil {
+			*err = fmt.Errorf("panic: %v", r)
+		}
+	}(&err)
+
+	return f()
 }
 
 type RequestError struct {
