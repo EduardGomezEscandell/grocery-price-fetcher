@@ -3,13 +3,15 @@ import Backend from '../../Backend/Backend.tsx';
 import TopBar from '../../TopBar/TopBar.tsx';
 import { ShoppingNeeds, ShoppingList, State } from '../../State/State.tsx';
 import SaveButton from '../../SaveButton/SaveButton.tsx';
-import ShoppingItem from './ShoppingItem.tsx';
+import ShoppingItem, { Column } from './ShoppingItem.tsx';
+import { asEuro } from '../../Numbers/Numbers.ts';
+import './ShoppingList.css';
 
 interface Props {
     backend: Backend;
     globalState: State;
     onBackToPantry: () => void;
-    onGotoHome: () => void;    
+    onGotoHome: () => void;
 }
 
 enum Dialog {
@@ -29,6 +31,8 @@ export default function Shopping(props: Props): JSX.Element {
         _setDialog(d)
         return true
     }
+
+    const [column, setColumn] = useState(Column.UNITS)
 
     const tableStyle: React.CSSProperties = {}
     if (dialog !== Dialog.OFF) {
@@ -73,21 +77,36 @@ export default function Shopping(props: Props): JSX.Element {
                                 }}>x</button>
                             </th>
                             <th id='left'>Ingredient</th>
-                            <th id='right'>Unitats</th>
-                            <th id='right'>Paquets</th>
+                            <th id='right'>
+                                <select
+                                    value={column}
+                                    onChange={e => setColumn(e.target.selectedIndex as Column)}
+                                >
+                                    <option value={Column.UNITS}>Unitats</option>
+                                    <option value={Column.PACKS}>Paquets</option>
+                                    <option value={Column.COST}>Cost</option>
+                                </select>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
                         {
                             props.globalState.shoppingList.items.map((i, idx) =>
-                                <ShoppingItem i={i} idx={idx} key={`${k}-${idx}`} globalState={props.globalState} />
+                                <ShoppingItem i={i} idx={idx} key={`${k}-${idx}-${column}`} globalState={props.globalState} show={column}/>
                             )
                         }
                     </tbody>
                     <tfoot id='header2'>
                         <tr>
-                            <td colSpan={4}>
-                             Gràcies per utilitzar La compra de l'Edu!
+                            <td></td>
+                            <td id='left'>Cost total</td>
+                            <td id='right'>
+                                {
+                                    (() => {
+                                        const cost = props.globalState.shoppingList.items.reduce((acc, i) => acc + i.packs * i.cost, 0)
+                                        return (<>{asEuro(cost)}</>)
+                                    })()
+                                }
                             </td>
                         </tr>
                     </tfoot>
@@ -153,7 +172,7 @@ function HelpDialog(props: {
                     de comprar.
                 </p>
                 <p>
-                    <b>Per exemple</b>, si necessitessis 9&nbsp;ous que es venen en paquets de 
+                    <b>Per exemple</b>, si necessitessis 9&nbsp;ous que es venen en paquets de
                     mitja&nbsp;dotzena, hauries de comprar dos paquets (ja que no pots comprar-ne
                     un&nbsp;i&nbsp;mig), i a la llista apareixeria 9&nbsp;unitats i 2&nbsp;paquets.
                 </p>
