@@ -1,16 +1,15 @@
 import React from 'react'
 import Backend from '../../Backend/Backend.ts';
-import { State, Day, Meal, Dish, Menu } from '../../State/State.tsx';
+import { Day, Meal, Dish, Menu } from '../../State/State.tsx';
 import TopBar from '../../TopBar/TopBar.tsx';
 import DishPicker from './DishPicker.tsx'
 import './Menu.css'
 import { round2 } from '../../Numbers/Numbers.ts';
 import SaveButton from '../../SaveButton/SaveButton.tsx';
-import DownloadPantry from '../Pantry/PantryLoad.ts';
 
 interface Props {
     backend: Backend;
-    globalState: State;
+    sessionName: string;
     onComplete: () => void
     onGotoHome: () => void
 }
@@ -89,14 +88,10 @@ export default class MenuTable extends React.Component<Props> {
                     .GET(),
                 this.props.backend.Menu()
                     .GET()
-                    .then(menu => menu.find(m => m.name === this.props.globalState.sessionName) || new Menu())
+                    .then(menu => menu.find(m => m.name === this.props.sessionName) || new Menu())
             ])
                 .then(([dishes, menu]) => {
-                    this.setState({
-                        ...this.state,
-                        menu: menu,
-                        days: menu.days.map(d => d.name),
-                        mealSizes: this.computeMealSizes(menu),
+                    this.setMenu(menu, {
                         dishes: dishes,
                         loaded: true
                     })
@@ -127,7 +122,7 @@ export default class MenuTable extends React.Component<Props> {
 
                         baseTxt='Següent'
 
-                        onSave={() => DownloadPantry(this.props.backend, this.props.globalState)}
+                        onSave={() => saveMenu(this.props.backend, this.state.menu).then(this.props.onGotoHome)}
                         onSaveTxt='Desant...'
 
                         onAcceptTxt='Desat'
@@ -164,13 +159,6 @@ export default class MenuTable extends React.Component<Props> {
             ...this.state,
             help: false,
             focus: path,
-        })
-    }
-
-    private Unfocus() {
-        this.setState({
-            ...this.state,
-            focus: undefined
         })
     }
 
@@ -389,5 +377,5 @@ function DishItem(pp: { name: string, amount: number, id: string, onMouseEnter: 
 }
 
 async function saveMenu(backend: Backend, menu: Menu): Promise<void> {
-    backend.Menu().POST(menu)
+    backend.Menu().PUT(menu)
 }

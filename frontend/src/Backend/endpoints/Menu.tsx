@@ -20,17 +20,15 @@ export class MenuEndpoint {
             .then(data => data.map(m => Menu.fromJSON(m)))
     }
 
-    async POST(menu: Menu): Promise<ShoppingNeeds> {
+    async PUT(menu: Menu): Promise<void> {
         return fetch(MenuEndpoint.path, {
-            method: 'POST',
+            method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
             body: menu.toJSON()
-        })
-            .then(response => response.json())
-            .then(data => ShoppingNeeds.fromJSON(data))
+        }).then(() => { })
     }
 }
 
@@ -46,48 +44,9 @@ export class MockMenuEndpoint extends MenuEndpoint {
             )
     }
 
-    async POST(menu: Menu): Promise<ShoppingNeeds> {
-        console.log(`POST to ${MockMenuEndpoint.path}:`)
+    async PUT(menu: Menu): Promise<void> {
+        console.log(`PUT to ${MockMenuEndpoint.path}:`)
         console.log(menu.toJSON().substring(0, 30), '...') // Ensure toJSON is called without errors
         return new Promise(resolve => setTimeout(resolve, 100))
-            .then(() => ShoppingNeeds.fromJSON([
-                { batch_size: 1, need: 1.00, price: 0.17, product: "Pastanaga" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Pebrot verd" },
-                { batch_size: 1, need: 0.95, price: 1.10, product: "Pebrot vermell" },
-                { batch_size: 4, need: 4.00, price: 1.00, product: "Iogurt" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Poma" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Plàtan" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Peres" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Taronges" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Maduixes" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Kiwi" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Mandarines" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Pinya" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Mango" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Pera" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Cireres" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Préssecs" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Albercocs" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Nectarines" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Pressec de vinya" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Poma àcida" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Poma verda" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Ceba" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Ceba vermella" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Ceba tendra" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Ceba de figueres" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Ceba de calçot" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Pipes" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Nous" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Ametlles" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Avellanes" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Pinyons" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Anacards" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Cacauets" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Pistatxos" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Garrofons" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Mongetes" },
-                { batch_size: 1, need: 0.50, price: 0.50, product: "Mongetes tendres" },
-            ]))
     }
 }

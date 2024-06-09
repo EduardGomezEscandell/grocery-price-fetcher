@@ -1,24 +1,17 @@
-export class Ingredient {
+export class Product {
     constructor(
         name: string,
         price: number,
         batch_size: number,
-        have: number,
-        need: number
     ) {
         this.name = name
         this.price = price
         this.batch_size = batch_size
-        this.have = have
-        this.need = need
     }
 
     name: string;
     price: number; // Price per batch
-
     batch_size: number;
-    have: number;
-    need: number;
 }
 
 export class Dish {
@@ -53,24 +46,6 @@ export class Meal {
 export class Day {
     name: string;
     meals: Array<Meal>;
-}
-
-export class ShoppingNeeds {
-    static fromJSON(json: any): ShoppingNeeds {
-        let shoppingList = new ShoppingNeeds()
-        shoppingList.ingredients = json.map((ingredient: any) => {
-            return new Ingredient(
-                either(ingredient, 'product', 'Unnamed ingredient'),
-                either(ingredient, 'price', 0),
-                either(ingredient, 'batch_size', 1),
-                either(ingredient, 'have', 0),
-                either(ingredient, 'need', 0),
-            )
-        })
-        return shoppingList
-    }
-
-    ingredients: Array<Ingredient> = [];
 }
 
 export class Menu {
@@ -139,22 +114,24 @@ export class Menu {
     }
 }
 
+export class PantryItem {
+    name: string
+    amount: number
+}
+
 export class Pantry {
     name: string = 'default'
-    contents: Array<Ingredient> = []
+    contents: Array<PantryItem> = []
 
     static fromJSON(json: any) {
         try {
             let pantry = new Pantry()
             pantry.name = either(json, 'name', 'Default')
-            pantry.contents = either(json, 'contents', []).map((content: any): Ingredient => {
-                return new Ingredient(
-                    /* name: */ either(content, 'name', 'Unnamed ingredient'),
-                    /* price */ 0,
-                    /* batch size */ 0,
-                    /* have: */ either(content, 'amount', 0),
-                    /* need */ 0
-                )
+            pantry.contents = either(json, 'contents', []).map((content: any): PantryItem => {
+                return {
+                    name: either(content, 'name', 'Unnamed ingredient'),
+                    amount: either(content, 'amount', 0),
+                }
             })
             return pantry
         } catch (e) {
@@ -162,6 +139,31 @@ export class Pantry {
             return new Pantry()
         }
     }
+}
+
+export class ShoppingNeedsItem extends Product {
+    static fromJSON(json: any): ShoppingNeedsItem {
+        const n = new ShoppingNeedsItem(
+            either(json, 'name', 'Unnamed ingredient'),
+            either(json, 'price', 0),
+            either(json, 'batch_size', 1),
+        )
+        n.amount = either(json, 'amount', 1)
+        return n
+    }
+
+    amount: number
+}
+
+export class ShoppingNeeds {
+    static fromJSON(json: any): ShoppingNeeds {
+        const need = new ShoppingNeeds()
+        need.contents = either(json, 'contents', []).map((ingredient: any) => ShoppingNeedsItem.fromJSON(ingredient))
+        return need
+    }
+
+    menu: string = 'default'
+    contents: Array<ShoppingNeedsItem> = [];
 }
 
 export class ShoppingListItem {
@@ -195,14 +197,3 @@ export class ShoppingList {
 function either<T>(struct: any, key: string, val: T): T {
     return struct[key] || val
 }
-
-export class State {
-    constructor() {
-        this.inNeed = new ShoppingNeeds()
-    }
-
-    sessionName: string = 'default'
-    inNeed: ShoppingNeeds;
-    shoppingList: ShoppingList;
-}
-

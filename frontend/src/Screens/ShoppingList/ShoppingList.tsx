@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import Backend from '../../Backend/Backend.tsx';
 import TopBar from '../../TopBar/TopBar.tsx';
-import { ShoppingNeeds, ShoppingList, State } from '../../State/State.tsx';
+import { ShoppingNeeds, ShoppingList } from '../../State/State.tsx';
 import SaveButton from '../../SaveButton/SaveButton.tsx';
 import ShoppingItem, { Column } from './ShoppingItem.tsx';
 import { asEuro } from '../../Numbers/Numbers.ts';
@@ -9,7 +9,7 @@ import './ShoppingList.css';
 
 interface Props {
     backend: Backend;
-    globalState: State;
+    sessionName: string;
     onBackToPantry: () => void;
     onGotoHome: () => void;
 }
@@ -46,7 +46,7 @@ export default function Shopping(props: Props): JSX.Element {
                     key='save'
 
                     baseTxt='Tornar'
-                    onSave={() => saveShoppingList(props.backend, props.globalState)}
+                    onSave={() => saveShoppingList(props.backend, props.sessionName)}
                     onSaveTxt='Desant...'
 
                     onAccept={() => props.onBackToPantry()}
@@ -54,14 +54,14 @@ export default function Shopping(props: Props): JSX.Element {
 
                     onRejectTxt='Error'
                 />}
-                logoOnClick={() => { saveShoppingList(props.backend, props.globalState).then(props.onGotoHome) }}
+                logoOnClick={() => { saveShoppingList(props.backend, props.sessionName).then(props.onGotoHome) }}
                 titleOnClick={() => setDialog(Dialog.HELP)}
                 titleText="La&nbsp;meva compra"
                 right={<SaveButton
                     key='save'
 
                     baseTxt='Desar'
-                    onSave={() => saveShoppingList(props.backend, props.globalState)}
+                    onSave={() => saveShoppingList(props.backend, props.sessionName)}
                     onSaveTxt='Desant...'
                     onAcceptTxt='Desat'
                     onRejectTxt='Error'
@@ -91,8 +91,8 @@ export default function Shopping(props: Props): JSX.Element {
                     </thead>
                     <tbody>
                         {
-                            props.globalState.shoppingList.items.map((i, idx) =>
-                                <ShoppingItem i={i} idx={idx} key={`${k}-${idx}-${column}`} globalState={props.globalState} show={column}/>
+                            props.sessionName.shoppingList.items.map((i, idx) =>
+                                <ShoppingItem i={i} idx={idx} key={`${k}-${idx}-${column}`} globalState={props.sessionName} show={column}/>
                             )
                         }
                     </tbody>
@@ -103,7 +103,7 @@ export default function Shopping(props: Props): JSX.Element {
                             <td id='right'>
                                 {
                                     (() => {
-                                        const cost = props.globalState.shoppingList.items.reduce((acc, i) => acc + i.packs * i.cost, 0)
+                                        const cost = props.sessionName.shoppingList.items.reduce((acc, i) => acc + i.packs * i.cost, 0)
                                         return (<>{asEuro(cost)}</>)
                                     })()
                                 }
@@ -117,8 +117,8 @@ export default function Shopping(props: Props): JSX.Element {
                             if (!setDialog(Dialog.CLOSING)) {
                                 return
                             }
-                            props.globalState.shoppingList.items.forEach(i => i.done = false)
-                            saveShoppingList(props.backend, props.globalState)
+                            props.sessionName.shoppingList.items.forEach(i => i.done = false)
+                            saveShoppingList(props.backend, props.sessionName)
                                 .then(() => forceChildUpdate())
                                 .then(() => setDialog(Dialog.OFF))
                         }}

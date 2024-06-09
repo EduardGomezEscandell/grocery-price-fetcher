@@ -1,11 +1,9 @@
 import React from 'react'
 import Backend from '../../Backend/Backend.ts';
-import { State } from '../../State/State.tsx';
 import './LandingPage.css';
 
 interface Props {
     backend: Backend;
-    globalState: State;
     onGotoMenu: () => void
 }
 

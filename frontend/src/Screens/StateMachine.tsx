@@ -1,6 +1,5 @@
 import React from 'react'
 import Backend from "../Backend/Backend.tsx";
-import { State } from "../State/State.tsx";
 import LandingPage from "./LandingPage/LandingPage.tsx";
 import RenderMenu from "./Menu/Menu.tsx";
 import Pantry from "./Pantry/Pantry.tsx";
@@ -8,7 +7,7 @@ import ShoppingList from './ShoppingList/ShoppingList.tsx';
 
 interface Props {
     backend: Backend;
-    globalState: State;
+    sessionName: string;
 }
 
 export default class StateMachine extends React.Component<Props> {
@@ -46,14 +45,14 @@ interface ScreenProps extends Props {
 class Screen extends React.Component<ScreenProps> {
     name: string;
     backend: Backend;
-    globalState: State;
+    sessionName: string;
     setScreen: (s: Screen) => void;
 
     constructor(pp: ScreenProps) {
         super(pp)
         this.name = "BASE Screen"
         this.backend = pp.backend
-        this.globalState = pp.globalState
+        this.sessionName = pp.sessionName
         this.setScreen = pp.setScreen
     }
 
@@ -71,7 +70,6 @@ class HomeScreen extends Screen {
     render(): JSX.Element {
         return <LandingPage
             backend={this.backend}
-            globalState={this.globalState}
             onGotoMenu={() => this.setScreen(new MenuScreen(this))}
         />
     }
@@ -86,7 +84,7 @@ class MenuScreen extends Screen {
     render() {
         return <RenderMenu
             backend={this.backend}
-            globalState={this.globalState}
+            sessionName={this.sessionName}
             onComplete={() => this.setScreen(new PantryScreen(this))}
             onGotoHome={() => this.setScreen(new HomeScreen(this))}
         />
@@ -102,7 +100,7 @@ class PantryScreen extends Screen {
     render() {
         return <Pantry
             backend={this.backend}
-            globalState={this.globalState}
+            sessionName={this.sessionName}
             onBackToMenu={() => this.setScreen(new MenuScreen(this))}
             onComplete={() => this.setScreen(new ShoppingListScreen(this))}
             onGotoHome={() => this.setScreen(new HomeScreen(this))}
@@ -119,7 +117,7 @@ class ShoppingListScreen extends Screen {
     render() {
         return <ShoppingList
             backend={this.backend}
-            globalState={this.globalState}
+            sessionName={this.sessionName}
             onBackToPantry={() => this.setScreen(new PantryScreen(this))}            
             onGotoHome={() => this.setScreen(new HomeScreen(this))}
         />

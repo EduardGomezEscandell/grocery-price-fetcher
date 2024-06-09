@@ -1,40 +1,60 @@
-import React, { useState } from 'react'
-import { Ingredient, State } from '../../State/State.tsx';
+import React, { useEffect, useState } from 'react'
+import { Pantry, PantryItem, ShoppingNeeds, ShoppingNeedsItem } from '../../State/State.tsx';
 import Backend from '../../Backend/Backend.tsx';
 import TopBar from '../../TopBar/TopBar.tsx';
 import SaveButton from '../../SaveButton/SaveButton.tsx';
-import { FocusIngredient, RowIngredient } from './PantryIngredient.tsx';
+import IngredientRow from './PantryIngredient.tsx';
+import IngredientDialog from './IngredientDialog.tsx';
 import { asEuro } from '../../Numbers/Numbers.ts'
-import { downloadShoppingList } from '../ShoppingList/ShoppingList.tsx';
 import { IngredientUsage } from '../../Backend/endpoints/IngredientUse.tsx';
 
 interface Props {
     backend: Backend;
-    globalState: State;
+    sessionName: string;
     onBackToMenu: () => void;
     onGotoHome: () => void;
     onComplete: () => void;
 }
 
-export default function Pantry(pp: Props) {
-    const [savings, setSavings] = useState(computeSavings(pp.globalState.inNeed.ingredients))
+interface Focus {
+    item: PantryItem
+    usage: IngredientUsage[]
+}
+
+export default function RenderPantry(pp: Props) {
+    const [needs, setNeeds] = useState<ShoppingNeeds>(new ShoppingNeeds())
+    const [pantry, setPantry] = useState<Pantry>(new Pantry())
     const [help, setHelp] = useState(false)
+    const [focussed, setFocussed] = useState<Focus | undefined>(undefined)
 
-    const [focussed, setFocussed] = useState<{
-        ingredient: Ingredient
-        usage: IngredientUsage[]
-     } | undefined>(undefined)
-
-
-     const tableStyle: React.CSSProperties = {}
+    const tableStyle: React.CSSProperties = {}
     if (focussed || help) {
         tableStyle.filter = 'blur(5px)'
     }
 
-    const ingr = pp.globalState.inNeed.ingredients
-    const updateSavings = () => {
-        setSavings(computeSavings(ingr))
+    const computeSavings = (): number => {
+        return merge(
+            needs.contents,
+            pantry.contents,
+            (need, have) => need.name.localeCompare(have.name),
+            (need, have) => ((need && need.price) || 0) * Math.max(0,
+                ((have && have.amount) || 0) - ((need && need.amount) || 0))
+        )
     }
+
+    useEffect(() => {
+        Promise.all([
+            pp.backend.Needs(pp.sessionName).GET(),
+            pp.backend.Pantry(pp.sessionName).GET(),
+        ])
+            .then(([needs, pantry]) => {
+                setNeeds(needs)
+                setPantry(pantry)
+            })
+            .catch((reason) => {
+                console.log('Error getting pantry: ', reason || 'Unknown error')
+            })
+    }, [pp.backend, pp.sessionName])
 
     return (
         <>
@@ -43,7 +63,7 @@ export default function Pantry(pp: Props) {
                     key='save'
 
                     baseTxt='Tornar'
-                    onSave={() => savePantry(pp.backend, pp.globalState)}
+                    onSave={() => pp.backend.Pantry(pp.sessionName).PUT(pantry)}
                     onSaveTxt='Desant...'
 
                     onAccept={() => pp.onBackToMenu()}
@@ -51,20 +71,17 @@ export default function Pantry(pp: Props) {
 
                     onRejectTxt='Error'
                 />}
-                logoOnClick={() => { savePantry(pp.backend, pp.globalState).then(pp.onGotoHome) }}
+                logoOnClick={() => { pp.backend.Pantry(pp.sessionName).PUT(pantry).then(pp.onGotoHome) }}
                 titleOnClick={() => setHelp(true)}
                 titleText='El&nbsp;meu rebost'
                 right={<SaveButton
                     key='save'
                     baseTxt='Següent'
 
-                    onSave={() => Promise.all([
-                        savePantry(pp.backend, pp.globalState),
-                        downloadShoppingList(pp.backend, pp.globalState),
-                    ])}
+                    onSave={() => pp.backend.Pantry(pp.sessionName).PUT(pantry)}
                     onSaveTxt='Desant...'
 
-                    onAccept={() => { pp.onComplete() }}
+                    onAccept={() => pp.onComplete()}
                     onAcceptTxt='Desat'
 
                     onReject={(reason: any) => console.log('Error saving pantry: ', reason || 'Unknown error')}
@@ -81,25 +98,26 @@ export default function Pantry(pp: Props) {
                     </thead>
                     <tbody>
                         {
-                            pp.globalState.inNeed.ingredients.map((i: Ingredient, idx: number) => (
-                                <RowIngredient
+                            needs.contents.map((i: ShoppingNeedsItem, idx: number) => (
+                                <IngredientRow
                                     key={i.name}
                                     id={idx % 2 === 0 ? 'even' : 'odd'}
-                                    ingredient={i}
+                                    item={i}
                                     onChange={(value: number) => {
-                                        pp.globalState.inNeed.ingredients[idx].have = value
-                                        updateSavings()
+                                        const c = pantry.contents.find(p => p.name === i.name)
+                                        c && (c.amount = value)
+                                        setPantry(pantry)
                                     }}
                                     onClick={() => {
                                         if (focussed) {
                                             setFocussed(undefined)
                                         } else {
                                             pp.backend.IngredientUse().POST({
-                                                MenuName: pp.globalState.sessionName,
+                                                MenuName: pp.sessionName,
                                                 IngredientName: i.name
                                             }).then((usage) => {
                                                 setFocussed({
-                                                    ingredient: i,
+                                                    item: i,
                                                     usage: usage
                                                 })
                                             }).catch((reason) => {
@@ -115,19 +133,15 @@ export default function Pantry(pp: Props) {
                         <tr><td colSpan={2} id='header1' /></tr>
                         <tr>
                             <td id='left'>T'estalvies</td>
-                            <td id='right'>{asEuro(savings)}</td>
+                            <td id='right'>{asEuro(computeSavings())}</td>
                         </tr>
                     </tfoot>
                 </table>
                 {
-                    focussed && <FocusIngredient
-                        ingredient={focussed.ingredient}
+                    focussed && <IngredientDialog
+                        item={focussed.item}
                         usage={focussed.usage}
                         onClose={() => setFocussed(undefined)}
-                        onChange={(value: number) => {
-                            focussed.ingredient.have = value
-                            updateSavings()
-                        }}
                     />
                 }
                 {
@@ -138,7 +152,7 @@ export default function Pantry(pp: Props) {
                                 Aquesta pàgina mostra una llista dels ingredients que necessites per al teu menú setmanal.
                             </p>
                             <p>
-                                Per a cada ingredient, indica quant en tens al teu rebost i 
+                                Per a cada ingredient, indica quant en tens al teu rebost i
                                 així <i>La compra de l'Edu</i> podrà calcular quant en necessites comprar.
                             </p>
                             <p>
@@ -158,21 +172,33 @@ export default function Pantry(pp: Props) {
     )
 }
 
-export async function savePantry(backend: Backend, globalState: State): Promise<void> {
-    await backend
-        .Pantry()
-        .POST({
-            name: 'default',
-            contents: globalState.inNeed.ingredients
-                .filter(i => i.have > 0)
-                .map(i_1 => {
-                    return { name: i_1.name, amount: i_1.have };
-                })
-        });
-}
+function merge<A, B>(a: A[], b: B[], cmp: ((a: A, b: B) => number), f: ((a: A | undefined, b: B | undefined) => number)): number {
+    let i = 0
+    let j = 0
+    let acc = 0
 
-function computeSavings(ingredients: Ingredient[]): number {
-    return ingredients
-        .map(i => Math.min(i.have, i.need) * i.price / i.batch_size)
-        .reduce((acc, x) => acc + x, 0)
+    while (i < a.length && j < b.length) {
+        switch (cmp(a[i], b[j])) {
+            case -1:
+                i++
+                continue
+            case 1:
+                j++
+                continue
+            case 0:
+                acc += f(a[i], b[j])
+                i++
+                j++
+        }
+    }
+
+    for (; i < a.length; i++) {
+        acc += f(a[i], undefined)
+    }
+
+    for (; j < b.length; j++) {
+        acc += f(undefined, b[j])
+    }
+
+    return acc
 }

@@ -4,46 +4,39 @@ import { DishesEndpoint, MockDishesEndpoint } from './endpoints/Dishes.tsx'
 import { PantryEndpoint, MockPantryEndpoint } from './endpoints/Pantry.tsx'
 import { MockShoppingListEndpoint, ShoppingListEndpoint } from './endpoints/ShoppingList.tsx'
 import { MockIngredientUseEndpoint, IngredientUseEndpoint } from './endpoints/IngredientUse.tsx'
+import { MockNeedsEndpoint, NeedsEndpoint } from './endpoints/Needs.tsx'
 
 class Backend {
-    static New(): Backend {
+    constructor() {
         if (process.env.REACT_APP_MOCK_BACKEND !== "") {
-            return new Backend(true)
+            this.mock = true
         }
-        return new Backend(false)
     }
 
-    private constructor(mock: boolean = false) {
-        this.menu = mock ? new MockMenuEndpoint() : new MenuEndpoint()
-        this.dishes = mock ? new MockDishesEndpoint() : new DishesEndpoint()
-        this.pantry = mock ? new MockPantryEndpoint() : new PantryEndpoint()
-        this.shopping =  mock ? new MockShoppingListEndpoint() : new ShoppingListEndpoint()
-        this.ingredientUse = mock ? new MockIngredientUseEndpoint() : new IngredientUseEndpoint()
-    }
+    private mock: boolean = false
 
-    private menu: MenuEndpoint;
     Menu(): MenuEndpoint {
-        return this.menu
+        return this.mock ? new MockMenuEndpoint() : new MenuEndpoint()
     }
 
-    private dishes: DishesEndpoint;
     Dishes(): DishesEndpoint {
-        return this.dishes
+        return this.mock ? new MockDishesEndpoint() : new DishesEndpoint()
     }
 
-    private pantry: PantryEndpoint;
-    Pantry(): PantryEndpoint {
-        return this.pantry
+    Pantry(which: string): PantryEndpoint {
+        return this.mock ? new MockPantryEndpoint(which) : new PantryEndpoint(which)
     }
 
-    private ingredientUse: IngredientUseEndpoint;
+    Needs(which: string): NeedsEndpoint {
+        return this.mock ? new MockNeedsEndpoint(which) : new NeedsEndpoint(which)
+    }
+
     IngredientUse(): IngredientUseEndpoint {
-        return this.ingredientUse
+        return this.mock ? new MockIngredientUseEndpoint() : new IngredientUseEndpoint()
     }
 
-    private shopping: ShoppingListEndpoint;
     Shopping(): ShoppingListEndpoint {
-        return this.shopping
+        return this.mock ? new MockShoppingListEndpoint() : new ShoppingListEndpoint()
     }
 }
 
