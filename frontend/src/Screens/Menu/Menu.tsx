@@ -1,6 +1,5 @@
 import React from 'react'
 import Backend from '../../Backend/Backend.ts';
-import Optional from '../../Optional/Optional.ts';
 import { State, Day, Meal, Dish, Menu } from '../../State/State.tsx';
 import TopBar from '../../TopBar/TopBar.tsx';
 import DishPicker from './DishPicker.tsx'

@@ -1,6 +1,6 @@
 import React from 'react'
 import Backend from '../../Backend/Backend.ts';
-import { State, Menu } from '../../State/State.tsx';
+import { State } from '../../State/State.tsx';
 import './LandingPage.css';
 
 interface Props {
