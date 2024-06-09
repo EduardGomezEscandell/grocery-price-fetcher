@@ -194,12 +194,16 @@ export default class MenuTable extends React.Component<Props> {
         })
     }
 
-
     private DayCol(day: Day): JSX.Element {
         return (
             <div className='Day'>
                 <div className='Header' id='header1'>
-                    {day.name}
+                    <input onChange={(event) => {
+                        day.name = event.target.value
+                        this.props.globalState.setMenu(this.props.globalState.menu)
+                    }}
+                        defaultValue={day.name}
+                    />
                 </div>
                 {
                     day.meals.map((meal) =>

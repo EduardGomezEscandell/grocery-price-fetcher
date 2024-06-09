@@ -27,6 +27,14 @@
     background: white;
 }
 
+.Day input {
+    font: inherit;
+    border: none;
+    text-align: center;
+    background-color: inherit;
+    color: inherit;
+}
+
 .Menu .Day .Header {
     height: 60px;
     text-transform: uppercase;
