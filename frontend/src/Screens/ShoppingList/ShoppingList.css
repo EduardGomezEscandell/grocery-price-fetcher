@@ -24,3 +24,9 @@ select {
         border: none;
     }
 }
+
+dialog #body{
+    display: flex;
+    overflow: auto;
+    max-height: 50vh;
+}

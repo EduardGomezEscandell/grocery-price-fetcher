@@ -165,21 +165,21 @@ function HelpDialog(props: {
             <div id="body">
                 <p>
                     Aquesta pàgina mostra una llista dels ingredients que necessites comprar per al
-                    teu menú setmanal, descomptant-li el que ja tens al teu rebost.
+                    teu menú setmanal, descomptant-li el que ja tens al teu rebost. Pots fer clic a qualsevol
+                    ingredient per marcar-lo com a comprat.
                 </p>
                 <p>
-                    Per a cada ingredient, t'indica quantes unitats necessites i quants paquets has
-                    de comprar.
+                    Per a cada ingredient, pots escollir quina informació vols veure. Expliquem-ho amb un exemple: si
+                    necessites 9 ous que es venen a 2€ cada mitja dotzena:
                 </p>
                 <p>
-                    <b>Per exemple</b>, si necessitessis 9&nbsp;ous que es venen en paquets de
-                    mitja&nbsp;dotzena, hauries de comprar dos paquets (ja que no pots comprar-ne
-                    un&nbsp;i&nbsp;mig), i a la llista apareixeria 9&nbsp;unitats i 2&nbsp;paquets.
+                    <b>Unitats:</b> Nombre d'unitats que necessites comprar. En aquest cas, 9 ous.
                 </p>
                 <p>
-                    Pots marcar els ingredients que ja hagis comprat. La compra es desa quan premis el
-                    botó de desar o quan naveguis a qualseveol altra pàgina d'aquest web. Pots desmarcar
-                    tots els elements marcats amb el botó <i>x</i> de la capçalera.
+                    <b>Paquets:</b> Nombre de paquets que necessites comprar. En aquest cas, dues mitges dotzenes.
+                </p>
+                <p>
+                    <b>Cost:</b> Cost total de la compra. En aquest cas, 4€.
                 </p>
             </div>
             <div id="footer">
