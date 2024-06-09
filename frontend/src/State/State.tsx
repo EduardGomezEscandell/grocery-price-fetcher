@@ -175,18 +175,21 @@ export class ShoppingListItem {
 }
 
 export class ShoppingList {
-    name: string = 'default'
-    timeStamp: string = ''
+    menu: string = 'default'
+    pantry: string = 'default'
     items: Array<ShoppingListItem> = []
 
     static fromJSON(json: any): ShoppingList {
         const shoppingList = new ShoppingList()
-        shoppingList.name = either(json, 'name', 'default')
-        shoppingList.timeStamp = either(json, 'time_stamp', '2000-01-01T00:00:00Z00:00')
+        shoppingList.menu = either(json, 'menu', 'default')
+        shoppingList.pantry = either(json, 'pantry', 'default')
         shoppingList.items = either(json, 'items', []).map((name: string) => {
             return {
-                name: name,
-                done: true,
+                name: either(name, 'name', 'Unnamed ingredient'),
+                done: either(name, 'done', false),
+                units: either(name, 'units', 0),
+                packs: either(name, 'packs', 0),
+                cost: either(name, 'cost', 0),
             } as ShoppingListItem
         })
         console.log(shoppingList)

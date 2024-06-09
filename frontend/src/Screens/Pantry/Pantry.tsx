@@ -48,6 +48,8 @@ export default function RenderPantry(pp: Props) {
             pp.backend.Pantry(pp.sessionName).GET(),
         ])
             .then(([needs, pantry]) => {
+                needs.contents.sort((a, b) => a.name.localeCompare(b.name))
+                pantry.contents.sort((a, b) => a.name.localeCompare(b.name))
                 setNeeds(needs)
                 setPantry(pantry)
             })

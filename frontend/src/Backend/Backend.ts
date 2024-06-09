@@ -35,8 +35,8 @@ class Backend {
         return this.mock ? new MockIngredientUseEndpoint() : new IngredientUseEndpoint()
     }
 
-    Shopping(): ShoppingListEndpoint {
-        return this.mock ? new MockShoppingListEndpoint() : new ShoppingListEndpoint()
+    ShoppingList(menu: string, pantry: string): ShoppingListEndpoint {
+        return this.mock ? new MockShoppingListEndpoint(menu, pantry) : new ShoppingListEndpoint(menu, pantry)
     }
 }
 
