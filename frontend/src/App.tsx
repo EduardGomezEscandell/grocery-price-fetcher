@@ -5,12 +5,10 @@ import Backend from './Backend/Backend.ts'
 import { State, Menu } from './State/State.tsx'
 
 function App(): JSX.Element {
-  const [menu, setMenu] = useState(new Menu())
-
   return (
     <ScreenStateMachine
       backend={Backend.New()}
-      globalState={new State().attachMenu(menu, setMenu)}
+      globalState={new State()}
     ></ScreenStateMachine>
   );
 }

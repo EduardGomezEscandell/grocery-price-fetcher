@@ -95,7 +95,7 @@ export default function Pantry(pp: Props) {
                                             setFocussed(undefined)
                                         } else {
                                             pp.backend.IngredientUse().POST({
-                                                MenuName: pp.globalState.menu.name,
+                                                MenuName: pp.globalState.sessionName,
                                                 IngredientName: i.name
                                             }).then((usage) => {
                                                 setFocussed({

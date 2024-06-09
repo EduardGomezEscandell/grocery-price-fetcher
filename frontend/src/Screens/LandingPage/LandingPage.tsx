@@ -45,19 +45,7 @@ export default function LandingPage(props: Props) {
                 }}>
                     Les meves receptes
                 </button>
-                <button onClick={() => {
-                    Promise.all([
-                        props.backend
-                            .Dishes()
-                            .GET()
-                            .then((d: string[]) => { props.globalState.dishes = d }),
-                        props.backend
-                            .Menu()
-                            .GET()
-                            .then((m: Menu[]) => m[0])
-                            .then((m: Menu) => props.globalState.menu = m)
-                    ]).finally(props.onGotoMenu)
-                }}>
+                <button onClick={props.onGotoMenu}>
                     La meva compra
                 </button>
             </div>

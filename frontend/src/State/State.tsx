@@ -198,31 +198,10 @@ function either<T>(struct: any, key: string, val: T): T {
 
 export class State {
     constructor() {
-        this.dishes = []
         this.inNeed = new ShoppingNeeds()
     }
 
-    attachMenu(menu: Menu, setMenu: (m: Menu) => void): State {
-        this.menu = menu
-        this._setMenu = setMenu
-        return this
-    }
-
-    menu: Menu;
-    private _setMenu: (m: Menu) => void;
-
-    setMenu(menu: Menu) {
-        menu.days.forEach(day => {
-            day.meals.forEach(meal => {
-                meal.dishes = meal.dishes
-                    .filter(dish => dish.name !== "")
-                    .filter(dish => dish.amount > 0)
-            })
-        })
-        this._setMenu(menu)
-    }
-
-    dishes: Array<string>;
+    sessionName: string = 'default'
     inNeed: ShoppingNeeds;
     shoppingList: ShoppingList;
 }
