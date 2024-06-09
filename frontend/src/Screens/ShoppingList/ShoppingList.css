@@ -1,0 +1,32 @@
+select {
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    
+    background-color: #1a237e;
+    color: white;
+    font: inherit;
+    /* padding: 0; */
+    margin: 0;
+    text-align: right;
+
+    border: none;
+    border-radius: inherit;
+
+    option {
+        color: black;
+        background-color: white;
+        
+        font: inherit;
+        font-weight: normal;
+        
+        border: none;
+    }
+}
+
+dialog #body{
+    display: flex;
+    overflow: auto;
+    max-height: 50vh;
+}

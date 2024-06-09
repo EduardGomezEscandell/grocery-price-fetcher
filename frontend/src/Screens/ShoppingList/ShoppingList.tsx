@@ -3,13 +3,15 @@ import Backend from '../../Backend/Backend.tsx';
 import TopBar from '../../TopBar/TopBar.tsx';
 import { ShoppingNeeds, ShoppingList, State } from '../../State/State.tsx';
 import SaveButton from '../../SaveButton/SaveButton.tsx';
-import ShoppingItem from './ShoppingItem.tsx';
+import ShoppingItem, { Column } from './ShoppingItem.tsx';
+import { asEuro } from '../../Numbers/Numbers.ts';
+import './ShoppingList.css';
 
 interface Props {
     backend: Backend;
     globalState: State;
     onBackToPantry: () => void;
-    onGotoHome: () => void;    
+    onGotoHome: () => void;
 }
 
 enum Dialog {
@@ -29,6 +31,8 @@ export default function Shopping(props: Props): JSX.Element {
         _setDialog(d)
         return true
     }
+
+    const [column, setColumn] = useState(Column.UNITS)
 
     const tableStyle: React.CSSProperties = {}
     if (dialog !== Dialog.OFF) {
@@ -73,21 +77,36 @@ export default function Shopping(props: Props): JSX.Element {
                                 }}>x</button>
                             </th>
                             <th id='left'>Ingredient</th>
-                            <th id='right'>Unitats</th>
-                            <th id='right'>Paquets</th>
+                            <th id='right'>
+                                <select
+                                    value={column}
+                                    onChange={e => setColumn(e.target.selectedIndex as Column)}
+                                >
+                                    <option value={Column.UNITS}>Unitats</option>
+                                    <option value={Column.PACKS}>Paquets</option>
+                                    <option value={Column.COST}>Cost</option>
+                                </select>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
                         {
                             props.globalState.shoppingList.items.map((i, idx) =>
-                                <ShoppingItem i={i} idx={idx} key={`${k}-${idx}`} globalState={props.globalState} />
+                                <ShoppingItem i={i} idx={idx} key={`${k}-${idx}-${column}`} globalState={props.globalState} show={column}/>
                             )
                         }
                     </tbody>
                     <tfoot id='header2'>
                         <tr>
-                            <td colSpan={4}>
-                             Gràcies per utilitzar La compra de l'Edu!
+                            <td></td>
+                            <td id='left'>Cost total</td>
+                            <td id='right'>
+                                {
+                                    (() => {
+                                        const cost = props.globalState.shoppingList.items.reduce((acc, i) => acc + i.packs * i.cost, 0)
+                                        return (<>{asEuro(cost)}</>)
+                                    })()
+                                }
                             </td>
                         </tr>
                     </tfoot>
@@ -146,21 +165,21 @@ function HelpDialog(props: {
             <div id="body">
                 <p>
                     Aquesta pàgina mostra una llista dels ingredients que necessites comprar per al
-                    teu menú setmanal, descomptant-li el que ja tens al teu rebost.
+                    teu menú setmanal, descomptant-li el que ja tens al teu rebost. Pots fer clic a qualsevol
+                    ingredient per marcar-lo com a comprat.
                 </p>
                 <p>
-                    Per a cada ingredient, t'indica quantes unitats necessites i quants paquets has
-                    de comprar.
+                    Per a cada ingredient, pots escollir quina informació vols veure. Expliquem-ho amb un exemple: si
+                    necessites 9 ous que es venen a 2€ cada mitja dotzena:
                 </p>
                 <p>
-                    <b>Per exemple</b>, si necessitessis 9&nbsp;ous que es venen en paquets de 
-                    mitja&nbsp;dotzena, hauríes de comprar dos paquets (ja que no pots comprar-ne
-                    un&nbsp;i&nbsp;mig), i a la llista apareixeria 9&nbsp;unitats i 2&nbsp;paquets.
+                    <b>Unitats:</b> Nombre d'unitats que necessites comprar. En aquest cas, 9 ous.
                 </p>
                 <p>
-                    Pots marcar els ingredients que ja hagis comprat. La compra es desa quan premis el
-                    botó de desar o quan naveguis a qualseveol altra pàgina d'aquest web. Pots desmarcar
-                    tots els elements marcats amb el botó <i>x</i> de la capçalera.
+                    <b>Paquets:</b> Nombre de paquets que necessites comprar. En aquest cas, dues mitges dotzenes.
+                </p>
+                <p>
+                    <b>Cost:</b> Cost total de la compra. En aquest cas, 4€.
                 </p>
             </div>
             <div id="footer">
