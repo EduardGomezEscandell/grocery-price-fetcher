@@ -37,6 +37,10 @@ func New(s Settings, db database.DB) *Service {
 	}
 }
 
+func (s Service) Path() string {
+	return "/api/pantry/{pantry}"
+}
+
 func (s Service) Enabled() bool {
 	return s.settings.Enable
 }
@@ -57,9 +61,14 @@ func (s *Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 		return httputils.Errorf(http.StatusBadRequest, "unsupported format: %s", r.Header.Get("Accept"))
 	}
 
-	pantries, err := s.db.Pantries()
-	if err != nil {
-		return httputils.Errorf(http.StatusInternalServerError, "could not get pantries: %w", err)
+	p := r.PathValue("pantry")
+	if p == "" {
+		return httputils.Error(http.StatusBadRequest, "missing pantry")
+	}
+
+	pantries, ok := s.db.LookupPantry(p)
+	if !ok {
+		return httputils.Error(http.StatusNotFound, "pantry not found")
 	}
 
 	if err := json.NewEncoder(w).Encode(pantries); err != nil {

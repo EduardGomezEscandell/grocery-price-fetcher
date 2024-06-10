@@ -32,24 +32,14 @@ export default function RenderPantry(pp: Props) {
         tableStyle.filter = 'blur(5px)'
     }
 
-    const computeSavings = (): number => {
-        return merge(
-            needs.contents,
-            pantry.contents,
-            (need, have) => need.name.localeCompare(have.name),
-            (need, have) => ((need && need.price) || 0) * Math.max(0,
-                ((have && have.amount) || 0) - ((need && need.amount) || 0))
-        )
-    }
-
     useEffect(() => {
         Promise.all([
             pp.backend.Needs(pp.sessionName).GET(),
             pp.backend.Pantry(pp.sessionName).GET(),
         ])
             .then(([needs, pantry]) => {
-                needs.contents.sort((a, b) => a.name.localeCompare(b.name))
-                pantry.contents.sort((a, b) => a.name.localeCompare(b.name))
+                needs.items.sort((a, b) => a.name.localeCompare(b.name))
+                pantry.items.sort((a, b) => a.name.localeCompare(b.name))
                 setNeeds(needs)
                 setPantry(pantry)
             })
@@ -100,13 +90,13 @@ export default function RenderPantry(pp: Props) {
                     </thead>
                     <tbody>
                         {
-                            needs.contents.map((i: ShoppingNeedsItem, idx: number) => (
+                            needs.items.map((i: ShoppingNeedsItem, idx: number) => (
                                 <IngredientRow
                                     key={i.name}
                                     id={idx % 2 === 0 ? 'even' : 'odd'}
                                     item={i}
                                     onChange={(value: number) => {
-                                        const c = pantry.contents.find(p => p.name === i.name)
+                                        const c = pantry.items.find(p => p.name === i.name)
                                         c && (c.amount = value)
                                         setPantry(pantry)
                                     }}
@@ -131,13 +121,6 @@ export default function RenderPantry(pp: Props) {
                             ))
                         }
                     </tbody>
-                    <tfoot id='header2'>
-                        <tr><td colSpan={2} id='header1' /></tr>
-                        <tr>
-                            <td id='left'>T'estalvies</td>
-                            <td id='right'>{asEuro(computeSavings())}</td>
-                        </tr>
-                    </tfoot>
                 </table>
                 {
                     focussed && <IngredientDialog
@@ -172,35 +155,4 @@ export default function RenderPantry(pp: Props) {
 
         </>
     )
-}
-
-function merge<A, B>(a: A[], b: B[], cmp: ((a: A, b: B) => number), f: ((a: A | undefined, b: B | undefined) => number)): number {
-    let i = 0
-    let j = 0
-    let acc = 0
-
-    while (i < a.length && j < b.length) {
-        switch (cmp(a[i], b[j])) {
-            case -1:
-                i++
-                continue
-            case 1:
-                j++
-                continue
-            case 0:
-                acc += f(a[i], b[j])
-                i++
-                j++
-        }
-    }
-
-    for (; i < a.length; i++) {
-        acc += f(a[i], undefined)
-    }
-
-    for (; j < b.length; j++) {
-        acc += f(undefined, b[j])
-    }
-
-    return acc
 }

@@ -51,7 +51,8 @@ func TestPantryEndpoint(t *testing.T) {
 			}
 
 			testutils.TestEndpoint(t, testutils.ResponseTestOptions{
-				ServePath: "/api/pantry",
+				ServePath: sv.Path(),
+				ReqPath:   "/api/pantry/pantry1",
 				Endpoint:  sv.Handle,
 				Method:    tc.method,
 				Body:      string(out),
