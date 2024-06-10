@@ -39,9 +39,6 @@ type ResponseTestOptions struct {
 
 func TestEndpoint(t *testing.T, opt ResponseTestOptions) {
 	t.Helper()
-	if opt.ReqPath == "" {
-		opt.ReqPath = opt.ServePath
-	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -49,9 +46,13 @@ func TestEndpoint(t *testing.T, opt ResponseTestOptions) {
 	addr, stop := HTTPServer(ctx, t, opt.ServePath, opt.Endpoint)
 	defer stop()
 
+	t.Logf("Server started serving %s with endpoint %s", addr, opt.ServePath)
+
 	url := "http://" + path.Join(addr, opt.ReqPath)
 	resp := MakeRequest(t, opt.Method, url, opt.Body)
 	defer resp.Body.Close()
+
+	t.Logf("Request %s to %s returned %d", opt.Method, url, resp.StatusCode)
 
 	out, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
@@ -80,7 +81,7 @@ func MakeRequest(t *testing.T, method, url string, body string) *http.Response {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := (&http.Client{}).Do(req)
 	require.NoError(t, err)
 
 	return resp
@@ -111,9 +112,9 @@ func HTTPServer(ctx context.Context, t *testing.T, p string, handler httputils.H
 	ctx, cancel := context.WithCancel(ctx)
 	t.Cleanup(cancel)
 
-	server := http.NewServeMux()
-	server.HandleFunc(p, httputils.HandleRequest(NewLogger(t), handler))
-	server.HandleFunc(PingEndpoint, func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
+	mux := http.NewServeMux()
+	mux.HandleFunc(p, httputils.HandleRequest(NewLogger(t), handler))
+	mux.HandleFunc(PingEndpoint, func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
 
 	lis, err := (&net.ListenConfig{}).Listen(ctx, "tcp", "localhost:")
 	require.NoError(t, err, "failed to listen")
@@ -122,10 +123,14 @@ func HTTPServer(ctx context.Context, t *testing.T, p string, handler httputils.H
 		_ = lis.Close()
 	})
 
+	sv := http.Server{
+		Handler:           mux,
+		ReadHeaderTimeout: 100 * time.Millisecond,
+	}
+
 	ch := make(chan error)
 	go func() {
-		//nolint:gosec // this is a test helper
-		ch <- http.Serve(lis, server)
+		ch <- sv.Serve(lis)
 	}()
 
 	require.Eventually(t, func() bool {
@@ -138,9 +143,9 @@ func HTTPServer(ctx context.Context, t *testing.T, p string, handler httputils.H
 		defer resp.Body.Close()
 		return resp.StatusCode == http.StatusOK
 	}, 10*time.Second, 100*time.Millisecond, "Server never started")
-	t.Logf("server started at %s", lis.Addr().String())
 
 	return lis.Addr().String(), func() {
+		_ = sv.Shutdown(context.Background())
 		lis.Close()
 		stop()
 		err := <-ch

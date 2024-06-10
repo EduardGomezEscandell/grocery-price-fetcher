@@ -17,7 +17,7 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func TestHelloWorld(t *testing.T) {
+func TestRecipes(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
@@ -57,7 +57,8 @@ func TestHelloWorld(t *testing.T) {
 			require.True(t, sv.Enabled())
 
 			testutils.TestEndpoint(t, testutils.ResponseTestOptions{
-				ServePath: "/api/version",
+				ServePath: sv.Path(),
+				ReqPath:   "/api/recipes",
 				Endpoint:  sv.Handle,
 				Method:    tc.method,
 				Body:      "",

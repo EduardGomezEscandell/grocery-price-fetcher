@@ -55,7 +55,8 @@ func TestMenuEndpoint(t *testing.T) {
 			}
 
 			testutils.TestEndpoint(t, testutils.ResponseTestOptions{
-				ServePath: "/api/menu",
+				ServePath: sv.Path(),
+				ReqPath:   "/api/menu",
 				Endpoint:  sv.Handle,
 				Method:    tc.method,
 				Body:      string(out),

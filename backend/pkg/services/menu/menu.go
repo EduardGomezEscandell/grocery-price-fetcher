@@ -46,6 +46,14 @@ func New(s Settings, db database.DB) *Service {
 	}
 }
 
+func (s Service) Name() string {
+	return "menu"
+}
+
+func (s Service) Path() string {
+	return "/api/menu"
+}
+
 func (s Service) Enabled() bool {
 	return s.settings.Enable
 }

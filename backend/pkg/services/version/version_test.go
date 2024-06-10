@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestHelloWorld(t *testing.T) {
+func TestVersion(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
@@ -33,7 +33,8 @@ func TestHelloWorld(t *testing.T) {
 			require.True(t, sv.Enabled())
 
 			testutils.TestEndpoint(t, testutils.ResponseTestOptions{
-				ServePath: "/api/version",
+				ServePath: sv.Path(),
+				ReqPath:   "/api/version",
 				Endpoint:  sv.Handle,
 				Method:    tc.method,
 				Body:      "",

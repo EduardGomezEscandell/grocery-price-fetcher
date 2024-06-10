@@ -40,6 +40,10 @@ func New(settings Settings, db database.DB) *Service {
 	}
 }
 
+func (s Service) Name() string {
+	return "shopping-list"
+}
+
 func (s Service) Path() string {
 	return "/api/shopping-list/{menu}/{pantry}"
 }
