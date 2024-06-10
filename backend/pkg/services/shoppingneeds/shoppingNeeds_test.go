@@ -17,7 +17,7 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func TestShoppingEndpoint(t *testing.T) {
+func TestShoppingNeedsEndpoint(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
@@ -52,7 +52,7 @@ func TestShoppingEndpoint(t *testing.T) {
 			}
 
 			testutils.TestEndpoint(t, testutils.ResponseTestOptions{
-				ServePath: "/api/shopping-needs/{menu}",
+				ServePath: sv.Path(),
 				ReqPath:   "/api/shopping-needs/testmenu1",
 				Endpoint:  sv.Handle,
 				Method:    tc.method,

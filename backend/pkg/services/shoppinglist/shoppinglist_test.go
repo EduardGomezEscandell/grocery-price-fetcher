@@ -51,7 +51,7 @@ func TestShoppingEndpoint(t *testing.T) {
 			}
 
 			testutils.TestEndpoint(t, testutils.ResponseTestOptions{
-				ServePath: "/api/shopping-list/{menu}/{pantry}",
+				ServePath: sv.Path(),
 				ReqPath:   "/api/shopping-list/testmenu1/testpantry1",
 				Endpoint:  sv.Handle,
 				Method:    tc.method,

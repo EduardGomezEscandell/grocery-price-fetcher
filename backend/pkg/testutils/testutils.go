@@ -39,6 +39,9 @@ type ResponseTestOptions struct {
 
 func TestEndpoint(t *testing.T, opt ResponseTestOptions) {
 	t.Helper()
+	if opt.ReqPath == "" {
+		opt.ReqPath = opt.ServePath
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

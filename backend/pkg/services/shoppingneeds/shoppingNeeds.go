@@ -37,7 +37,7 @@ func New(settings Settings, db database.DB) *Service {
 }
 
 func (s Service) Path() string {
-	return "shopping-needs/{menu}"
+	return "/api/shopping-needs/{menu}"
 }
 
 func (s Service) Enabled() bool {
