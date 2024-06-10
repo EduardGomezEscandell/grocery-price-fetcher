@@ -1,5 +1,4 @@
 import { Menu } from '../../State/State.tsx'
-import { ShoppingNeeds } from '../../State/State.tsx'
 
 export class MenuEndpoint {
     protected static path: string = '/api/menu'
