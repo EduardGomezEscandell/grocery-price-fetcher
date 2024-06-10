@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/types"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 )
 
 func (s *SQL) clearMenus(tx *sql.Tx) error {
@@ -80,7 +80,7 @@ func (s *SQL) createMenus(tx *sql.Tx) error {
 	return nil
 }
 
-func (s *SQL) Menus() ([]types.Menu, error) {
+func (s *SQL) Menus() ([]dbtypes.Menu, error) {
 	tx, err := s.db.BeginTx(s.ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("could not begin transaction: %v", err)
@@ -123,7 +123,7 @@ func (s *SQL) queryMenus(tx *sql.Tx) ([]string, error) {
 	return menus, nil
 }
 
-func (s *SQL) queryMenuContents(tx *sql.Tx, names []string) ([]types.Menu, error) {
+func (s *SQL) queryMenuContents(tx *sql.Tx, names []string) ([]dbtypes.Menu, error) {
 	if len(names) == 0 {
 		return nil, nil
 	}
@@ -237,15 +237,15 @@ func (s *SQL) queryMealItems(tx *sql.Tx) ([]mealItemRow, error) {
 }
 
 type menuBuilder struct {
-	menus []types.Menu
+	menus []dbtypes.Menu
 }
 
 func newMenuBuilder(names []string) menuBuilder {
 	p := menuBuilder{
-		menus: make([]types.Menu, 0, len(names)),
+		menus: make([]dbtypes.Menu, 0, len(names)),
 	}
 	for _, n := range names {
-		p.menus = append(p.menus, types.Menu{Name: n})
+		p.menus = append(p.menus, dbtypes.Menu{Name: n})
 	}
 	return p
 }
@@ -257,7 +257,7 @@ func (p *menuBuilder) setDays(d []dayMenuRow) {
 			continue
 		}
 
-		*at(&menu.Days, row.Pos) = types.Day{Name: row.Name}
+		*at(&menu.Days, row.Pos) = dbtypes.Day{Name: row.Name}
 	}
 }
 
@@ -272,7 +272,7 @@ func (p *menuBuilder) setMeals(m []mealMenuRow) {
 			continue
 		}
 
-		*at(&menu.Days[row.DayPos].Meals, row.Pos) = types.Meal{Name: row.Name}
+		*at(&menu.Days[row.DayPos].Meals, row.Pos) = dbtypes.Meal{Name: row.Name}
 	}
 }
 
@@ -291,15 +291,15 @@ func (p *menuBuilder) setItems(i []mealItemRow) {
 			continue
 		}
 
-		*at(&menu.Days[row.DayPos].Meals[row.MealPos].Dishes, row.Pos) = types.Dish{
+		*at(&menu.Days[row.DayPos].Meals[row.MealPos].Dishes, row.Pos) = dbtypes.Dish{
 			Name:   row.Recipe,
 			Amount: row.Amount,
 		}
 	}
 }
 
-func getMenu(s []types.Menu, name string) (*types.Menu, bool) {
-	idx := slices.IndexFunc(s, func(v types.Menu) bool { return v.Name == name })
+func getMenu(s []dbtypes.Menu, name string) (*dbtypes.Menu, bool) {
+	idx := slices.IndexFunc(s, func(v dbtypes.Menu) bool { return v.Name == name })
 	if idx == -1 {
 		return nil, false
 	}
@@ -314,10 +314,10 @@ func at[T any](slice *[]T, i int) *T {
 	return &(*slice)[i]
 }
 
-func (s *SQL) LookupMenu(name string) (types.Menu, bool) {
+func (s *SQL) LookupMenu(name string) (dbtypes.Menu, bool) {
 	tx, err := s.db.BeginTx(s.ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
-		return types.Menu{}, false
+		return dbtypes.Menu{}, false
 	}
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
@@ -326,26 +326,26 @@ func (s *SQL) LookupMenu(name string) (types.Menu, bool) {
 
 	row := tx.QueryRowContext(s.ctx, q, name)
 	if err := row.Scan(&name); err != nil {
-		return types.Menu{}, false
+		return dbtypes.Menu{}, false
 	}
 
 	m, err := s.queryMenuContents(tx, []string{name})
 	if err != nil {
-		return types.Menu{}, false
+		return dbtypes.Menu{}, false
 	}
 
 	if len(m) == 0 {
-		return types.Menu{}, false
+		return dbtypes.Menu{}, false
 	}
 
 	if err := tx.Commit(); err != nil {
-		return types.Menu{}, false
+		return dbtypes.Menu{}, false
 	}
 
 	return m[0], true
 }
 
-func (s *SQL) SetMenu(m types.Menu) error {
+func (s *SQL) SetMenu(m dbtypes.Menu) error {
 	var dc struct {
 		days  []dayMenuRow
 		meals []mealMenuRow

@@ -109,7 +109,7 @@ func (s *Manager) Register(registerer func(endpoint string, handler httputils.Ha
 		{path: "/api/menu", handler: s.menu},
 		{path: "/api/pantry", handler: s.pantry},
 		{path: "/api/recipes", handler: s.recipes},
-		{path: "/api/shopping-list", handler: s.shoppingList},
+		{path: s.shoppingList.Path(), handler: s.shoppingList},
 		{path: "/api/version", handler: s.version},
 	} {
 		if !p.handler.Enabled() {

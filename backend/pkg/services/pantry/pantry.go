@@ -6,9 +6,9 @@ import (
 	"net/http"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/types"
 )
 
 type Service struct {
@@ -84,7 +84,7 @@ func (s *Service) handlePost(_ logger.Logger, w http.ResponseWriter, r *http.Req
 	}
 	r.Body.Close()
 
-	pantry := types.Pantry{
+	pantry := dbtypes.Pantry{
 		Name: "default",
 	}
 

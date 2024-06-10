@@ -11,12 +11,12 @@ import (
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtestutils"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/mysql"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers/blank"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/testutils"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/types"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
@@ -198,9 +198,9 @@ func TestDBRecipes(t *testing.T) {
 	err = db.SetProduct(p[1])
 	require.NoError(t, err)
 
-	rec := types.Recipe{
+	rec := dbtypes.Recipe{
 		Name: "Water",
-		Ingredients: []types.Ingredient{
+		Ingredients: []dbtypes.Ingredient{
 			{Name: "Hydrogen", Amount: 2},
 			{Name: "Oxygen", Amount: 1},
 		},
@@ -222,7 +222,7 @@ func TestDBRecipes(t *testing.T) {
 
 	recs, err = db.Recipes()
 	require.NoError(t, err)
-	require.ElementsMatch(t, []types.Recipe{rec}, recs)
+	require.ElementsMatch(t, []dbtypes.Recipe{rec}, recs)
 
 	rec.Ingredients[0].Amount = 3
 	err = db.SetRecipe(rec)
@@ -230,7 +230,7 @@ func TestDBRecipes(t *testing.T) {
 
 	recs, err = db.Recipes()
 	require.NoError(t, err)
-	require.ElementsMatch(t, []types.Recipe{rec}, recs)
+	require.ElementsMatch(t, []dbtypes.Recipe{rec}, recs)
 
 	err = db.DeleteRecipe(rec.Name)
 	require.NoError(t, err)
@@ -270,24 +270,24 @@ func TestDBMenus(t *testing.T) {
 		},
 	}
 
-	r := []types.Recipe{
+	r := []dbtypes.Recipe{
 		{
 			Name: "Water",
-			Ingredients: []types.Ingredient{
+			Ingredients: []dbtypes.Ingredient{
 				{Name: "Hydrogen", Amount: 2},
 				{Name: "Oxygen", Amount: 1},
 			},
 		},
 		{
 			Name: "Hydrogen Peroxide",
-			Ingredients: []types.Ingredient{
+			Ingredients: []dbtypes.Ingredient{
 				{Name: "Hydrogen", Amount: 2},
 				{Name: "Oxygen", Amount: 2},
 			},
 		},
 		{
 			Name: "Oxygen Gas",
-			Ingredients: []types.Ingredient{
+			Ingredients: []dbtypes.Ingredient{
 				{Name: "Oxygen", Amount: 2},
 			},
 		},
@@ -307,26 +307,26 @@ func TestDBMenus(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, menus)
 
-	m := types.Menu{
+	m := dbtypes.Menu{
 		Name: "Test Menu",
-		Days: []types.Day{
+		Days: []dbtypes.Day{
 			{
 				Name: "Monday",
-				Meals: []types.Meal{
-					{Name: "Lunch", Dishes: []types.Dish{
+				Meals: []dbtypes.Meal{
+					{Name: "Lunch", Dishes: []dbtypes.Dish{
 						{Name: "Water", Amount: 1.12},
 					}},
-					{Name: "Dinner", Dishes: []types.Dish{
+					{Name: "Dinner", Dishes: []dbtypes.Dish{
 						{Name: "Hydrogen Peroxide", Amount: 3},
 						{Name: "Oxygen Gas", Amount: 4}}},
 				},
 			},
 			{
 				Name: "Saturday",
-				Meals: []types.Meal{
-					{Name: "Lunch", Dishes: []types.Dish{
+				Meals: []dbtypes.Meal{
+					{Name: "Lunch", Dishes: []dbtypes.Dish{
 						{Name: "Water", Amount: 1}}},
-					{Name: "Dinner", Dishes: []types.Dish{
+					{Name: "Dinner", Dishes: []dbtypes.Dish{
 						{Name: "Hydrogen Peroxide", Amount: 3}}},
 				},
 			},
@@ -345,7 +345,7 @@ func TestDBMenus(t *testing.T) {
 
 	menus, err = db.Menus()
 	require.NoError(t, err)
-	require.ElementsMatch(t, []types.Menu{m}, menus)
+	require.ElementsMatch(t, []dbtypes.Menu{m}, menus)
 
 	m.Days[0].Meals[0].Dishes[0].Amount = 2.34
 	err = db.SetMenu(m)
@@ -353,7 +353,7 @@ func TestDBMenus(t *testing.T) {
 
 	menus, err = db.Menus()
 	require.NoError(t, err)
-	require.ElementsMatch(t, []types.Menu{m}, menus)
+	require.ElementsMatch(t, []dbtypes.Menu{m}, menus)
 
 	err = db.DeleteMenu(m.Name)
 	require.NoError(t, err)
@@ -400,9 +400,9 @@ func TestDBPantries(t *testing.T) {
 	err = db.SetProduct(p[1])
 	require.NoError(t, err)
 
-	pantry := types.Pantry{
+	pantry := dbtypes.Pantry{
 		Name: "Test Pantry",
-		Contents: []types.Ingredient{
+		Contents: []dbtypes.Ingredient{
 			{Name: "Hydrogen", Amount: 2165},
 			{Name: "Oxygen", Amount: 100},
 		},
@@ -424,7 +424,7 @@ func TestDBPantries(t *testing.T) {
 
 	pantries, err = db.Pantries()
 	require.NoError(t, err)
-	require.ElementsMatch(t, []types.Pantry{pantry}, pantries)
+	require.ElementsMatch(t, []dbtypes.Pantry{pantry}, pantries)
 
 	pantry.Contents[0].Amount = 1
 	err = db.SetPantry(pantry)
@@ -432,7 +432,7 @@ func TestDBPantries(t *testing.T) {
 
 	pantries, err = db.Pantries()
 	require.NoError(t, err)
-	require.ElementsMatch(t, []types.Pantry{pantry}, pantries)
+	require.ElementsMatch(t, []dbtypes.Pantry{pantry}, pantries)
 
 	err = db.DeletePantry(pantry.Name)
 	require.NoError(t, err)
@@ -478,10 +478,10 @@ func TestDBShoopingLists(t *testing.T) {
 	err = db.SetProduct(p[1])
 	require.NoError(t, err)
 
-	sl := types.ShoppingList{
-		Name:      "Test Shopping List",
-		TimeStamp: "2021-01-01T00:00:00Z",
-		Items: []string{
+	sl := dbtypes.ShoppingList{
+		Menu:   "My test menu",
+		Pantry: "My test pantry",
+		Contents: []string{
 			"Hydrogen",
 		},
 	}
@@ -490,29 +490,29 @@ func TestDBShoopingLists(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, pantries)
 
-	_, ok := db.LookupShoppingList(sl.Name)
+	_, ok := db.LookupShoppingList(sl.Menu, sl.Pantry)
 	require.False(t, ok)
 
 	err = db.SetShoppingList(sl)
 	require.NoError(t, err)
 
-	got, ok := db.LookupShoppingList(sl.Name)
+	got, ok := db.LookupShoppingList(sl.Menu, sl.Pantry)
 	require.True(t, ok)
 	require.Equal(t, sl, got)
 
 	pantries, err = db.ShoppingLists()
 	require.NoError(t, err)
-	require.ElementsMatch(t, []types.ShoppingList{sl}, pantries)
+	require.ElementsMatch(t, []dbtypes.ShoppingList{sl}, pantries)
 
-	sl.Items = append(sl.Items, "Oxygen")
+	sl.Contents = append(sl.Contents, "Oxygen")
 	err = db.SetShoppingList(sl)
 	require.NoError(t, err)
 
 	pantries, err = db.ShoppingLists()
 	require.NoError(t, err)
-	require.ElementsMatch(t, []types.ShoppingList{sl}, pantries)
+	require.ElementsMatch(t, []dbtypes.ShoppingList{sl}, pantries)
 
-	err = db.DeleteShoppingList(sl.Name)
+	err = db.DeleteShoppingList(sl.Menu, sl.Pantry)
 	require.NoError(t, err)
 
 	pantries, err = db.ShoppingLists()

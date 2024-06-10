@@ -1,4 +1,4 @@
-package types
+package dbtypes
 
 // Ingredient represents a single ingredient that is part of a recipe.
 type Ingredient struct {
@@ -42,7 +42,7 @@ type Pantry struct {
 }
 
 type ShoppingList struct {
-	Name      string   `json:"name"`
-	TimeStamp string   `json:"time_stamp"`
-	Items     []string `json:"items"`
+	Menu     string   `json:"menu"`
+	Pantry   string   `json:"pantry"`
+	Contents []string `json:"contents"`
 }

@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/types"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 )
 
 func (s *SQL) clearRecipes(tx *sql.Tx) (err error) {
@@ -57,7 +57,7 @@ func (s *SQL) createRecipes(tx *sql.Tx) error {
 	return nil
 }
 
-func (s *SQL) Recipes() ([]types.Recipe, error) {
+func (s *SQL) Recipes() ([]dbtypes.Recipe, error) {
 	tx, err := s.db.BeginTx(s.ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
 		return nil, fmt.Errorf("could not begin transaction: %v", err)
@@ -69,7 +69,7 @@ func (s *SQL) Recipes() ([]types.Recipe, error) {
 		return nil, fmt.Errorf("could not query recipes: %v", err)
 	}
 
-	recipes := make([]types.Recipe, 0, len(recs))
+	recipes := make([]dbtypes.Recipe, 0, len(recs))
 	for _, name := range recs {
 		rec, err := s.queryIngredients(tx, name)
 		if err != nil {
@@ -86,28 +86,28 @@ func (s *SQL) Recipes() ([]types.Recipe, error) {
 	return recipes, nil
 }
 
-func (s *SQL) LookupRecipe(name string) (types.Recipe, bool) {
+func (s *SQL) LookupRecipe(name string) (dbtypes.Recipe, bool) {
 	tx, err := s.db.BeginTx(s.ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
 		s.log.Errorf("could not begin transaction: %v", err)
-		return types.Recipe{}, false
+		return dbtypes.Recipe{}, false
 	}
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
 	row := tx.QueryRowContext(s.ctx, "SELECT name FROM recipes WHERE name = ?", name)
 	if err := row.Scan(&name); err != nil {
-		return types.Recipe{}, false
+		return dbtypes.Recipe{}, false
 	}
 
 	rec, err := s.queryIngredients(tx, name)
 	if err != nil {
 		s.log.Warningf("could not get recipe %s: %v", name, err)
-		return types.Recipe{}, false
+		return dbtypes.Recipe{}, false
 	}
 
 	if err := tx.Commit(); err != nil {
 		s.log.Errorf("could not commit transaction: %v", err)
-		return types.Recipe{}, false
+		return dbtypes.Recipe{}, false
 	}
 
 	return rec, true
@@ -125,7 +125,7 @@ func (s *SQL) queryRecipes(tx *sql.Tx) ([]string, error) {
 
 	var recs []string
 	for r.Next() {
-		var rec types.Recipe
+		var rec dbtypes.Recipe
 		if err := r.Scan(&rec.Name); err != nil {
 			s.log.Warnf("could not scan: %v", err)
 			continue
@@ -136,8 +136,8 @@ func (s *SQL) queryRecipes(tx *sql.Tx) ([]string, error) {
 	return recs, nil
 }
 
-func (s *SQL) queryIngredients(tx *sql.Tx, recipe string) (types.Recipe, error) {
-	rec := types.Recipe{Name: recipe}
+func (s *SQL) queryIngredients(tx *sql.Tx, recipe string) (dbtypes.Recipe, error) {
+	rec := dbtypes.Recipe{Name: recipe}
 
 	query := `
 	SELECT
@@ -156,7 +156,7 @@ func (s *SQL) queryIngredients(tx *sql.Tx, recipe string) (types.Recipe, error) 
 	defer ingr.Close()
 
 	for ingr.Next() {
-		var i types.Ingredient
+		var i dbtypes.Ingredient
 		var dummy string
 		if err := ingr.Scan(&dummy, &i.Name, &i.Amount); err != nil {
 			return rec, fmt.Errorf("could not scan ingredients: %v", err)
@@ -167,7 +167,7 @@ func (s *SQL) queryIngredients(tx *sql.Tx, recipe string) (types.Recipe, error) 
 	return rec, nil
 }
 
-func (s *SQL) SetRecipe(r types.Recipe) error {
+func (s *SQL) SetRecipe(r dbtypes.Recipe) error {
 	tx, err := s.db.BeginTx(s.ctx, nil)
 	if err != nil {
 		return fmt.Errorf("could not begin transaction: %v", err)
@@ -191,7 +191,7 @@ func (s *SQL) SetRecipe(r types.Recipe) error {
 
 	err = bulkInsert(s, tx,
 		"recipe_ingredients(recipe_name, ingredient_name, amount)",
-		r.Ingredients, func(i types.Ingredient) []interface{} {
+		r.Ingredients, func(i dbtypes.Ingredient) []interface{} {
 			return []interface{}{r.Name, i.Name, i.Amount}
 		})
 	if err != nil {

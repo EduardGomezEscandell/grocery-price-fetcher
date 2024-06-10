@@ -1,10 +1,10 @@
-import { ShoppingList } from '../../State/State.tsx'
+import { ShoppingList, ShoppingListItem } from '../../State/State.tsx'
 
 export class ShoppingListEndpoint {
     protected path: string
 
     constructor(menu: string, pantry: string) {
-        this.path = `/api/${menu}/${pantry}/shopping`
+        this.path = `/api/shopping-list/${menu}/${pantry}`
     }
 
     Path(): string {
@@ -23,14 +23,14 @@ export class ShoppingListEndpoint {
             .then(data => data.map(p => ShoppingList.fromJSON(p)))
     }
 
-    async PUT(msg: ShoppingList): Promise<void> {
+    async PUT(items: ShoppingListItem[]): Promise<void> {
         return fetch(this.path, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
-            body: JSON.stringify(msg)
+            body: JSON.stringify(items)
         })
             .then(() => { })
             .catch((error) => { console.error('Error:', error) })
@@ -110,9 +110,9 @@ export class MockShoppingListEndpoint extends ShoppingListEndpoint {
             )
     }
 
-    async PUT(msg: ShoppingList): Promise<void> {
+    async PUT(items: ShoppingListItem[]): Promise<void> {
         console.log(`PUT to ${this.path}:`)
-        console.log(JSON.stringify(msg)) // Ensure toJSON is called without errors
+        console.log(JSON.stringify(items)) // Ensure toJSON is called without errors
         return new Promise(resolve => setTimeout(resolve, 100))
     }
 

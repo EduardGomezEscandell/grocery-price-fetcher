@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/jsondb"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/mysql"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/types"
 	"gopkg.in/yaml.v3"
 )
 
@@ -18,25 +18,25 @@ type DB interface {
 	SetProduct(p product.Product) error
 	DeleteProduct(name string) error
 
-	Recipes() ([]types.Recipe, error)
-	LookupRecipe(name string) (types.Recipe, bool)
-	SetRecipe(r types.Recipe) error
+	Recipes() ([]dbtypes.Recipe, error)
+	LookupRecipe(name string) (dbtypes.Recipe, bool)
+	SetRecipe(r dbtypes.Recipe) error
 	DeleteRecipe(name string) error
 
-	Menus() ([]types.Menu, error)
-	LookupMenu(name string) (types.Menu, bool)
-	SetMenu(m types.Menu) error
+	Menus() ([]dbtypes.Menu, error)
+	LookupMenu(name string) (dbtypes.Menu, bool)
+	SetMenu(m dbtypes.Menu) error
 	DeleteMenu(name string) error
 
-	Pantries() ([]types.Pantry, error)
-	LookupPantry(name string) (types.Pantry, bool)
-	SetPantry(p types.Pantry) error
+	Pantries() ([]dbtypes.Pantry, error)
+	LookupPantry(name string) (dbtypes.Pantry, bool)
+	SetPantry(p dbtypes.Pantry) error
 	DeletePantry(name string) error
 
-	ShoppingLists() ([]types.ShoppingList, error)
-	LookupShoppingList(name string) (types.ShoppingList, bool)
-	SetShoppingList(m types.ShoppingList) error
-	DeleteShoppingList(name string) error
+	ShoppingLists() ([]dbtypes.ShoppingList, error)
+	LookupShoppingList(menu, pantry string) (dbtypes.ShoppingList, bool)
+	SetShoppingList(m dbtypes.ShoppingList) error
+	DeleteShoppingList(menu, pantry string) error
 
 	Close() error
 }

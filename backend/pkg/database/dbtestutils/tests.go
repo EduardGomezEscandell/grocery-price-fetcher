@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers/blank"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -92,15 +92,15 @@ func RecipesTest(t *testing.T, openDB func() database.DB) {
 	_, ok := db.LookupProduct("AAAAAAAAAAAAAAAAAAAAA")
 	require.False(t, ok)
 
-	recipe1 := types.Recipe{
+	recipe1 := dbtypes.Recipe{
 		Name: "Recipe #1",
-		Ingredients: []types.Ingredient{
+		Ingredients: []dbtypes.Ingredient{
 			{Name: "Ingredient #1", Amount: 1.0},
 			{Name: "Ingredient #2", Amount: 2.0},
 		},
 	}
 
-	recipe2 := types.Recipe{
+	recipe2 := dbtypes.Recipe{
 		Name:        "Recipe #2",
 		Ingredients: nil,
 	}
@@ -137,7 +137,7 @@ func RecipesTest(t *testing.T, openDB func() database.DB) {
 
 	menus, err := db.Recipes()
 	require.NoError(t, err)
-	require.ElementsMatch(t, []types.Recipe{recipe1, recipe2}, menus, "Recipes do not match the ones just created")
+	require.ElementsMatch(t, []dbtypes.Recipe{recipe1, recipe2}, menus, "Recipes do not match the ones just created")
 
 	_, ok = db.LookupRecipe("AAAAAAAAAAAAAAAAAAAAA")
 	require.False(t, ok)
@@ -150,7 +150,7 @@ func RecipesTest(t *testing.T, openDB func() database.DB) {
 	require.True(t, ok, "Could not find empty Recipe after reopening DB")
 	require.Equal(t, recipe2, p, "Empty menu does not match the one after reopening DB")
 
-	require.ElementsMatch(t, []types.Recipe{recipe1, recipe2}, menus, "Recipes do not match the ones after reopening DB")
+	require.ElementsMatch(t, []dbtypes.Recipe{recipe1, recipe2}, menus, "Recipes do not match the ones after reopening DB")
 
 	err = db.DeleteRecipe(recipe1.Name)
 	require.NoError(t, err)
@@ -170,15 +170,15 @@ func MenuTest(t *testing.T, openDB func() database.DB) {
 	_, ok := db.LookupMenu("AAAAAAAAAAAAAAAAAAAAA")
 	require.False(t, ok)
 
-	myMenu := types.Menu{
+	myMenu := dbtypes.Menu{
 		Name: "myMenu",
-		Days: []types.Day{
+		Days: []dbtypes.Day{
 			{
 				Name: "Segiunda-Feira",
-				Meals: []types.Meal{
+				Meals: []dbtypes.Meal{
 					{
 						Name: "Café da Manhã",
-						Dishes: []types.Dish{
+						Dishes: []dbtypes.Dish{
 							{
 								Name:   "Torrada i suc de taronja",
 								Amount: 16,
@@ -210,7 +210,7 @@ func MenuTest(t *testing.T, openDB func() database.DB) {
 	require.True(t, ok, "Could not find Menu just overridden")
 	require.Equal(t, myMenu, m, "Menu does not match the one just overridden")
 
-	emptyMenu := types.Menu{
+	emptyMenu := dbtypes.Menu{
 		Name: "Empty Menu",
 	}
 
@@ -227,7 +227,7 @@ func MenuTest(t *testing.T, openDB func() database.DB) {
 
 	menus, err := db.Menus()
 	require.NoError(t, err)
-	require.ElementsMatch(t, []types.Menu{myMenu, emptyMenu}, menus, "Menus do not match the ones just created")
+	require.ElementsMatch(t, []dbtypes.Menu{myMenu, emptyMenu}, menus, "Menus do not match the ones just created")
 
 	_, ok = db.LookupMenu("AAAAAAAAAAAAAAAAAAAAA")
 	require.False(t, ok)
@@ -240,7 +240,7 @@ func MenuTest(t *testing.T, openDB func() database.DB) {
 	require.True(t, ok, "Could not find empty Menu after reopening DB")
 	require.Equal(t, emptyMenu, m, "Empty menu does not match the one after reopening DB")
 
-	require.ElementsMatch(t, []types.Menu{myMenu, emptyMenu}, menus, "Menus do not match the ones after reopening DB")
+	require.ElementsMatch(t, []dbtypes.Menu{myMenu, emptyMenu}, menus, "Menus do not match the ones after reopening DB")
 
 	err = db.DeleteMenu(myMenu.Name)
 	require.NoError(t, err)
@@ -261,15 +261,15 @@ func PantriesTest(t *testing.T, openDB func() database.DB) {
 	_, ok := db.LookupProduct("AAAAAAAAAAAAAAAAAAAAA")
 	require.False(t, ok)
 
-	pantry1 := types.Pantry{
+	pantry1 := dbtypes.Pantry{
 		Name: "Pantry #1",
-		Contents: []types.Ingredient{
+		Contents: []dbtypes.Ingredient{
 			{Name: "Ingredient #1", Amount: 1.0},
 			{Name: "Ingredient #2", Amount: 2.0},
 		},
 	}
 
-	pantry2 := types.Pantry{
+	pantry2 := dbtypes.Pantry{
 		Name:     "Pantry #2",
 		Contents: nil,
 	}
@@ -306,7 +306,7 @@ func PantriesTest(t *testing.T, openDB func() database.DB) {
 
 	menus, err := db.Pantries()
 	require.NoError(t, err)
-	require.ElementsMatch(t, []types.Pantry{pantry1, pantry2}, menus, "Pantries do not match the ones just created")
+	require.ElementsMatch(t, []dbtypes.Pantry{pantry1, pantry2}, menus, "Pantries do not match the ones just created")
 
 	_, ok = db.LookupPantry("AAAAAAAAAAAAAAAAAAAAA")
 	require.False(t, ok)
@@ -319,7 +319,7 @@ func PantriesTest(t *testing.T, openDB func() database.DB) {
 	require.True(t, ok, "Could not find empty Pantry after reopening DB")
 	require.Equal(t, pantry2, p, "Empty menu does not match the one after reopening DB")
 
-	require.ElementsMatch(t, []types.Pantry{pantry1, pantry2}, menus, "Pantries do not match the ones after reopening DB")
+	require.ElementsMatch(t, []dbtypes.Pantry{pantry1, pantry2}, menus, "Pantries do not match the ones after reopening DB")
 
 	err = db.DeletePantry(pantry1.Name)
 	require.NoError(t, err)
@@ -339,42 +339,45 @@ func ShoppingListsTest(t *testing.T, openDB func() database.DB) {
 	_, ok := db.LookupProduct("AAAAAAAAAAAAAAAAAAAAA")
 	require.False(t, ok)
 
-	list1 := types.ShoppingList{
-		Name:      "ShoppingList #1",
-		TimeStamp: "2021-09-01T00:00:00Z",
-		Items: []string{
+	list1 := dbtypes.ShoppingList{
+		Menu:   "Menu #1",
+		Pantry: "Pantry #1",
+		Contents: []string{
 			"Item #1",
 			"Item #2",
 		},
 	}
 
-	list2 := types.ShoppingList{
-		Name:      "ShoppingList #2",
-		TimeStamp: "2027-09-01T00:00:01Z",
-		Items:     nil,
+	list2 := dbtypes.ShoppingList{
+		Menu:   "Menu #99",
+		Pantry: "Pantry #1",
+		Contents: []string{
+			"Item #5",
+			"Item #6",
+		},
 	}
 
 	require.NoError(t, db.SetShoppingList(list1), "Could not set ShoppingList")
-	p, ok := db.LookupShoppingList(list1.Name)
+	p, ok := db.LookupShoppingList(list1.Menu, list1.Pantry)
 	require.True(t, ok, "Could not find ShoppingList just created")
 	require.Equal(t, list1, p, "ShoppingList does not match the one just created")
 
-	list1.TimeStamp = "2024-01-01T00:00:03Z"
+	list1.Contents[0] = "Item #97"
 
 	require.NoError(t, db.SetShoppingList(list1), "Could not override ShoppingList")
-	p, ok = db.LookupShoppingList(list1.Name)
+	p, ok = db.LookupShoppingList(list1.Menu, list1.Pantry)
 	require.True(t, ok, "Could not find ShoppingList just overridden")
 	require.Equal(t, list1, p, "ShoppingList does not match the one just overridden")
 
 	// Test implicit deletion of items
-	list1.Items = list1.Items[:1]
+	list1.Contents = list1.Contents[:1]
 	require.NoError(t, db.SetShoppingList(list1), "Could not override ShoppingList")
-	p, ok = db.LookupShoppingList(list1.Name)
+	p, ok = db.LookupShoppingList(list1.Menu, list1.Pantry)
 	require.True(t, ok, "Could not find ShoppingList just overridden")
 	require.Equal(t, list1, p, "ShoppingList does not match the one just overridden")
 
 	require.NoError(t, db.SetShoppingList(list2), "Could not set ShoppingList")
-	p, ok = db.LookupShoppingList(list2.Name)
+	p, ok = db.LookupShoppingList(list2.Menu, list2.Pantry)
 	require.True(t, ok, "Could not find empty ShoppingList just created")
 	require.Equal(t, list2, p, "Empty menu does not match the one just created")
 
@@ -386,25 +389,25 @@ func ShoppingListsTest(t *testing.T, openDB func() database.DB) {
 
 	menus, err := db.ShoppingLists()
 	require.NoError(t, err)
-	require.ElementsMatch(t, []types.ShoppingList{list1, list2}, menus, "ShoppingLists do not match the ones just created")
+	require.ElementsMatch(t, []dbtypes.ShoppingList{list1, list2}, menus, "ShoppingLists do not match the ones just created")
 
-	_, ok = db.LookupShoppingList("AAAAAAAAAAAAAAAAAAAAA")
+	_, ok = db.LookupShoppingList("FAKE MENU", "FAKE PANTRY")
 	require.False(t, ok)
 
-	p, ok = db.LookupShoppingList(list1.Name)
+	p, ok = db.LookupShoppingList(list1.Menu, list1.Pantry)
 	require.True(t, ok, "Could not find ShoppingList after reopening DB")
 	require.Equal(t, list1, p, "ShoppingList does not match the one after reopening DB")
 
-	p, ok = db.LookupShoppingList(list2.Name)
+	p, ok = db.LookupShoppingList(list2.Menu, list2.Pantry)
 	require.True(t, ok, "Could not find empty ShoppingList after reopening DB")
 	require.Equal(t, list2, p, "Empty menu does not match the one after reopening DB")
 
-	require.ElementsMatch(t, []types.ShoppingList{list1, list2}, menus, "ShoppingLists do not match the ones after reopening DB")
+	require.ElementsMatch(t, []dbtypes.ShoppingList{list1, list2}, menus, "ShoppingLists do not match the ones after reopening DB")
 
-	err = db.DeleteShoppingList(list1.Name)
+	err = db.DeleteShoppingList(list1.Menu, list1.Pantry)
 	require.NoError(t, err)
 
-	_, ok = db.LookupShoppingList(list1.Name)
+	_, ok = db.LookupShoppingList(list1.Menu, list1.Pantry)
 	require.False(t, ok)
 
 	require.NoError(t, db.Close())

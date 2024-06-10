@@ -1,4 +1,4 @@
-package pantry_test
+package shoppinglist_test
 
 import (
 	"net/http"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers/blank"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/pantry"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/shoppinglist"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/testutils"
 	"github.com/stretchr/testify/require"
 )
@@ -17,7 +17,7 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func TestPantryEndpoint(t *testing.T) {
+func TestShoppingEndpoint(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
@@ -27,10 +27,10 @@ func TestPantryEndpoint(t *testing.T) {
 		wantBody string
 	}{
 		"GET":    {method: "GET", wantCode: http.StatusOK, wantBody: "!golden"},
-		"POST":   {method: "POST", wantCode: http.StatusCreated},
+		"PUT":    {method: "PUT", wantCode: http.StatusCreated},
+		"DELETE": {method: "DELETE", wantCode: http.StatusNoContent},
 		"PATCH":  {method: "PATCH", wantCode: http.StatusMethodNotAllowed},
-		"PUT":    {method: "PUT", wantCode: http.StatusMethodNotAllowed},
-		"DELETE": {method: "DELETE", wantCode: http.StatusMethodNotAllowed},
+		"POST":   {method: "POST", wantCode: http.StatusMethodNotAllowed},
 	}
 
 	for name, tc := range testCases {
@@ -39,7 +39,7 @@ func TestPantryEndpoint(t *testing.T) {
 
 			db := testutils.Database(t, testutils.FixturePath(t, "database"))
 
-			sv := pantry.New(pantry.Settings{}.Defaults(), db)
+			sv := shoppinglist.New(shoppinglist.Settings{}.Defaults(), db)
 			require.True(t, sv.Enabled())
 
 			fixture := testutils.FixturePath(t, "message", "body.json")
@@ -51,7 +51,8 @@ func TestPantryEndpoint(t *testing.T) {
 			}
 
 			testutils.TestEndpoint(t, testutils.ResponseTestOptions{
-				ServePath: "/api/pantry",
+				ServePath: "/api/shopping-list/{menu}/{pantry}",
+				ReqPath:   "/api/shopping-list/testmenu1/testpantry1",
 				Endpoint:  sv.Handle,
 				Method:    tc.method,
 				Body:      string(out),

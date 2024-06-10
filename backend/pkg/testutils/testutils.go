@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -20,12 +21,14 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/pricing"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 )
 
 type ResponseTestOptions struct {
-	Path     string
-	Endpoint httputils.Handler
+	ServePath string
+	ReqPath   string
+	Endpoint  httputils.Handler
 
 	Method string
 	Body   string
@@ -40,10 +43,11 @@ func TestEndpoint(t *testing.T, opt ResponseTestOptions) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	addr, stop := HTTPServer(ctx, t, opt.Path, opt.Endpoint)
+	addr, stop := HTTPServer(ctx, t, opt.ServePath, opt.Endpoint)
 	defer stop()
 
-	resp := MakeRequest(t, opt.Method, addr, opt.Body)
+	url := "http://" + path.Join(addr, opt.ReqPath)
+	resp := MakeRequest(t, opt.Method, url, opt.Body)
 	defer resp.Body.Close()
 
 	out, err := io.ReadAll(resp.Body)
@@ -84,6 +88,7 @@ const PingEndpoint = "/test_utils_api/ping"
 func NewLogger(t *testing.T) logger.Logger {
 	t.Helper()
 	log := logger.New()
+	log.SetLevel(int(logrus.DebugLevel))
 
 	r, w := io.Pipe()
 	go func() {
@@ -132,9 +137,7 @@ func HTTPServer(ctx context.Context, t *testing.T, p string, handler httputils.H
 	}, 10*time.Second, 100*time.Millisecond, "Server never started")
 	t.Logf("server started at %s", lis.Addr().String())
 
-	addr := fmt.Sprintf("http://%s%s", lis.Addr().String(), p)
-
-	return addr, func() {
+	return lis.Addr().String(), func() {
 		lis.Close()
 		stop()
 		err := <-ch
