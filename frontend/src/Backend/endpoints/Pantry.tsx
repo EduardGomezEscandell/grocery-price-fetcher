@@ -1,7 +1,7 @@
 import { Pantry } from '../../State/State.tsx'
 
 export class PantryEndpoint {
-    protected path: string = '/api/pantry'
+    protected path: string
     constructor(protected which: string) {
         this.path = '/api/pantry/' + which
     }
@@ -19,7 +19,7 @@ export class PantryEndpoint {
             }
         })
             .then(response => response.json())
-            .then(data => data.map(p => Pantry.fromJSON(p)))
+            .then(data => Pantry.fromJSON(data))
     }
 
     async PUT(msg: Pantry): Promise<void> {

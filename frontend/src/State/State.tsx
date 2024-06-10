@@ -121,13 +121,13 @@ export class PantryItem {
 
 export class Pantry {
     name: string = 'default'
-    items: Array<PantryItem> = []
+    contents: Array<PantryItem> = []
 
-    static fromJSON(json: any) {
+    static fromJSON(json: any): Pantry {
         try {
             let pantry = new Pantry()
             pantry.name = either(json, 'name', 'Default')
-            pantry.items = either(json, 'contents', []).map((content: any): PantryItem => {
+            pantry.contents = either(json, 'contents', []).map((content: any): PantryItem => {
                 return {
                     name: either(content, 'name', 'Unnamed ingredient'),
                     amount: either(content, 'amount', 0),
@@ -196,7 +196,6 @@ export class ShoppingList {
                 cost: either(name, 'cost', 0),
             } as ShoppingListItem
         })
-        console.log(shoppingList)
         return shoppingList
     }
 }

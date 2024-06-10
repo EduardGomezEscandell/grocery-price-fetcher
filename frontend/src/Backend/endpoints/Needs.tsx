@@ -4,7 +4,7 @@ export class NeedsEndpoint {
     protected path: string
 
     constructor(which: string) {
-        this.path = '/api/needs/' + which
+        this.path = '/api/shopping-needs/' + which
     }
 
     Path(): string {
@@ -20,7 +20,7 @@ export class NeedsEndpoint {
             }
         })
             .then(response => response.json())
-            .then(data => data.map(p => ShoppingNeeds.fromJSON(p)))
+            .then(data => ShoppingNeeds.fromJSON(data))
     }
 }
 
@@ -36,7 +36,7 @@ export class MockNeedsEndpoint extends NeedsEndpoint {
         return new Promise(resolve => setTimeout(resolve, 100))
             .then(() => ShoppingNeeds.fromJSON({
                 name: this.which,
-                contents: [
+                items: [
                     { amount: 1.00, name: "Pastanaga" },
                     { amount: 0.50, name: "Pebrot verd" },
                     { amount: 0.95, name: "Pebrot vermell" },

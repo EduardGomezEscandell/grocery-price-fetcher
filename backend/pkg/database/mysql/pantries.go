@@ -110,7 +110,7 @@ func (s *SQL) queryPantryContents(tx *sql.Tx, name string) ([]dbtypes.Ingredient
 		return nil, fmt.Errorf("could not query pantry items: %v", err)
 	}
 
-	var items []dbtypes.Ingredient
+	items := make([]dbtypes.Ingredient, 0)
 	for r.Next() {
 		var item dbtypes.Ingredient
 		if err := r.Scan(&item.Name, &item.Amount); err != nil {

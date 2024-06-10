@@ -5,7 +5,6 @@ import TopBar from '../../TopBar/TopBar.tsx';
 import SaveButton from '../../SaveButton/SaveButton.tsx';
 import IngredientRow from './PantryIngredient.tsx';
 import IngredientDialog from './IngredientDialog.tsx';
-import { asEuro } from '../../Numbers/Numbers.ts'
 import { IngredientUsage } from '../../Backend/endpoints/IngredientUse.tsx';
 
 interface Props {
@@ -22,7 +21,6 @@ interface Focus {
 }
 
 export default function RenderPantry(pp: Props) {
-    const [needs, setNeeds] = useState<ShoppingNeeds>(new ShoppingNeeds())
     const [pantry, setPantry] = useState<Pantry>(new Pantry())
     const [help, setHelp] = useState(false)
     const [focussed, setFocussed] = useState<Focus | undefined>(undefined)
@@ -34,15 +32,11 @@ export default function RenderPantry(pp: Props) {
 
     useEffect(() => {
         Promise.all([
-            pp.backend.Needs(pp.sessionName).GET(),
             pp.backend.Pantry(pp.sessionName).GET(),
+            pp.backend.Needs(pp.sessionName).GET(),
         ])
-            .then(([needs, pantry]) => {
-                needs.items.sort((a, b) => a.name.localeCompare(b.name))
-                pantry.items.sort((a, b) => a.name.localeCompare(b.name))
-                setNeeds(needs)
-                setPantry(pantry)
-            })
+            .then(([pantry, needs]) => filterPantry(pantry, needs))
+            .then(p => setPantry(p))
             .catch((reason) => {
                 console.log('Error getting pantry: ', reason || 'Unknown error')
             })
@@ -90,13 +84,13 @@ export default function RenderPantry(pp: Props) {
                     </thead>
                     <tbody>
                         {
-                            needs.items.map((i: ShoppingNeedsItem, idx: number) => (
+                            pantry.contents.map((i: ShoppingNeedsItem, idx: number) => (
                                 <IngredientRow
                                     key={i.name}
                                     id={idx % 2 === 0 ? 'even' : 'odd'}
                                     item={i}
                                     onChange={(value: number) => {
-                                        const c = pantry.items.find(p => p.name === i.name)
+                                        const c = pantry.contents.find(p => p.name === i.name)
                                         c && (c.amount = value)
                                         setPantry(pantry)
                                     }}
@@ -155,4 +149,47 @@ export default function RenderPantry(pp: Props) {
 
         </>
     )
+}
+
+// This function is used to filter the pantry contents against the shopping needs
+// - Items inherit their amounts from the pantry.
+// - If an item is in the pantry but not in the needs, it is removed.
+// - If an item is in the needs the amount defaults to 0.
+// - Items are sorted alphabetically.
+function filterPantry(pantry: Pantry, needs: ShoppingNeeds): Pantry {
+    const filtered = new Pantry()
+    pantry.contents.sort((a, b) => a.name.localeCompare(b.name))
+    needs.items.sort((a, b) => a.name.localeCompare(b.name))
+    
+    let i = 0;
+    let j = 0;
+
+    while (i < pantry.contents.length && j < needs.items.length) {
+        const comp = pantry.contents[i].name.localeCompare(needs.items[j].name)
+        if (comp < 0) {
+            // Ingredient in pantry but not in needs
+            i++
+        } else if (comp > 0) {
+            // Ingredient in needs but not in pantry
+            filtered.contents.push({
+                name: needs.items[j].name,
+                amount: 0,
+            })
+            j++
+        } else {
+            // Ingredient in both pantry and needs
+            filtered.contents.push(pantry.contents[i])
+            i++
+            j++
+        }
+    }
+
+    while (j < needs.items.length) {
+        filtered.contents.push({
+            name: needs.items[j].name,
+            amount: 0,
+        })
+        j++
+    }
+    return filtered
 }

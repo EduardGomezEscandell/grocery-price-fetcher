@@ -55,7 +55,7 @@ export default function Shopping(props: Props): JSX.Element {
                     key='save'
 
                     baseTxt='Tornar'
-                    onSave={() => props.backend.ShoppingList(props.sessionName, props.sessionName).PUT(shoppingList)}
+                    onSave={() => saveShoppingList(props.backend, shoppingList)}
                     onSaveTxt='Desant...'
 
                     onAccept={() => props.onBackToPantry()}
@@ -63,10 +63,7 @@ export default function Shopping(props: Props): JSX.Element {
 
                     onRejectTxt='Error'
                 />}
-                logoOnClick={() => props.backend
-                    .ShoppingList(props.sessionName, props.sessionName)
-                    .PUT(shoppingList)
-                    .then(props.onGotoHome) 
+                logoOnClick={() => saveShoppingList(props.backend, shoppingList).then(props.onGotoHome) 
                 }
                 titleOnClick={() => setDialog(Dialog.HELP)}
                 titleText="La&nbsp;meva compra"
@@ -74,7 +71,7 @@ export default function Shopping(props: Props): JSX.Element {
                     key='save'
 
                     baseTxt='Desar'
-                    onSave={() => props.backend.ShoppingList(props.sessionName, props.sessionName).PUT(shoppingList)}
+                    onSave={() => saveShoppingList(props.backend, shoppingList)}
                     onSaveTxt='Desant...'
                     onAcceptTxt='Desat'
                     onRejectTxt='Error'
@@ -211,4 +208,11 @@ function HelpDialog(props: {
             </div>
         </dialog>
     )
+}
+
+async function saveShoppingList(backend: Backend, shoppingList: ShoppingList): Promise<void> {
+    backend
+        .ShoppingList(shoppingList.menu, shoppingList.pantry)
+        .PUT(shoppingList.items.filter(i => i.done).map(i => i.name))
+        .then(() => { })
 }

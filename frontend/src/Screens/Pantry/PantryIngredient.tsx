@@ -11,7 +11,10 @@ interface Props {
 
 export default function IngredientRow(props: Props): JSX.Element {
     const [highlight, setHighlight] = useState(false)
-    const [have, setHave] = useState(props.item.amount.toString())
+    const [have, setHave] = useState(
+        (Math.round(props.item.amount*1e4)/1e4) // Clean up floating point errors
+        .toString()
+    )
 
     return (
         <tr key={props.item.name}

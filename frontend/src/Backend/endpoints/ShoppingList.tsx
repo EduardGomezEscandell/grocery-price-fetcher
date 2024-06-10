@@ -1,4 +1,4 @@
-import { ShoppingList, ShoppingListItem } from '../../State/State.tsx'
+import { ShoppingList } from '../../State/State.tsx'
 
 export class ShoppingListEndpoint {
     protected path: string
@@ -20,10 +20,10 @@ export class ShoppingListEndpoint {
             }
         })
             .then(response => response.json())
-            .then(data => data.map(p => ShoppingList.fromJSON(p)))
+            .then(data => ShoppingList.fromJSON(data))
     }
 
-    async PUT(items: ShoppingListItem[]): Promise<void> {
+    async PUT(items: string[]): Promise<void> {
         return fetch(this.path, {
             method: 'PUT',
             headers: {
@@ -110,7 +110,7 @@ export class MockShoppingListEndpoint extends ShoppingListEndpoint {
             )
     }
 
-    async PUT(items: ShoppingListItem[]): Promise<void> {
+    async PUT(items: string[]): Promise<void> {
         console.log(`PUT to ${this.path}:`)
         console.log(JSON.stringify(items)) // Ensure toJSON is called without errors
         return new Promise(resolve => setTimeout(resolve, 100))
