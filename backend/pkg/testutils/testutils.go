@@ -100,6 +100,10 @@ func NewLogger(t *testing.T) logger.Logger {
 		for sc.Scan() {
 			t.Log(sc.Text())
 		}
+
+		if err := sc.Err(); err != nil {
+			t.Errorf("Error reading log pipe: %v", err)
+		}
 	}()
 
 	log.SetOutput(w)

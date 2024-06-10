@@ -70,7 +70,7 @@ func (s *SQL) ShoppingLists() ([]dbtypes.ShoppingList, error) {
 	items := make([]item, 0)
 	for r.Next() {
 		var i item
-		if err := r.Scan(&i.Menu, i.Pantry, i.Product); err != nil {
+		if err := r.Scan(&i.Menu, &i.Pantry, &i.Product); err != nil {
 			return nil, fmt.Errorf("could not scan shopping list: %v", err)
 		}
 
@@ -154,6 +154,15 @@ func (s *SQL) LookupShoppingList(menu, pantry string) (dbtypes.ShoppingList, boo
 		}
 
 		sl.Contents = append(sl.Contents, item)
+	}
+
+	if err := r.Err(); err != nil {
+		s.log.Warningf("could not get shopping list items: %v", err)
+		return sl, false
+	}
+
+	if len(sl.Contents) == 0 {
+		return sl, false
 	}
 
 	if err := tx.Commit(); err != nil {

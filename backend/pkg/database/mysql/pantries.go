@@ -119,6 +119,10 @@ func (s *SQL) queryPantryContents(tx *sql.Tx, name string) ([]dbtypes.Ingredient
 		items = append(items, item)
 	}
 
+	if err := r.Err(); err != nil {
+		return nil, fmt.Errorf("could not get pantry items: %v", err)
+	}
+
 	return items, nil
 }
 
@@ -131,6 +135,11 @@ func (s *SQL) LookupPantry(name string) (dbtypes.Pantry, bool) {
 
 	row := tx.QueryRowContext(s.ctx, "SELECT name FROM pantries WHERE name = ?", name)
 	if err = row.Scan(&name); err != nil {
+		return dbtypes.Pantry{}, false
+	}
+
+	if err := row.Err(); err != nil {
+		s.log.Warningf("could not get pantry %s: %v", name, err)
 		return dbtypes.Pantry{}, false
 	}
 

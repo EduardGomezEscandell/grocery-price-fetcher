@@ -120,6 +120,10 @@ func (s *SQL) queryMenus(tx *sql.Tx) ([]string, error) {
 		menus = append(menus, m)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("could not iterate over menus: %v", err)
+	}
+
 	return menus, nil
 }
 
@@ -173,6 +177,10 @@ func (s *SQL) queryMenuDays(tx *sql.Tx) ([]dayMenuRow, error) {
 		days = append(days, d)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("could not iterate over menu days: %v", err)
+	}
+
 	return days, nil
 }
 
@@ -197,6 +205,10 @@ func (s *SQL) queryMenuMeals(tx *sql.Tx) ([]mealMenuRow, error) {
 			return nil, fmt.Errorf("could not scan menu meal: %v", err)
 		}
 		meals = append(meals, m)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("could not iterate over menu meals: %v", err)
 	}
 
 	return meals, nil
@@ -231,6 +243,10 @@ func (s *SQL) queryMealItems(tx *sql.Tx) ([]mealItemRow, error) {
 			return nil, fmt.Errorf("could not scan meal item: %v", err)
 		}
 		items = append(items, i)
+	}
+
+	if err := r.Err(); err != nil {
+		return nil, fmt.Errorf("could not iterate over meal items: %v", err)
 	}
 
 	return items, nil
@@ -317,6 +333,7 @@ func at[T any](slice *[]T, i int) *T {
 func (s *SQL) LookupMenu(name string) (dbtypes.Menu, bool) {
 	tx, err := s.db.BeginTx(s.ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
+		s.log.Warnf("could not begin transaction: %v", err)
 		return dbtypes.Menu{}, false
 	}
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
@@ -326,11 +343,18 @@ func (s *SQL) LookupMenu(name string) (dbtypes.Menu, bool) {
 
 	row := tx.QueryRowContext(s.ctx, q, name)
 	if err := row.Scan(&name); err != nil {
+		s.log.Warnf("could not scan menu name: %v", err)
+		return dbtypes.Menu{}, false
+	}
+
+	if err := row.Err(); err != nil {
+		s.log.Warnf("could not scan menu name: %v", err)
 		return dbtypes.Menu{}, false
 	}
 
 	m, err := s.queryMenuContents(tx, []string{name})
 	if err != nil {
+		s.log.Warnf("could not query menu contents: %v", err)
 		return dbtypes.Menu{}, false
 	}
 
@@ -339,6 +363,7 @@ func (s *SQL) LookupMenu(name string) (dbtypes.Menu, bool) {
 	}
 
 	if err := tx.Commit(); err != nil {
+		s.log.Warnf("could not commit transaction: %v", err)
 		return dbtypes.Menu{}, false
 	}
 

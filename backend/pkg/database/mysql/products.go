@@ -82,6 +82,10 @@ func (s *SQL) Products() ([]product.Product, error) {
 		products = append(products, p)
 	}
 
+	if err := r.Err(); err != nil {
+		return nil, fmt.Errorf("could not get products: %v", err)
+	}
+
 	return products, nil
 }
 
@@ -104,6 +108,11 @@ func (s *SQL) LookupProduct(name string) (product.Product, bool) {
 	p, err := parseProduct(s.log, r)
 	if err != nil {
 		return product.Product{}, false
+	}
+
+	if err := r.Err(); err != nil {
+		s.log.Warningf("could not get product %s: %v", name, err)
+		return p, false
 	}
 
 	return p, true

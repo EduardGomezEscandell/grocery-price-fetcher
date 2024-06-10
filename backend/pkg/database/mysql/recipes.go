@@ -99,6 +99,11 @@ func (s *SQL) LookupRecipe(name string) (dbtypes.Recipe, bool) {
 		return dbtypes.Recipe{}, false
 	}
 
+	if err := row.Err(); err != nil {
+		s.log.Warningf("could not get recipe %s: %v", name, err)
+		return dbtypes.Recipe{}, false
+	}
+
 	rec, err := s.queryIngredients(tx, name)
 	if err != nil {
 		s.log.Warningf("could not get recipe %s: %v", name, err)
@@ -133,6 +138,10 @@ func (s *SQL) queryRecipes(tx *sql.Tx) ([]string, error) {
 		recs = append(recs, rec.Name)
 	}
 
+	if err := r.Err(); err != nil {
+		return nil, fmt.Errorf("could not get recipes: %v", err)
+	}
+
 	return recs, nil
 }
 
@@ -162,6 +171,10 @@ func (s *SQL) queryIngredients(tx *sql.Tx, recipe string) (dbtypes.Recipe, error
 			return rec, fmt.Errorf("could not scan ingredients: %v", err)
 		}
 		rec.Ingredients = append(rec.Ingredients, i)
+	}
+
+	if err := ingr.Err(); err != nil {
+		return rec, fmt.Errorf("could not get ingredients: %v", err)
 	}
 
 	return rec, nil

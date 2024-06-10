@@ -1,6 +1,7 @@
 package dbtestutils
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
@@ -82,7 +83,6 @@ func ProductsTest(t *testing.T, openDB func() database.DB) {
 	require.NoError(t, db.Close())
 }
 
-//nolint:dupl // This is a test file, so it's normal to have similar functions
 func RecipesTest(t *testing.T, openDB func() database.DB) {
 	t.Helper()
 
@@ -251,7 +251,6 @@ func MenuTest(t *testing.T, openDB func() database.DB) {
 	require.NoError(t, db.Close())
 }
 
-//nolint:dupl // This is a test file, so it's normal to have similar functions
 func PantriesTest(t *testing.T, openDB func() database.DB) {
 	t.Helper()
 
@@ -271,7 +270,7 @@ func PantriesTest(t *testing.T, openDB func() database.DB) {
 
 	pantry2 := dbtypes.Pantry{
 		Name:     "Pantry #2",
-		Contents: nil,
+		Contents: []dbtypes.Ingredient{},
 	}
 
 	require.NoError(t, db.SetPantry(pantry1), "Could not set Pantry")
@@ -360,6 +359,9 @@ func ShoppingListsTest(t *testing.T, openDB func() database.DB) {
 	require.NoError(t, db.SetShoppingList(list1), "Could not set ShoppingList")
 	p, ok := db.LookupShoppingList(list1.Menu, list1.Pantry)
 	require.True(t, ok, "Could not find ShoppingList just created")
+	// Sort the slices to make sure the order is deterministic
+	slices.Sort(list1.Contents)
+	slices.Sort(p.Contents)
 	require.Equal(t, list1, p, "ShoppingList does not match the one just created")
 
 	list1.Contents[0] = "Item #97"
@@ -367,6 +369,9 @@ func ShoppingListsTest(t *testing.T, openDB func() database.DB) {
 	require.NoError(t, db.SetShoppingList(list1), "Could not override ShoppingList")
 	p, ok = db.LookupShoppingList(list1.Menu, list1.Pantry)
 	require.True(t, ok, "Could not find ShoppingList just overridden")
+	// Sort the slices to make sure the order is deterministic
+	slices.Sort(list1.Contents)
+	slices.Sort(p.Contents)
 	require.Equal(t, list1, p, "ShoppingList does not match the one just overridden")
 
 	// Test implicit deletion of items
@@ -374,11 +379,17 @@ func ShoppingListsTest(t *testing.T, openDB func() database.DB) {
 	require.NoError(t, db.SetShoppingList(list1), "Could not override ShoppingList")
 	p, ok = db.LookupShoppingList(list1.Menu, list1.Pantry)
 	require.True(t, ok, "Could not find ShoppingList just overridden")
+	// Sort the slices to make sure the order is deterministic
+	slices.Sort(list1.Contents)
+	slices.Sort(p.Contents)
 	require.Equal(t, list1, p, "ShoppingList does not match the one just overridden")
 
 	require.NoError(t, db.SetShoppingList(list2), "Could not set ShoppingList")
 	p, ok = db.LookupShoppingList(list2.Menu, list2.Pantry)
 	require.True(t, ok, "Could not find empty ShoppingList just created")
+	// Sort the slices to make sure the order is deterministic
+	slices.Sort(list1.Contents)
+	slices.Sort(p.Contents)
 	require.Equal(t, list2, p, "Empty menu does not match the one just created")
 
 	t.Log("Closing DB and reopening")
@@ -396,10 +407,16 @@ func ShoppingListsTest(t *testing.T, openDB func() database.DB) {
 
 	p, ok = db.LookupShoppingList(list1.Menu, list1.Pantry)
 	require.True(t, ok, "Could not find ShoppingList after reopening DB")
+	// Sort the slices to make sure the order is deterministic
+	slices.Sort(list1.Contents)
+	slices.Sort(p.Contents)
 	require.Equal(t, list1, p, "ShoppingList does not match the one after reopening DB")
 
 	p, ok = db.LookupShoppingList(list2.Menu, list2.Pantry)
 	require.True(t, ok, "Could not find empty ShoppingList after reopening DB")
+	// Sort the slices to make sure the order is deterministic
+	slices.Sort(list1.Contents)
+	slices.Sort(p.Contents)
 	require.Equal(t, list2, p, "Empty menu does not match the one after reopening DB")
 
 	require.ElementsMatch(t, []dbtypes.ShoppingList{list1, list2}, menus, "ShoppingLists do not match the ones after reopening DB")
