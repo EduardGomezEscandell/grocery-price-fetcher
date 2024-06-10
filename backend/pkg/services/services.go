@@ -19,6 +19,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/pricing"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/recipes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/shoppinglist"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/shoppingneeds"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/version"
 )
 
@@ -36,6 +37,7 @@ type Manager struct {
 	pricing       *pricing.Service
 	recipes       *recipes.Service
 	shoppingList  *shoppinglist.Service
+	shoppingNeeds *shoppingneeds.Service
 	version       *version.Service
 }
 
@@ -48,6 +50,7 @@ type Settings struct {
 	Pricing       pricing.Settings
 	Recipes       recipes.Settings
 	ShoppingList  shoppinglist.Settings
+	ShoppingNeeds shoppingneeds.Settings
 	Version       version.Settings
 }
 
@@ -61,6 +64,7 @@ func (Settings) Defaults() Settings {
 		Pricing:       pricing.Settings{}.Defaults(),
 		Recipes:       recipes.Settings{}.Defaults(),
 		ShoppingList:  shoppinglist.Settings{}.Defaults(),
+		ShoppingNeeds: shoppingneeds.Settings{}.Defaults(),
 		Version:       version.Settings{}.Defaults(),
 	}
 }
@@ -92,6 +96,7 @@ func New(ctx context.Context, logger logger.Logger, settings Settings) (*Manager
 		pricing:       pricing.New(ctx, settings.Pricing, logger, db),
 		recipes:       recipes.New(settings.Recipes, db),
 		shoppingList:  shoppinglist.New(settings.ShoppingList, db),
+		shoppingNeeds: shoppingneeds.New(settings.ShoppingNeeds, db),
 		version:       version.New(settings.Version),
 	}, nil
 }
@@ -110,6 +115,7 @@ func (s *Manager) Register(registerer func(endpoint string, handler httputils.Ha
 		{path: "/api/pantry", handler: s.pantry},
 		{path: "/api/recipes", handler: s.recipes},
 		{path: s.shoppingList.Path(), handler: s.shoppingList},
+		{path: s.shoppingNeeds.Path(), handler: s.shoppingNeeds},
 		{path: "/api/version", handler: s.version},
 	} {
 		if !p.handler.Enabled() {

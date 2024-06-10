@@ -1,0 +1,15 @@
+[
+    {
+        "name": "testpantry1",
+        "contents": [
+            {
+                "name": "Water",
+                "amount": 5
+            },
+            {
+                "name": "Apple",
+                "amount": 3
+            }
+        ]
+    }
+]

@@ -141,29 +141,33 @@ export class Pantry {
     }
 }
 
-export class ShoppingNeedsItem extends Product {
+export class ShoppingNeedsItem {
     static fromJSON(json: any): ShoppingNeedsItem {
         const n = new ShoppingNeedsItem(
             either(json, 'name', 'Unnamed ingredient'),
-            either(json, 'price', 0),
-            either(json, 'batch_size', 1),
+            either(json, 'amount', 0),
         )
-        n.amount = either(json, 'amount', 1)
         return n
     }
 
+    constructor(name: string, amount: number) {
+        this.name = name
+        this.amount = amount
+    }
+
+    name: string
     amount: number
 }
 
 export class ShoppingNeeds {
     static fromJSON(json: any): ShoppingNeeds {
         const need = new ShoppingNeeds()
-        need.contents = either(json, 'contents', []).map((ingredient: any) => ShoppingNeedsItem.fromJSON(ingredient))
+        need.items = either(json, 'items', []).map((ingredient: any) => ShoppingNeedsItem.fromJSON(ingredient))
         return need
     }
 
     menu: string = 'default'
-    contents: Array<ShoppingNeedsItem> = [];
+    items: Array<ShoppingNeedsItem> = [];
 }
 
 export class ShoppingListItem {
