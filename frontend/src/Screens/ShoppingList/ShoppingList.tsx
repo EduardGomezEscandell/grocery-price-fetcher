@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Backend from '../../Backend/Backend.tsx';
 import TopBar from '../../TopBar/TopBar.tsx';
-import { ShoppingNeeds, ShoppingList, State } from '../../State/State.tsx';
+import { ShoppingList } from '../../State/State.tsx';
 import SaveButton from '../../SaveButton/SaveButton.tsx';
 import ShoppingItem, { Column } from './ShoppingItem.tsx';
 import { asEuro } from '../../Numbers/Numbers.ts';
@@ -9,7 +9,7 @@ import './ShoppingList.css';
 
 interface Props {
     backend: Backend;
-    globalState: State;
+    sessionName: string;
     onBackToPantry: () => void;
     onGotoHome: () => void;
 }
@@ -23,8 +23,9 @@ enum Dialog {
 
 export default function Shopping(props: Props): JSX.Element {
     const [dialog, _setDialog] = useState(Dialog.OFF);
-    const [k, setK] = useState(0)
-    const forceChildUpdate = () => setK(k + 1)
+
+    const [k, _setK] = useState(0)
+    const forceReload = () => _setK(k + 1)
 
     const setDialog = (d: Dialog): boolean => {
         if (dialog === Dialog.CLOSING) return false
@@ -33,6 +34,14 @@ export default function Shopping(props: Props): JSX.Element {
     }
 
     const [column, setColumn] = useState(Column.UNITS)
+
+    const [shoppingList, setShoppingList] = useState<ShoppingList>(new ShoppingList())
+    useEffect(() => {
+        props.backend
+            .ShoppingList(props.sessionName, props.sessionName)
+            .GET()
+            .then((sl)=> setShoppingList(sl))
+    }, [props])
 
     const tableStyle: React.CSSProperties = {}
     if (dialog !== Dialog.OFF) {
@@ -46,7 +55,7 @@ export default function Shopping(props: Props): JSX.Element {
                     key='save'
 
                     baseTxt='Tornar'
-                    onSave={() => saveShoppingList(props.backend, props.globalState)}
+                    onSave={() => saveShoppingList(props.backend, shoppingList)}
                     onSaveTxt='Desant...'
 
                     onAccept={() => props.onBackToPantry()}
@@ -54,14 +63,15 @@ export default function Shopping(props: Props): JSX.Element {
 
                     onRejectTxt='Error'
                 />}
-                logoOnClick={() => { saveShoppingList(props.backend, props.globalState).then(props.onGotoHome) }}
+                logoOnClick={() => saveShoppingList(props.backend, shoppingList).then(props.onGotoHome) 
+                }
                 titleOnClick={() => setDialog(Dialog.HELP)}
                 titleText="La&nbsp;meva compra"
                 right={<SaveButton
                     key='save'
 
                     baseTxt='Desar'
-                    onSave={() => saveShoppingList(props.backend, props.globalState)}
+                    onSave={() => saveShoppingList(props.backend, shoppingList)}
                     onSaveTxt='Desant...'
                     onAcceptTxt='Desat'
                     onRejectTxt='Error'
@@ -91,8 +101,17 @@ export default function Shopping(props: Props): JSX.Element {
                     </thead>
                     <tbody>
                         {
-                            props.globalState.shoppingList.items.map((i, idx) =>
-                                <ShoppingItem i={i} idx={idx} key={`${k}-${idx}-${column}`} globalState={props.globalState} show={column}/>
+                            shoppingList.items.map((item, idx) =>
+                                <ShoppingItem
+                                    item={item}
+                                    idx={idx}
+                                    key={`${k}-${idx}-${column}`}
+                                    show={column}
+                                    setSelection={(v: boolean) => {
+                                        item.done = v
+                                        setShoppingList(shoppingList)
+                                    }}
+                                    />
                             )
                         }
                     </tbody>
@@ -103,7 +122,7 @@ export default function Shopping(props: Props): JSX.Element {
                             <td id='right'>
                                 {
                                     (() => {
-                                        const cost = props.globalState.shoppingList.items.reduce((acc, i) => acc + i.packs * i.cost, 0)
+                                        const cost = shoppingList.items.reduce((acc, i) => acc + i.cost, 0)
                                         return (<>{asEuro(cost)}</>)
                                     })()
                                 }
@@ -117,10 +136,12 @@ export default function Shopping(props: Props): JSX.Element {
                             if (!setDialog(Dialog.CLOSING)) {
                                 return
                             }
-                            props.globalState.shoppingList.items.forEach(i => i.done = false)
-                            saveShoppingList(props.backend, props.globalState)
-                                .then(() => forceChildUpdate())
+                            shoppingList.items.forEach(i => i.done = false)
+                            props.backend
+                                .ShoppingList(props.sessionName, props.sessionName)
+                                .DELETE()
                                 .then(() => setDialog(Dialog.OFF))
+                                .then(() => forceReload())
                         }}
                         onExit={() => setDialog(Dialog.OFF)}
                     />
@@ -189,41 +210,9 @@ function HelpDialog(props: {
     )
 }
 
-
-function saveShoppingList(backend: Backend, globalState: State): Promise<void> {
-    return backend
-        .Shopping()
-        .POST({
-            name: globalState.shoppingList.name,
-            items: globalState.shoppingList.items
-                .filter(i => i.done)
-                .map(i => i.name)
-        })
-}
-
-export async function downloadShoppingList(backend: Backend, globalState: State): Promise<void> {
-    const lists = await backend.Shopping().GET();
-    const s = lists[0] || new ShoppingList();
-    globalState.shoppingList = makeShoppingList(s, globalState.inNeed);
-}
-
-function makeShoppingList(list: ShoppingList, needs: ShoppingNeeds): ShoppingList {
-    return {
-        name: list.name,
-        timeStamp: list.timeStamp,
-        items: needs.ingredients
-            .filter(i => i.need > 0)
-            .map(i => {
-                const alreadyBought = list.items.findIndex(si => si.name === i.name) !== -1
-                const mustBuy = Math.max(0, i.need - i.have)
-
-                return {
-                    name: i.name,
-                    done: alreadyBought,
-                    units: mustBuy,
-                    packs: Math.ceil(mustBuy / i.batch_size),
-                    cost: Math.ceil(mustBuy / i.batch_size) * i.price,
-                }
-            })
-    }
+async function saveShoppingList(backend: Backend, shoppingList: ShoppingList): Promise<void> {
+    backend
+        .ShoppingList(shoppingList.menu, shoppingList.pantry)
+        .PUT(shoppingList.items.filter(i => i.done).map(i => i.name))
+        .then(() => { })
 }

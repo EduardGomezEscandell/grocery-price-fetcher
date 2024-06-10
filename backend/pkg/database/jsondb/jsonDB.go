@@ -10,17 +10,17 @@ import (
 	"slices"
 	"sync"
 
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/types"
 )
 
 type JSON struct {
 	products      []product.Product
-	recipes       []types.Recipe
-	menus         []types.Menu
-	pantries      []types.Pantry
-	shoppingLists []types.ShoppingList
+	recipes       []dbtypes.Recipe
+	menus         []dbtypes.Menu
+	pantries      []dbtypes.Pantry
+	shoppingLists []dbtypes.ShoppingList
 
 	productsPath      string
 	recipesPath       string
@@ -153,35 +153,35 @@ func (db *JSON) DeleteProduct(name string) error {
 	return nil
 }
 
-func (db *JSON) Recipes() ([]types.Recipe, error) {
+func (db *JSON) Recipes() ([]dbtypes.Recipe, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	out := make([]types.Recipe, len(db.recipes))
+	out := make([]dbtypes.Recipe, len(db.recipes))
 	copy(out, db.recipes)
 	return out, nil
 }
 
-func (db *JSON) LookupRecipe(name string) (types.Recipe, bool) {
+func (db *JSON) LookupRecipe(name string) (dbtypes.Recipe, bool) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	i := slices.IndexFunc(db.recipes, func(p types.Recipe) bool {
+	i := slices.IndexFunc(db.recipes, func(p dbtypes.Recipe) bool {
 		return p.Name == name
 	})
 
 	if i == -1 {
-		return types.Recipe{}, false
+		return dbtypes.Recipe{}, false
 	}
 
 	return db.recipes[i], true
 }
 
-func (db *JSON) SetRecipe(r types.Recipe) error {
+func (db *JSON) SetRecipe(r dbtypes.Recipe) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	i := slices.IndexFunc(db.recipes, func(entry types.Recipe) bool {
+	i := slices.IndexFunc(db.recipes, func(entry dbtypes.Recipe) bool {
 		return entry.Name == r.Name
 	})
 
@@ -201,7 +201,7 @@ func (db *JSON) DeleteRecipe(name string) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	i := slices.IndexFunc(db.recipes, func(p types.Recipe) bool {
+	i := slices.IndexFunc(db.recipes, func(p dbtypes.Recipe) bool {
 		return p.Name == name
 	})
 
@@ -218,35 +218,35 @@ func (db *JSON) DeleteRecipe(name string) error {
 	return nil
 }
 
-func (db *JSON) Menus() ([]types.Menu, error) {
+func (db *JSON) Menus() ([]dbtypes.Menu, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	out := make([]types.Menu, len(db.menus))
+	out := make([]dbtypes.Menu, len(db.menus))
 	copy(out, db.menus)
 	return out, nil
 }
 
-func (db *JSON) LookupMenu(name string) (types.Menu, bool) {
+func (db *JSON) LookupMenu(name string) (dbtypes.Menu, bool) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	i := slices.IndexFunc(db.menus, func(p types.Menu) bool {
+	i := slices.IndexFunc(db.menus, func(p dbtypes.Menu) bool {
 		return p.Name == name
 	})
 
 	if i == -1 {
-		return types.Menu{}, false
+		return dbtypes.Menu{}, false
 	}
 
 	return db.menus[i], true
 }
 
-func (db *JSON) SetMenu(m types.Menu) error {
+func (db *JSON) SetMenu(m dbtypes.Menu) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	i := slices.IndexFunc(db.menus, func(entry types.Menu) bool {
+	i := slices.IndexFunc(db.menus, func(entry dbtypes.Menu) bool {
 		return entry.Name == m.Name
 	})
 
@@ -266,7 +266,7 @@ func (db *JSON) DeleteMenu(name string) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	i := slices.IndexFunc(db.menus, func(p types.Menu) bool {
+	i := slices.IndexFunc(db.menus, func(p dbtypes.Menu) bool {
 		return p.Name == name
 	})
 
@@ -283,31 +283,31 @@ func (db *JSON) DeleteMenu(name string) error {
 	return nil
 }
 
-func (db *JSON) Pantries() ([]types.Pantry, error) {
+func (db *JSON) Pantries() ([]dbtypes.Pantry, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	out := make([]types.Pantry, len(db.pantries))
+	out := make([]dbtypes.Pantry, len(db.pantries))
 	copy(out, db.pantries)
 	return out, nil
 }
 
-func (db *JSON) LookupPantry(name string) (types.Pantry, bool) {
+func (db *JSON) LookupPantry(name string) (dbtypes.Pantry, bool) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	i := slices.IndexFunc(db.pantries, func(p types.Pantry) bool {
+	i := slices.IndexFunc(db.pantries, func(p dbtypes.Pantry) bool {
 		return p.Name == name
 	})
 
 	if i == -1 {
-		return types.Pantry{}, false
+		return dbtypes.Pantry{}, false
 	}
 
 	return db.pantries[i], true
 }
 
-func (db *JSON) SetPantry(p types.Pantry) error {
+func (db *JSON) SetPantry(p dbtypes.Pantry) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
@@ -315,7 +315,7 @@ func (db *JSON) SetPantry(p types.Pantry) error {
 		p.Name = "default"
 	}
 
-	i := slices.IndexFunc(db.pantries, func(entry types.Pantry) bool {
+	i := slices.IndexFunc(db.pantries, func(entry dbtypes.Pantry) bool {
 		return entry.Name == p.Name
 	})
 
@@ -335,7 +335,7 @@ func (db *JSON) DeletePantry(name string) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	i := slices.IndexFunc(db.pantries, func(p types.Pantry) bool {
+	i := slices.IndexFunc(db.pantries, func(p dbtypes.Pantry) bool {
 		return p.Name == name
 	})
 
@@ -352,40 +352,44 @@ func (db *JSON) DeletePantry(name string) error {
 	return nil
 }
 
-func (db *JSON) ShoppingLists() ([]types.ShoppingList, error) {
+func (db *JSON) ShoppingLists() ([]dbtypes.ShoppingList, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	out := make([]types.ShoppingList, len(db.shoppingLists))
+	out := make([]dbtypes.ShoppingList, len(db.shoppingLists))
 	copy(out, db.shoppingLists)
 	return out, nil
 }
 
-func (db *JSON) LookupShoppingList(name string) (types.ShoppingList, bool) {
+func (db *JSON) LookupShoppingList(menu, pantry string) (dbtypes.ShoppingList, bool) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	i := slices.IndexFunc(db.shoppingLists, func(p types.ShoppingList) bool {
-		return p.Name == name
+	i := slices.IndexFunc(db.shoppingLists, func(p dbtypes.ShoppingList) bool {
+		return p.Menu == menu && p.Pantry == pantry
 	})
 
 	if i == -1 {
-		return types.ShoppingList{}, false
+		return dbtypes.ShoppingList{}, false
 	}
 
 	return db.shoppingLists[i], true
 }
 
-func (db *JSON) SetShoppingList(p types.ShoppingList) error {
+func (db *JSON) SetShoppingList(p dbtypes.ShoppingList) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	if p.Name == "" {
-		p.Name = "default"
+	if p.Menu == "" {
+		p.Menu = "default"
 	}
 
-	i := slices.IndexFunc(db.shoppingLists, func(entry types.ShoppingList) bool {
-		return entry.Name == p.Name
+	if p.Pantry == "" {
+		p.Pantry = "default"
+	}
+
+	i := slices.IndexFunc(db.shoppingLists, func(entry dbtypes.ShoppingList) bool {
+		return entry.Menu == p.Menu && entry.Pantry == p.Pantry
 	})
 
 	if i == -1 {
@@ -400,16 +404,16 @@ func (db *JSON) SetShoppingList(p types.ShoppingList) error {
 	return nil
 }
 
-func (db *JSON) DeleteShoppingList(name string) error {
+func (db *JSON) DeleteShoppingList(menu, pantry string) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	i := slices.IndexFunc(db.shoppingLists, func(p types.ShoppingList) bool {
-		return p.Name == name
+	i := slices.IndexFunc(db.shoppingLists, func(p dbtypes.ShoppingList) bool {
+		return p.Menu == menu && p.Pantry == pantry
 	})
 
 	if i == -1 {
-		return fmt.Errorf("shopping list %q not found", name)
+		return fmt.Errorf("shopping list (%s, %s) not found", menu, pantry)
 	}
 
 	db.shoppingLists = append(db.shoppingLists[:i], db.shoppingLists[i+1:]...)

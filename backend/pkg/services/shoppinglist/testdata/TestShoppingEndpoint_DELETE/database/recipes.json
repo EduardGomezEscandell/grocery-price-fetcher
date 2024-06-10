@@ -1,0 +1,15 @@
+[
+    {
+        "Name": "Fruit salad",
+        "Ingredients": [
+            {
+                "name": "Apple",
+                "amount": 2
+            },
+            {
+                "name": "Banana",
+                "amount": 1
+            }
+        ]
+    }
+]

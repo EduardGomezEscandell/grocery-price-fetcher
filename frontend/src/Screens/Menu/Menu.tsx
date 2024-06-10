@@ -1,31 +1,56 @@
 import React from 'react'
 import Backend from '../../Backend/Backend.ts';
-import Optional from '../../Optional/Optional.ts';
-import { State, Day, Meal, Dish } from '../../State/State.tsx';
+import { Day, Meal, Dish, Menu } from '../../State/State.tsx';
 import TopBar from '../../TopBar/TopBar.tsx';
 import DishPicker from './DishPicker.tsx'
 import './Menu.css'
 import { round2 } from '../../Numbers/Numbers.ts';
 import SaveButton from '../../SaveButton/SaveButton.tsx';
-import DownloadPantry from '../Pantry/PantryLoad.ts';
 
 interface Props {
     backend: Backend;
-    globalState: State;
+    sessionName: string;
     onComplete: () => void
     onGotoHome: () => void
 }
 
-class MealMetadata {
-    name: string;
-    size: number;
+class Path {
+    constructor(day: number, meal: number = 0, dish: number = 0) {
+        this.day = day
+        this.meal = meal
+        this.dish = dish
+    }
+
+    day: number
+    meal: number
+    dish: number
+
+    Day(m: Menu): Day {
+        return m.days[this.day]
+    }
+
+    Meal(m: Menu): Meal {
+        return this.Day(m).meals[this.meal]
+    }
+
+    Dish(m: Menu): Dish {
+        return this.Meal(m).dishes[this.dish]
+    }
 }
 
 export default class MenuTable extends React.Component<Props> {
     state: {
+        // Data loaded
+        loaded: boolean
+
+        // Menu data
         days: string[],
-        meals: MealMetadata[]
-        focus: { day: Day, meal: Meal } | undefined
+        mealSizes: number[]
+        dishes: string[]
+        menu: Menu
+
+        // UI state
+        focus: Path | undefined
         help: boolean
         hover: string | undefined
     }
@@ -33,44 +58,44 @@ export default class MenuTable extends React.Component<Props> {
     constructor(props: Props) {
         super(props)
         this.state = {
+            loaded: false,
+
             focus: undefined,
             hover: undefined,
             help: false,
-            days: props.globalState.menu.days.map(d => d.name),
-            meals: props.globalState.menu.days.map((day: Day, i: number) => {
-                return day.meals.map(meal => {
-                    return {
-                        name: meal.name,
-                        size: meal.dishes.length,
-                    }
-                })
-            }).reduce((acc: MealMetadata[], val: MealMetadata[]) => {
-                val.forEach((m: MealMetadata) => {
-                    var idx = acc.findIndex(x => x.name === m.name)
-                    if (idx === -1) {
-                        acc.push(m)
-                        return
-                    }
-                    acc[idx].size = Math.max(acc[idx].size, m.size)
-                })
-                return acc
-            }, [])
-        }
 
+            days: [],
+            mealSizes: [],
+            menu: new Menu(),
+            dishes: []
+        }
     }
 
     get days(): string[] {
         return this.state.days
     }
 
-    get meals(): MealMetadata[] {
-        return this.state.meals
-    }
-
     render(): JSX.Element {
         const tableStyle: React.CSSProperties = {}
         if (this.state.focus !== undefined || this.state.help) {
             tableStyle.filter = 'blur(5px)'
+        }
+
+        if (!this.state.loaded) {
+            Promise.all([
+                this.props.backend
+                    .Dishes()
+                    .GET(),
+                this.props.backend.Menu()
+                    .GET()
+                    .then(menu => menu.find(m => m.name === this.props.sessionName) || new Menu())
+            ])
+                .then(([dishes, menu]) => {
+                    this.setMenu(menu, {
+                        dishes: dishes,
+                        loaded: true
+                    })
+                })
         }
 
         return (
@@ -81,7 +106,7 @@ export default class MenuTable extends React.Component<Props> {
 
                         baseTxt='Tornar'
 
-                        onSave={() => saveMenu(this.props.backend, this.props.globalState)}
+                        onSave={() => saveMenu(this.props.backend, this.state.menu)}
                         onSaveTxt='Desant...'
 
                         onAcceptTxt='Desat'
@@ -89,7 +114,7 @@ export default class MenuTable extends React.Component<Props> {
 
                         onRejectTxt='Error'
                     />}
-                    logoOnClick={() => saveMenu(this.props.backend, this.props.globalState).then(this.props.onGotoHome)}
+                    logoOnClick={() => saveMenu(this.props.backend, this.state.menu).then(this.props.onGotoHome)}
                     titleOnClick={() => this.DisplayHelp()}
                     titleText='El&nbsp;meu menú'
                     right={<SaveButton
@@ -97,7 +122,7 @@ export default class MenuTable extends React.Component<Props> {
 
                         baseTxt='Següent'
 
-                        onSave={() => DownloadPantry(this.props.backend, this.props.globalState)}
+                        onSave={() => saveMenu(this.props.backend, this.state.menu).then(this.props.onGotoHome)}
                         onSaveTxt='Desant...'
 
                         onAcceptTxt='Desat'
@@ -112,9 +137,9 @@ export default class MenuTable extends React.Component<Props> {
                         <tbody>
                             <tr>
                                 {
-                                    this.props.globalState.menu.days.map((day, i) =>
+                                    this.state.menu.days.map((day, i) =>
                                         <td key={`day-col-${i}`}>
-                                            {this.DayCol(day)}
+                                            {this.DayCol(new Path(i))}
                                         </td>
                                     )
                                 }
@@ -129,25 +154,15 @@ export default class MenuTable extends React.Component<Props> {
         )
     }
 
-    private Focus(day: Day, meal: Meal) {
+    private Focus(path: Path) {
         this.setState({
             ...this.state,
             help: false,
-            focus: {
-                day: day,
-                meal: meal
-            }
+            focus: path,
         })
     }
 
-    private Unfocus() {
-        this.setState({
-            ...this.state,
-            focus: undefined
-        })
-    }
-
-    private Highlight(dish: Dish) {
+    private Highlight(dish: string) {
         if (this.state.focus !== undefined) {
             return
         }
@@ -156,7 +171,7 @@ export default class MenuTable extends React.Component<Props> {
         }
         this.setState({
             ...this.state,
-            hover: dish.name
+            hover: dish
         })
     }
 
@@ -194,49 +209,72 @@ export default class MenuTable extends React.Component<Props> {
         })
     }
 
+    private setMenu(menu: Menu, args = {}) {
+        this.setState({
+            ...this.state,
+            ...args,
+            menu: menu,
+            days: menu.days.map(d => d.name),
+            mealSizes: this.computeMealSizes(menu),
+        })
+    }
 
-    private DayCol(day: Day): JSX.Element {
+    private DayCol(p: Path): JSX.Element {
+        const m = this.state.menu
+
         return (
             <div className='Day'>
                 <div className='Header' id='header1'>
-                    {day.name}
+                    <input onChange={(event) => {
+                        p.Day(m).name = event.target.value
+                        this.setMenu(m)
+                    }}
+                        defaultValue={p.Day(m).name}
+                    />
                 </div>
                 {
-                    day.meals.map((meal) =>
-                        <div className="Meal" key={meal.name} onClick={() => {
-                            if (this.state.focus !== undefined) {
-                                return
-                            }
-                            this.Focus(day, meal)
-                        }}>
-                            <div className='MealHeader' key='MealName' id='header2'>
-                                {meal.name}
+                    p.Day(m).meals.map((meal, idx) => {
+                        const path = new Path(p.day, idx)
+
+                        return (
+                            <div className="Meal" key={idx}>
+                                <div className='MealHeader' key='MealName' id='header2'>
+                                    <input
+                                        onChange={(event) => {
+                                            meal.name = event.target.value
+                                            this.setMenu(this.state.menu)
+                                        }}
+                                        defaultValue={meal.name}
+                                    />
+                                </div>
+                                <div className="Body" key='MealBody' style={{
+                                    minHeight: (this.state.mealSizes[idx] * 35 || 0) + 15
+                                }} onClick={() => {
+                                    if (this.state.focus !== undefined) {
+                                        return
+                                    }
+                                    this.Focus(path)
+                                }}>
+                                    {
+                                        meal.dishes.map((dish, i) =>
+                                            <DishItem
+                                                key={dish.name}
+                                                name={dish.name}
+                                                amount={dish.amount}
+                                                id={dish.name === this.state.hover
+                                                    ? 'highlight' :
+                                                    i % 2 === 0
+                                                        ? 'odd' : 'even'
+                                                }
+                                                onMouseEnter={() => this.Highlight(dish.name)}
+                                                onMouseLeave={() => this.Unhighlight()}
+                                            />
+                                        )
+                                    }
+                                </div>
                             </div>
-                            <div className="Body" key='MealBody' style={{
-                                minHeight: new Optional(this.meals.find(m => m.name === meal.name))
-                                    .then(m => 15 + m.size * 35)
-                                    .then(s => s.toString() + 'px')
-                                    .else('15px')
-                            }}>
-                                {
-                                    meal.dishes.map((dish, i) =>
-                                        <DishItem
-                                            key={dish.name}
-                                            name={dish.name}
-                                            amount={dish.amount}
-                                            id={dish.name === this.state.hover
-                                                ? 'highlight' :
-                                                i % 2 === 0
-                                                    ? 'odd' : 'even'
-                                            }
-                                            onMouseEnter={() => this.Highlight(dish)}
-                                            onMouseLeave={() => this.Unhighlight()}
-                                        />
-                                    )
-                                }
-                            </div>
-                        </div>
-                    )
+                        )
+                    })
                 }
             </div>
         )
@@ -248,51 +286,40 @@ export default class MenuTable extends React.Component<Props> {
             return <></>
         }
 
-        const day = f.day
-        const meal = f.meal
+        const day = f.Day(this.state.menu)
+        const meal = f.Meal(this.state.menu)
 
         return (
             <dialog open>
                 <h2 id='header'>
                     {meal.name} de {day.name}
                 </h2>
-                <div id="body" style={{
-                    minHeight: new Optional(this.meals.find(m => m.name === meal.name))
-                        .then(m => m.size * 30)
-                        .then(s => s.toString() + 'px')
-                        .else('0px')
-                }}>
+                <div id="body">
                     {
                         meal.dishes.map((dish, i) =>
                             <DishPicker
                                 key={`dish-${i}`}
-                                recipes={this.props.globalState.dishes}
+                                recipes={this.state.dishes}
                                 default={dish}
                                 onChange={(newDish) => {
-                                    new Optional(this.props.globalState.menu)
-                                        .then(menu => menu.days.find(d => d.name === day.name))
-                                        .elseLog(`Could not find day ${day.name}`)
-                                        .then(day => day.meals.find(m => m.name === meal.name))
-                                        .elseLog(`Could not find meal ${meal.name}`)
-                                        .then(meal => meal.dishes[i] = newDish)
-                                        .then(() => this.props.globalState.setMenu(this.props.globalState.menu))
+                                    meal.dishes[i] = newDish
                                 }}
                                 onRemove={() => {
                                     meal.dishes.splice(i, 1)
-                                    this.forceUpdate()
+                                    this.setMenu(this.state.menu)
                                 }}
                             />
                         )
                     }
                     <button className='AddOne' onClick={() => {
                         meal.dishes.push(new Dish("", 1))
-                        this.forceUpdate()
+                        this.setMenu(this.state.menu)
                     }}> + </button>
                 </div>
                 <div id='footer'>
                     <button onClick={() => {
-                        this.props.globalState.setMenu(this.props.globalState.menu) // Trigger a cleanup
-                        this.Unfocus()
+                        meal.dishes = meal.dishes.filter(d => d.name !== "" && d.amount !== 0)
+                        this.setMenu(this.state.menu, { focus: undefined })
                     }
                     }>Tancar</button>
                 </div>
@@ -323,6 +350,15 @@ export default class MenuTable extends React.Component<Props> {
             </dialog>
         )
     }
+
+    private computeMealSizes(menu: Menu): number[] {
+        return menu.days.map((day: Day) => {
+            return day.meals.map(m => m.dishes.length)
+        }).reduce((acc: number[], val: number[]): number[] => {
+            return acc.map((v, i) => Math.max(v, val[i] || 0)).concat(val.slice(acc.length))
+        }, [])
+    }
+
 }
 
 function DishItem(pp: { name: string, amount: number, id: string, onMouseEnter: () => void, onMouseLeave: () => void }) {
@@ -340,6 +376,6 @@ function DishItem(pp: { name: string, amount: number, id: string, onMouseEnter: 
     )
 }
 
-async function saveMenu(backend: Backend, globalState: State): Promise<void> {
-    backend.Menu().POST(globalState.menu)
+async function saveMenu(backend: Backend, menu: Menu): Promise<void> {
+    backend.Menu().PUT(menu)
 }

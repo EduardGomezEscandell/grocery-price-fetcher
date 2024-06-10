@@ -3,12 +3,14 @@ package mysql
 import (
 	"database/sql"
 	"fmt"
+	"slices"
+	"strings"
 
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/types"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 )
 
 func (s *SQL) clearShoppingLists(tx *sql.Tx) error {
-	tables := []string{"shopping_lists", "shopping_list_items"}
+	tables := []string{"shopping_list_items"}
 
 	for _, table := range tables {
 		q := fmt.Sprintf("DROP TABLE %s", table)
@@ -29,20 +31,13 @@ func (s *SQL) createShoppingLists(tx *sql.Tx) error {
 		query string
 	}{
 		{
-			name: "shopping_lists",
-			query: `
-			CREATE TABLE shopping_lists (
-				name VARCHAR(255) PRIMARY KEY,
-				timestamp VARCHAR(255) NOT NULL
-			)`,
-		},
-		{
 			name: "shopping_list_items",
 			query: `
 			CREATE TABLE shopping_list_items (
-				shopping_list_name VARCHAR(255) REFERENCES shopping_lists(name),
+				menu_name VARCHAR(255) REFERENCES menus(name),
+				pantry_name VARCHAR(255) REFERENCES pantries(name),
 				product_name VARCHAR(255) REFERENCES products(name),
-				PRIMARY KEY (shopping_list_name, product_name)
+				PRIMARY KEY (menu_name, pantry_name, product_name)
 			)`,
 		},
 	}
@@ -59,129 +54,144 @@ func (s *SQL) createShoppingLists(tx *sql.Tx) error {
 	return nil
 }
 
-func (s *SQL) ShoppingLists() ([]types.ShoppingList, error) {
-	tx, err := s.db.BeginTx(s.ctx, nil)
-	if err != nil {
-		return nil, fmt.Errorf("could not start transaction: %v", err)
-	}
-	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
-
-	lists, err := s.queryShoppingLists(tx)
-	if err != nil {
-		return nil, fmt.Errorf("could not query shopping lists: %v", err)
-	}
-
-	for i := range lists {
-		lists[i].Items, err = s.shoppingListItems(tx, lists[i].Name)
-		if err != nil {
-			return nil, fmt.Errorf("could not get items for shopping list %s: %v", lists[i].Name, err)
-		}
-	}
-
-	if err := tx.Commit(); err != nil {
-		return nil, fmt.Errorf("could not commit transaction: %v", err)
-	}
-
-	return lists, nil
-}
-
-func (s *SQL) queryShoppingLists(tx *sql.Tx) ([]types.ShoppingList, error) {
-	query := `SELECT name, timestamp FROM shopping_lists`
+func (s *SQL) ShoppingLists() ([]dbtypes.ShoppingList, error) {
+	query := `SELECT * FROM shopping_list_items`
 	s.log.Trace(query)
 
-	r, err := tx.QueryContext(s.ctx, query)
+	r, err := s.db.QueryContext(s.ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("could not query shopping lists: %v", err)
 	}
 
-	lists := make([]types.ShoppingList, 0)
+	type item struct {
+		Menu, Pantry, Product string
+	}
+
+	items := make([]item, 0)
 	for r.Next() {
-		var sl types.ShoppingList
-		if err := r.Scan(&sl.Name, &sl.TimeStamp); err != nil {
+		var i item
+		if err := r.Scan(&i.Menu, &i.Pantry, &i.Product); err != nil {
 			return nil, fmt.Errorf("could not scan shopping list: %v", err)
 		}
 
-		lists = append(lists, sl)
+		items = append(items, i)
+	}
+
+	if err := r.Err(); err != nil {
+		return nil, fmt.Errorf("could not get shopping list items: %v", err)
+	}
+
+	if len(items) == 0 {
+		return make([]dbtypes.ShoppingList, 0), nil
+	}
+
+	slices.SortFunc(items, func(i, j item) int {
+		if i.Menu != j.Menu {
+			return strings.Compare(i.Menu, j.Menu)
+		}
+		if i.Pantry != j.Pantry {
+			return strings.Compare(i.Pantry, j.Pantry)
+		}
+		return strings.Compare(i.Product, j.Product)
+	})
+
+	lists := []dbtypes.ShoppingList{
+		{
+			Menu:     items[0].Menu,
+			Pantry:   items[0].Pantry,
+			Contents: []string{items[0].Product},
+		},
+	}
+
+	for i := 1; i < len(items); i++ {
+		if items[i].Menu == items[i-1].Menu && items[i].Pantry == items[i-1].Pantry {
+			lists[len(lists)-1].Contents = append(lists[len(lists)-1].Contents, items[i].Product)
+			continue
+		}
+
+		lists = append(lists, dbtypes.ShoppingList{
+			Menu:     items[i].Menu,
+			Pantry:   items[i].Pantry,
+			Contents: []string{items[i].Product},
+		})
 	}
 
 	return lists, nil
 }
 
-func (s *SQL) shoppingListItems(tx *sql.Tx, name string) ([]string, error) {
-	query := `
-	SELECT product_name
-	FROM shopping_list_items
-	WHERE shopping_list_name = ?
-	`
-	s.log.Trace(query)
-
-	r, err := tx.QueryContext(s.ctx, query, name)
-	if err != nil {
-		return nil, fmt.Errorf("could not query shopping list items: %v", err)
+func (s *SQL) LookupShoppingList(menu, pantry string) (dbtypes.ShoppingList, bool) {
+	sl := dbtypes.ShoppingList{
+		Menu:     menu,
+		Pantry:   pantry,
+		Contents: []string{},
 	}
 
-	var items []string
-	for r.Next() {
-		var item string
-		if err := r.Scan(&item); err != nil {
-			return nil, fmt.Errorf("could not scan shopping list item: %v", err)
-		}
-
-		items = append(items, item)
-	}
-
-	return items, nil
-}
-
-func (s *SQL) LookupShoppingList(name string) (types.ShoppingList, bool) {
 	tx, err := s.db.BeginTx(s.ctx, nil)
 	if err != nil {
-		return types.ShoppingList{}, false
+		s.log.Warningf("could not begin transaction: %v", err)
+		return sl, false
 	}
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
-	query := `SELECT name, timestamp FROM shopping_lists WHERE name = ?`
+	query := `
+	SELECT product_name
+	FROM shopping_list_items
+	WHERE menu_name = ? AND pantry_name = ?
+	`
 	s.log.Trace(query)
 
-	var sl types.ShoppingList
-	row := tx.QueryRowContext(s.ctx, query, name)
-	if err := row.Scan(&sl.Name, &sl.TimeStamp); err != nil {
-		return types.ShoppingList{}, false
+	r, err := tx.QueryContext(s.ctx, query, menu, pantry)
+	if err != nil {
+		s.log.Warningf("could not query shopping list items: %v", err)
+		return sl, false
 	}
 
-	if sl.Items, err = s.shoppingListItems(tx, name); err != nil {
-		return types.ShoppingList{}, false
+	for r.Next() {
+		var item string
+		if err := r.Scan(&item); err != nil {
+			s.log.Warningf("could not scan: %v", err)
+			return sl, false
+		}
+
+		sl.Contents = append(sl.Contents, item)
+	}
+
+	if err := r.Err(); err != nil {
+		s.log.Warningf("could not get shopping list items: %v", err)
+		return sl, false
+	}
+
+	if len(sl.Contents) == 0 {
+		return sl, false
 	}
 
 	if err := tx.Commit(); err != nil {
-		return types.ShoppingList{}, false
+		return sl, false
 	}
 
 	return sl, true
 }
 
-func (s *SQL) SetShoppingList(list types.ShoppingList) error {
+func (s *SQL) SetShoppingList(list dbtypes.ShoppingList) error {
 	tx, err := s.db.BeginTx(s.ctx, nil)
 	if err != nil {
 		return fmt.Errorf("could not start transaction: %v", err)
 	}
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
-	query := `REPLACE INTO shopping_lists (name, timestamp) VALUES (?, ?)`
-	s.log.Trace(query)
-
-	_, err = tx.ExecContext(s.ctx, query, list.Name, list.TimeStamp)
-	if err != nil {
-		return fmt.Errorf("could not insert shopping list: %v", err)
-	}
-
-	_, err = tx.ExecContext(s.ctx, "DELETE FROM shopping_list_items WHERE shopping_list_name = ?", list.Name)
+	_, err = tx.ExecContext(s.ctx, `
+		DELETE FROM
+			shopping_list_items
+		WHERE 
+			menu_name = ? 
+			AND pantry_name = ?
+	`, list.Menu, list.Pantry)
 	if err != nil {
 		return fmt.Errorf("could not delete old shopping list items: %v", err)
 	}
 
-	err = bulkInsert(s, tx, "shopping_list_items(shopping_list_name, product_name)", list.Items, func(s string) []any {
-		return []any{list.Name, s}
+	err = bulkInsert(s, tx, "shopping_list_items(menu_name, pantry_name, product_name)", list.Contents, func(s string) []any {
+		return []any{list.Menu, list.Pantry, s}
 	})
 	if err != nil {
 		return fmt.Errorf("could not insert shopping list items: %v", err)
@@ -194,31 +204,12 @@ func (s *SQL) SetShoppingList(list types.ShoppingList) error {
 	return nil
 }
 
-func (s *SQL) DeleteShoppingList(name string) error {
-	tx, err := s.db.BeginTx(s.ctx, nil)
-	if err != nil {
-		return fmt.Errorf("could not start transaction: %v", err)
-	}
-	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
-
-	query := `DELETE FROM shopping_lists WHERE name = ?`
+func (s *SQL) DeleteShoppingList(menu, pantry string) error {
+	query := `DELETE FROM shopping_list_items WHERE menu_name = ? AND pantry_name = ?`
 	s.log.Trace(query)
 
-	_, err = tx.ExecContext(s.ctx, query, name)
-	if err != nil {
-		return fmt.Errorf("could not delete shopping list: %v", err)
-	}
-
-	query = `DELETE FROM shopping_list_items WHERE shopping_list_name = ?`
-	s.log.Trace(query)
-
-	_, err = tx.ExecContext(s.ctx, query, name)
-	if err != nil {
+	if _, err := s.db.ExecContext(s.ctx, query, menu, pantry); err != nil {
 		return fmt.Errorf("could not delete shopping list items: %v", err)
-	}
-
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("could not commit transaction: %v", err)
 	}
 
 	return nil

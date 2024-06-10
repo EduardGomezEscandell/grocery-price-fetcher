@@ -1,12 +1,12 @@
 import React, { useState } from 'react'
-import { ShoppingListItem, State } from '../../State/State.tsx';
+import { ShoppingListItem } from '../../State/State.tsx';
 import { asEuro, round2 } from '../../Numbers/Numbers.ts';
 
 interface Props {
-    globalState: State;
-    i: ShoppingListItem;
+    item: ShoppingListItem;
     idx: number;
     show: Column;
+    setSelection: (v: boolean) => void;
 }
 
 export enum Column {
@@ -14,28 +14,28 @@ export enum Column {
 }
 
 export default function ShoppingItem(props: Props) {
-    const { i, idx } = props;
+    const { item, idx } = props;
 
-    const [selected, _setSelected] = useState(props.i.done)
+    const [selected, _setSelected] = useState(props.item.done)
 
     const flip = () => {
         const s = !selected
         _setSelected(s)
-        props.globalState.shoppingList.items[idx].done = s
+        props.setSelection(s)
     }
 
     const show = ((): string => {
         switch(props.show) {
-            case Column.UNITS: return round2(i.units)
-            case Column.PACKS: return round2(i.packs)
-            case Column.COST: return asEuro(i.cost * i.packs)
+            case Column.UNITS: return round2(item.units)
+            case Column.PACKS: return round2(item.packs)
+            case Column.COST: return asEuro(item.cost * item.packs)
         }
     })()
 
     return (
         <tr
             key={idx}
-            id={i.units === 0 || selected ? 'lowlight' : 'even'}
+            id={item.units === 0 || selected ? 'lowlight' : 'even'}
             onClick={flip}
         >
             <td>
@@ -45,7 +45,7 @@ export default function ShoppingItem(props: Props) {
                     onChange={flip}
                 />
             </td>
-            <td id='left'>{i.name}</td>
+            <td id='left'>{item.name}</td>
             <td id='right'>{show}</td>
         </tr>
     )

@@ -29,12 +29,12 @@ func TestMenuEndpoint(t *testing.T) {
 		"GET":               {method: "GET", wantCode: http.StatusOK, wantBody: "!golden"},
 		"GET with empty DB": {method: "GET", wantCode: http.StatusOK, wantBody: "[]\n"},
 
-		"POST":          {method: "POST", wantCode: http.StatusCreated, wantBody: "!golden"},
-		"POST override": {method: "POST", wantCode: http.StatusCreated, wantBody: ""},
+		"PUT":          {method: "PUT", wantCode: http.StatusCreated, wantBody: ""},
+		"PUT override": {method: "PUT", wantCode: http.StatusCreated, wantBody: ""},
 
-		"PATCH":  {method: "PATCH", wantCode: http.StatusMethodNotAllowed},
-		"PUT":    {method: "PUT", wantCode: http.StatusMethodNotAllowed},
 		"DELETE": {method: "DELETE", wantCode: http.StatusMethodNotAllowed},
+		"PATCH":  {method: "PATCH", wantCode: http.StatusMethodNotAllowed},
+		"POST":   {method: "POST", wantCode: http.StatusMethodNotAllowed},
 	}
 
 	for name, tc := range testCases {
@@ -55,12 +55,13 @@ func TestMenuEndpoint(t *testing.T) {
 			}
 
 			testutils.TestEndpoint(t, testutils.ResponseTestOptions{
-				Path:     "/api/menu",
-				Endpoint: sv.Handle,
-				Method:   tc.method,
-				Body:     string(out),
-				WantCode: tc.wantCode,
-				WantBody: tc.wantBody,
+				ServePath: sv.Path(),
+				ReqPath:   "/api/menu",
+				Endpoint:  sv.Handle,
+				Method:    tc.method,
+				Body:      string(out),
+				WantCode:  tc.wantCode,
+				WantBody:  tc.wantBody,
 			})
 		})
 	}

@@ -33,12 +33,13 @@ func TestHelloWorld(t *testing.T) {
 			require.True(t, sv.Enabled())
 
 			testutils.TestEndpoint(t, testutils.ResponseTestOptions{
-				Path:     "/api/hello",
-				Endpoint: sv.Handle,
-				Method:   tc.method,
-				Body:     "",
-				WantCode: tc.wantCode,
-				WantBody: tc.wantBody,
+				ServePath: sv.Path(),
+				ReqPath:   "/api/helloworld",
+				Endpoint:  sv.Handle,
+				Method:    tc.method,
+				Body:      "",
+				WantCode:  tc.wantCode,
+				WantBody:  tc.wantBody,
 			})
 		})
 	}

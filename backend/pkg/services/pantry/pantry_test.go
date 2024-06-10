@@ -26,11 +26,12 @@ func TestPantryEndpoint(t *testing.T) {
 		wantCode int
 		wantBody string
 	}{
-		"GET":    {method: "GET", wantCode: http.StatusOK, wantBody: "!golden"},
-		"POST":   {method: "POST", wantCode: http.StatusCreated},
-		"PATCH":  {method: "PATCH", wantCode: http.StatusMethodNotAllowed},
-		"PUT":    {method: "PUT", wantCode: http.StatusMethodNotAllowed},
+		"GET": {method: "GET", wantCode: http.StatusOK, wantBody: "!golden"},
+		"PUT": {method: "PUT", wantCode: http.StatusCreated},
+
 		"DELETE": {method: "DELETE", wantCode: http.StatusMethodNotAllowed},
+		"PATCH":  {method: "PATCH", wantCode: http.StatusMethodNotAllowed},
+		"POST":   {method: "POST", wantCode: http.StatusMethodNotAllowed},
 	}
 
 	for name, tc := range testCases {
@@ -51,12 +52,13 @@ func TestPantryEndpoint(t *testing.T) {
 			}
 
 			testutils.TestEndpoint(t, testutils.ResponseTestOptions{
-				Path:     "/api/pantry",
-				Endpoint: sv.Handle,
-				Method:   tc.method,
-				Body:     string(out),
-				WantCode: tc.wantCode,
-				WantBody: tc.wantBody,
+				ServePath: sv.Path(),
+				ReqPath:   "/api/pantry/pantry1",
+				Endpoint:  sv.Handle,
+				Method:    tc.method,
+				Body:      string(out),
+				WantCode:  tc.wantCode,
+				WantBody:  tc.wantBody,
 			})
 		})
 	}

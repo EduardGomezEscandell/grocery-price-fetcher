@@ -189,7 +189,7 @@ func copyShoppingLists(log logger.Logger, input, output database.DB) error {
 	}
 
 	for _, s := range shoppingLists {
-		log.Tracef("Copying %T %s", s, s.Name)
+		log.Tracef("Copying %T %s+%s", s, s.Menu, s.Pantry)
 
 		if err := output.SetShoppingList(s); err != nil {
 			return fmt.Errorf("could not set shopping list: %w", err)

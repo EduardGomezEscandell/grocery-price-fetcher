@@ -30,6 +30,14 @@ func New(settings Settings) *Service {
 	}
 }
 
+func (s Service) Name() string {
+	return "version"
+}
+
+func (s Service) Path() string {
+	return "/api/version"
+}
+
 func (s Service) Enabled() bool {
 	return s.settings.Enable
 }

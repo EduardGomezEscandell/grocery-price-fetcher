@@ -19,6 +19,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/pricing"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/recipes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/shoppinglist"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/shoppingneeds"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/version"
 )
 
@@ -26,17 +27,10 @@ type Manager struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	db  database.DB
-	log logger.Logger
-
-	helloworld    *helloworld.Service
-	ingredientUse *ingredientuse.Service
-	menu          *menu.Service
-	pantry        *pantry.Service
-	pricing       *pricing.Service
-	recipes       *recipes.Service
-	shoppingList  *shoppinglist.Service
-	version       *version.Service
+	log          logger.Logger
+	db           database.DB
+	pricing      *pricing.Service
+	httpServices map[string]HTTPService
 }
 
 type Settings struct {
@@ -48,6 +42,7 @@ type Settings struct {
 	Pricing       pricing.Settings
 	Recipes       recipes.Settings
 	ShoppingList  shoppinglist.Settings
+	ShoppingNeeds shoppingneeds.Settings
 	Version       version.Settings
 }
 
@@ -61,8 +56,16 @@ func (Settings) Defaults() Settings {
 		Pricing:       pricing.Settings{}.Defaults(),
 		Recipes:       recipes.Settings{}.Defaults(),
 		ShoppingList:  shoppinglist.Settings{}.Defaults(),
+		ShoppingNeeds: shoppingneeds.Settings{}.Defaults(),
 		Version:       version.Settings{}.Defaults(),
 	}
+}
+
+type HTTPService interface {
+	Name() string
+	Path() string
+	Handle(logger.Logger, http.ResponseWriter, *http.Request) error
+	Enabled() bool
 }
 
 func New(ctx context.Context, logger logger.Logger, settings Settings) (*Manager, error) {
@@ -78,46 +81,41 @@ func New(ctx context.Context, logger logger.Logger, settings Settings) (*Manager
 		return nil, fmt.Errorf("could not load database: %v", err)
 	}
 
-	return &Manager{
+	m := &Manager{
 		ctx:    ctx,
 		cancel: cancel,
 
-		db:  db,
-		log: logger,
+		db:      db,
+		log:     logger,
+		pricing: pricing.New(ctx, settings.Pricing, logger, db),
 
-		helloworld:    helloworld.New(settings.HelloWorld),
-		ingredientUse: ingredientuse.New(settings.IngredientUse, db),
-		menu:          menu.New(settings.Menu, db),
-		pantry:        pantry.New(settings.Pantry, db),
-		pricing:       pricing.New(ctx, settings.Pricing, logger, db),
-		recipes:       recipes.New(settings.Recipes, db),
-		shoppingList:  shoppinglist.New(settings.ShoppingList, db),
-		version:       version.New(settings.Version),
-	}, nil
+		httpServices: map[string]HTTPService{},
+	}
+
+	for _, s := range []HTTPService{
+		helloworld.New(settings.HelloWorld),
+		ingredientuse.New(settings.IngredientUse, db),
+		menu.New(settings.Menu, db),
+		pantry.New(settings.Pantry, db),
+		recipes.New(settings.Recipes, db),
+		shoppinglist.New(settings.ShoppingList, db),
+		shoppingneeds.New(settings.ShoppingNeeds, db),
+		version.New(settings.Version),
+	} {
+		m.httpServices[s.Name()] = s
+	}
+
+	return m, nil
 }
 
 func (s *Manager) Register(registerer func(endpoint string, handler httputils.Handler)) {
-	for _, p := range []struct {
-		path    string
-		handler interface {
-			Handle(logger.Logger, http.ResponseWriter, *http.Request) error
-			Enabled() bool
-		}
-	}{
-		{path: "/api/helloworld", handler: s.helloworld},
-		{path: "/api/ingredient-use", handler: s.ingredientUse},
-		{path: "/api/menu", handler: s.menu},
-		{path: "/api/pantry", handler: s.pantry},
-		{path: "/api/recipes", handler: s.recipes},
-		{path: "/api/shopping-list", handler: s.shoppingList},
-		{path: "/api/version", handler: s.version},
-	} {
-		if !p.handler.Enabled() {
-			s.log.Infof("Skipping dynamic endpoint %s", p.path)
+	for _, p := range s.httpServices {
+		if !p.Enabled() {
+			s.log.Infof("Skipping dynamic endpoint %s", p.Name())
 			continue
 		}
 
-		registerer(p.path, p.handler.Handle)
+		registerer(p.Path(), p.Handle)
 	}
 }
 

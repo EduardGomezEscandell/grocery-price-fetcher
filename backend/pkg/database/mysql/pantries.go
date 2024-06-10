@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/types"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 )
 
 func (s *SQL) clearPanties(tx *sql.Tx) error {
@@ -59,7 +59,7 @@ func (s *SQL) createPantries(tx *sql.Tx) error {
 	return nil
 }
 
-func (s *SQL) Pantries() ([]types.Pantry, error) {
+func (s *SQL) Pantries() ([]dbtypes.Pantry, error) {
 	tx, err := s.db.BeginTx(s.ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("could not begin transaction: %v", err)
@@ -71,13 +71,13 @@ func (s *SQL) Pantries() ([]types.Pantry, error) {
 		return nil, fmt.Errorf("could not query pantries: %v", err)
 	}
 
-	pantries := make([]types.Pantry, 0, len(names))
+	pantries := make([]dbtypes.Pantry, 0, len(names))
 	for _, name := range names {
 		contents, err := s.queryPantryContents(tx, name)
 		if err != nil {
 			return nil, fmt.Errorf("could not query pantry items: %v", err)
 		}
-		pantries = append(pantries, types.Pantry{
+		pantries = append(pantries, dbtypes.Pantry{
 			Name:     name,
 			Contents: contents,
 		})
@@ -104,48 +104,57 @@ func (s *SQL) queryPantries(tx *sql.Tx) ([]string, error) {
 	return pantries, nil
 }
 
-func (s *SQL) queryPantryContents(tx *sql.Tx, name string) ([]types.Ingredient, error) {
+func (s *SQL) queryPantryContents(tx *sql.Tx, name string) ([]dbtypes.Ingredient, error) {
 	r, err := tx.QueryContext(s.ctx, "SELECT product_name, amount FROM pantry_items WHERE pantry_name = ?", name)
 	if err != nil {
 		return nil, fmt.Errorf("could not query pantry items: %v", err)
 	}
 
-	var items []types.Ingredient
+	items := make([]dbtypes.Ingredient, 0)
 	for r.Next() {
-		var item types.Ingredient
+		var item dbtypes.Ingredient
 		if err := r.Scan(&item.Name, &item.Amount); err != nil {
 			return nil, fmt.Errorf("could not scan pantry item: %v", err)
 		}
 		items = append(items, item)
 	}
 
+	if err := r.Err(); err != nil {
+		return nil, fmt.Errorf("could not get pantry items: %v", err)
+	}
+
 	return items, nil
 }
 
-func (s *SQL) LookupPantry(name string) (types.Pantry, bool) {
+func (s *SQL) LookupPantry(name string) (dbtypes.Pantry, bool) {
 	tx, err := s.db.BeginTx(s.ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
-		return types.Pantry{}, false
+		return dbtypes.Pantry{}, false
 	}
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
 	row := tx.QueryRowContext(s.ctx, "SELECT name FROM pantries WHERE name = ?", name)
 	if err = row.Scan(&name); err != nil {
-		return types.Pantry{}, false
+		return dbtypes.Pantry{}, false
+	}
+
+	if err := row.Err(); err != nil {
+		s.log.Warningf("could not get pantry %s: %v", name, err)
+		return dbtypes.Pantry{}, false
 	}
 
 	contents, err := s.queryPantryContents(tx, name)
 	if err != nil {
-		return types.Pantry{}, false
+		return dbtypes.Pantry{}, false
 	}
 
-	return types.Pantry{
+	return dbtypes.Pantry{
 		Name:     name,
 		Contents: contents,
 	}, true
 }
 
-func (s *SQL) SetPantry(p types.Pantry) error {
+func (s *SQL) SetPantry(p dbtypes.Pantry) error {
 	tx, err := s.db.BeginTx(s.ctx, nil)
 	if err != nil {
 		return fmt.Errorf("could not begin transaction: %v", err)
@@ -166,7 +175,7 @@ func (s *SQL) SetPantry(p types.Pantry) error {
 	err = bulkInsert(s, tx,
 		"pantry_items (pantry_name, product_name, amount)",
 		p.Contents,
-		func(i types.Ingredient) []any {
+		func(i dbtypes.Ingredient) []any {
 			return []any{p.Name, i.Name, i.Amount}
 		})
 	if err != nil {

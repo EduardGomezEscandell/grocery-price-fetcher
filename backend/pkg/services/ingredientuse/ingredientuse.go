@@ -32,6 +32,14 @@ func New(settings Settings, db database.DB) *Service {
 	}
 }
 
+func (s Service) Name() string {
+	return "ingredientuse"
+}
+
+func (s Service) Path() string {
+	return "/api/ingredient-use"
+}
+
 func (s Service) Enabled() bool {
 	return s.settings.Enable
 }

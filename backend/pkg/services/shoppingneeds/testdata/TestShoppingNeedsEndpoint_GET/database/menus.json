@@ -1,0 +1,21 @@
+[
+    {
+        "name": "testmenu1",
+        "days": [
+            {
+                "name": "monday",
+                "meals": [
+                    {
+                        "name": "breakfast",
+                        "dishes": [
+                            {
+                                "name": "Fruit salad",
+                                "amount": 2
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+]

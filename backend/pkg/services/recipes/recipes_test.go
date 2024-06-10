@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers/blank"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/recipes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/testutils"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,7 +17,7 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func TestHelloWorld(t *testing.T) {
+func TestRecipes(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
@@ -41,13 +41,13 @@ func TestHelloWorld(t *testing.T) {
 
 			db := testutils.Database(t, "")
 			if !tc.emptyDB {
-				err := db.SetRecipe(types.Recipe{Name: "Water", Ingredients: []types.Ingredient{
+				err := db.SetRecipe(dbtypes.Recipe{Name: "Water", Ingredients: []dbtypes.Ingredient{
 					{Name: "Hydrogen", Amount: 2},
 					{Name: "Oxygen", Amount: 1},
 				}})
 				require.NoError(t, err)
 
-				err = db.SetRecipe(types.Recipe{Name: "Juice", Ingredients: []types.Ingredient{
+				err = db.SetRecipe(dbtypes.Recipe{Name: "Juice", Ingredients: []dbtypes.Ingredient{
 					{Name: "Orange", Amount: 2.12},
 				}})
 				require.NoError(t, err)
@@ -57,12 +57,13 @@ func TestHelloWorld(t *testing.T) {
 			require.True(t, sv.Enabled())
 
 			testutils.TestEndpoint(t, testutils.ResponseTestOptions{
-				Path:     "/api/version",
-				Endpoint: sv.Handle,
-				Method:   tc.method,
-				Body:     "",
-				WantCode: tc.wantCode,
-				WantBody: tc.wantBody,
+				ServePath: sv.Path(),
+				ReqPath:   "/api/recipes",
+				Endpoint:  sv.Handle,
+				Method:    tc.method,
+				Body:      "",
+				WantCode:  tc.wantCode,
+				WantBody:  tc.wantBody,
 			})
 		})
 	}
