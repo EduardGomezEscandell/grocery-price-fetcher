@@ -31,24 +31,34 @@ export default function LandingPage(props: Props) {
                 <h1>La&nbsp;compra de&nbsp;l'Edu</h1>
             </div>
             <div id="content" style={baseStyle}>
-                <button onClick={() => {
-                    setDialog(DialogState.Help)
-                }}>
-                    Com funciona?
-                </button>
-                <button id="inactive" onClick={() => {
-                    setDialog(DialogState.CommingSoon)
-                }}>
-                    Els meus productes
-                </button>
-                <button id="inactive" onClick={() => {
-                    setDialog(DialogState.CommingSoon)
-                }}>
-                    Les meves receptes
-                </button>
-                <button onClick={() => navigate('/menu')}>
-                    La meva compra
-                </button>
+                <div id="iconrow">
+                    <button onClick={() => {
+                        setDialog(DialogState.Help)
+                    }}>
+                        Com funciona?
+                    </button>
+                    <button id="inactive" onClick={() => {
+                        setDialog(DialogState.CommingSoon)
+                    }}>
+                        Els meus productes
+                    </button>
+                    <button id="inactive" onClick={() => {
+                        setDialog(DialogState.CommingSoon)
+                    }}>
+                        Les meves receptes
+                    </button>
+                </div>
+                <div id="iconrow">
+                    <button onClick={() => navigate('/menu')}>
+                        El meu menú
+                    </button>
+                    <button onClick={() => navigate('/pantry')}>
+                        El meu rebost
+                    </button>
+                    <button onClick={() => navigate('/pantry')}>
+                        La meva llista de la compra
+                    </button>
+                </div>
                 <Outlet />
             </div>
             {commingSoon === DialogState.CommingSoon && (

@@ -29,8 +29,16 @@
     margin: auto;
 }
 
-.LandingPage #content button {
-    width: 80%;   
+.LandingPage div#content>div#iconrow {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+
+    button {
+        font: inherit;
+        width: 100px;
+        height: 100px;
+    }
 }
 
 .LandingPage #footer {
