@@ -7,6 +7,7 @@ import ShoppingItem, { Column } from './ShoppingItem.tsx';
 import { asEuro } from '../../Numbers/Numbers.ts';
 import './ShoppingList.css';
 import { useNavigate } from 'react-router-dom';
+import Sidebar from '../../SideBar/Sidebar.tsx';
 
 interface Props {
     backend: Backend;
@@ -49,21 +50,15 @@ export default function Shopping(props: Props): JSX.Element {
 
     const navigate = useNavigate()
 
+    const [sidebar, setSidebar] = useState(false)
+
     return (
-        <>
+        <div id='rootdiv'>
             <TopBar
-                left={<SaveButton
-                    key='save'
-
-                    baseTxt='Tornar'
-                    onSave={() => saveShoppingList(props.backend, shoppingList)}
-                    onSaveTxt='Desant...'
-
-                    onAccept={() => navigate("/pantry")}
-                    onAcceptTxt='Desat'
-
-                    onRejectTxt='Error'
-                />}
+                left={<button className='save-button' id='idle'
+                    onClick={() => setSidebar(!sidebar)}
+                >Opcions </button>
+            }
                 logoOnClick={() => saveShoppingList(props.backend, shoppingList).then(() => navigate("/")) 
                 }
                 titleOnClick={() => setDialog(Dialog.HELP)}
@@ -78,6 +73,7 @@ export default function Shopping(props: Props): JSX.Element {
                     onRejectTxt='Error'
                 />}
             />
+            <section>
             <div className='scroll-table'>
                 <table style={tableStyle}>
                     <thead id='header1'>
@@ -153,7 +149,15 @@ export default function Shopping(props: Props): JSX.Element {
                     />
                 }
             </div>
-        </>
+            {sidebar && <Sidebar
+                    onHelp={() => {
+                        setDialog(Dialog.HELP)
+                        setSidebar(false)
+                    }}
+                    onNavigate={() => saveShoppingList(props.backend, shoppingList)}
+                />}
+            </section>
+        </ div>
     )
 }
 

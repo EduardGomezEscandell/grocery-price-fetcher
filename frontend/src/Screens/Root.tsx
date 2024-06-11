@@ -11,19 +11,13 @@ export default function Root(): JSX.Element {
     const sessionName = 'default';
 
     return (
-        <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100vh',
-        }}>
-            <BrowserRouter>
-                <Routes>
-                    <Route path="/" element={<LandingPage backend={backend} sessionName={sessionName} />} />
-                    <Route path="/menu" element={<RenderMenu backend={backend} sessionName={sessionName} />} />
-                    <Route path="/pantry" element={<RenderPantry backend={backend} sessionName={sessionName} />} />
-                    <Route path="/shopping-list" element={<ShoppingList backend={backend} sessionName={sessionName} />} />
-                </Routes>
-            </BrowserRouter>
-        </div>
+        <BrowserRouter>
+            <Routes>
+                <Route path="/" element={<LandingPage backend={backend} sessionName={sessionName} />} />
+                <Route path="/menu" element={<RenderMenu backend={backend} sessionName={sessionName} />} />
+                <Route path="/pantry" element={<RenderPantry backend={backend} sessionName={sessionName} />} />
+                <Route path="/shopping-list" element={<ShoppingList backend={backend} sessionName={sessionName} />} />
+            </Routes>
+        </BrowserRouter>
     );
 }

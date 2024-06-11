@@ -7,6 +7,7 @@ import IngredientRow from './PantryIngredient.tsx';
 import IngredientDialog from './IngredientDialog.tsx';
 import { IngredientUsage } from '../../Backend/endpoints/IngredientUse.tsx';
 import { useNavigate } from 'react-router-dom';
+import Sidebar from '../../SideBar/Sidebar.tsx';
 
 interface Props {
     backend: Backend;
@@ -41,21 +42,15 @@ export default function RenderPantry(pp: Props) {
             })
     }, [pp.backend, pp.sessionName])
 
+    const [sidebar, setSidebar] = useState(false)
+
     return (
-        <>
+        <div id='rootdiv'>
             <TopBar
-                left={<SaveButton
-                    key='save'
-
-                    baseTxt='Tornar'
-                    onSave={() => pp.backend.Pantry(pp.sessionName).PUT(pantry)}
-                    onSaveTxt='Desant...'
-
-                    onAccept={() => navigate("/menu")}
-                    onAcceptTxt='Desat'
-
-                    onRejectTxt='Error'
-                />}
+                left={<button className='save-button' id='idle'
+                    onClick={() => setSidebar(!sidebar)}
+                >Opcions </button>
+            }
                 logoOnClick={() => { pp.backend.Pantry(pp.sessionName).PUT(pantry).then(() => navigate("/")) }}
                 titleOnClick={() => setHelp(true)}
                 titleText='El&nbsp;meu rebost'
@@ -73,73 +68,81 @@ export default function RenderPantry(pp: Props) {
                     onRejectTxt='Error'
                 />}
             />
-            <div className='scroll-table' key='pantry'>
-                <table style={tableStyle}>
-                    <thead>
-                        <tr key='header' id='header1'>
-                            <th id="left">Producte</th>
-                            <th id="right">Tens</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {
-                            pantry.contents.map((i: ShoppingNeedsItem, idx: number) => (
-                                <IngredientRow
-                                    key={i.name}
-                                    id={idx % 2 === 0 ? 'even' : 'odd'}
-                                    item={i}
-                                    onChange={(value: number) => {
-                                        const c = pantry.contents.find(p => p.name === i.name)
-                                        c && (c.amount = value)
-                                        setPantry(pantry)
-                                    }}
-                                    onClick={() => {
-                                        if (focussed) {
-                                            setFocussed(undefined)
-                                        } else {
-                                            pp.backend.IngredientUse(pp.sessionName, i.name)
-                                                .GET()
-                                                .then(usage => setFocussed({item: i, usage: usage}))
-                                                .catch(reason => console.log('Error getting ingredient usage: ', reason || 'Unknown error'))
-                                        }
-                                    }}
-                                />
-                            ))
-                        }
-                    </tbody>
-                </table>
-                {
-                    focussed && <IngredientDialog
-                        item={focussed.item}
-                        usage={focussed.usage}
-                        onClose={() => setFocussed(undefined)}
-                    />
-                }
-                {
-                    help && <dialog open>
-                        <h2 id="header">El meu rebost</h2>
-                        <div id="body">
-                            <p>
-                                Aquesta pàgina mostra una llista dels ingredients que necessites per al teu menú setmanal.
-                            </p>
-                            <p>
-                                Per a cada ingredient, indica quant en tens al teu rebost i
-                                així <i>La compra de l'Edu</i> podrà calcular quant en necessites comprar.
-                            </p>
-                            <p>
-                                Si fas clic en un ingredient, veuràs quins dies, àpats i receptes l'utilitzen en el teu menu.
-                            </p>
-                        </div>
-                        <div id="footer">
-                            <button onClick={() => setHelp(false)}>
-                                D'acord
-                            </button>
-                        </div>
-                    </dialog>
-                }
-            </div>
-
-        </>
+            <section>
+                <div className='scroll-table' key='pantry'>
+                    <table style={tableStyle}>
+                        <thead>
+                            <tr key='header' id='header1'>
+                                <th id="left">Producte</th>
+                                <th id="right">Tens</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {
+                                pantry.contents.map((i: ShoppingNeedsItem, idx: number) => (
+                                    <IngredientRow
+                                        key={i.name}
+                                        id={idx % 2 === 0 ? 'even' : 'odd'}
+                                        item={i}
+                                        onChange={(value: number) => {
+                                            const c = pantry.contents.find(p => p.name === i.name)
+                                            c && (c.amount = value)
+                                            setPantry(pantry)
+                                        }}
+                                        onClick={() => {
+                                            if (focussed) {
+                                                setFocussed(undefined)
+                                            } else {
+                                                pp.backend.IngredientUse(pp.sessionName, i.name)
+                                                    .GET()
+                                                    .then(usage => setFocussed({ item: i, usage: usage }))
+                                                    .catch(reason => console.log('Error getting ingredient usage: ', reason || 'Unknown error'))
+                                            }
+                                        }}
+                                    />
+                                ))
+                            }
+                        </tbody>
+                    </table>
+                    {
+                        focussed && <IngredientDialog
+                            item={focussed.item}
+                            usage={focussed.usage}
+                            onClose={() => setFocussed(undefined)}
+                        />
+                    }
+                    {
+                        help && <dialog open>
+                            <h2 id="header">El meu rebost</h2>
+                            <div id="body">
+                                <p>
+                                    Aquesta pàgina mostra una llista dels ingredients que necessites per al teu menú setmanal.
+                                </p>
+                                <p>
+                                    Per a cada ingredient, indica quant en tens al teu rebost i
+                                    així <i>La compra de l'Edu</i> podrà calcular quant en necessites comprar.
+                                </p>
+                                <p>
+                                    Si fas clic en un ingredient, veuràs quins dies, àpats i receptes l'utilitzen en el teu menu.
+                                </p>
+                            </div>
+                            <div id="footer">
+                                <button onClick={() => setHelp(false)}>
+                                    D'acord
+                                </button>
+                            </div>
+                        </dialog>
+                    }
+                </div>
+                {sidebar && <Sidebar
+                    onHelp={() => {
+                        setHelp(true)
+                        setSidebar(false)
+                    }}
+                    onNavigate={() => pp.backend.Pantry(pp.sessionName).PUT(pantry)}
+                />}
+            </section>
+        </ div>
     )
 }
 

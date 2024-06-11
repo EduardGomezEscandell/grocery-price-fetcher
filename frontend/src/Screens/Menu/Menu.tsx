@@ -7,6 +7,7 @@ import './Menu.css'
 import { round2 } from '../../Numbers/Numbers.ts';
 import SaveButton from '../../SaveButton/SaveButton.tsx';
 import { useNavigate } from 'react-router-dom';
+import Sidebar from '../../SideBar/Sidebar.tsx';
 
 interface Props {
     backend: Backend;
@@ -156,41 +157,33 @@ export default function RenderMenu(props: Props) {
     }
 
     const navigate = useNavigate()
+    const [sidebar, setSidebar] = useState(false)
 
-    return (
-        <>
-            <TopBar
-                left={<SaveButton
-                    key='goback'
+    return (<div id='rootdiv'>
+        <TopBar
+            left={<button className='save-button' id='idle'
+                onClick={() => setSidebar(!sidebar)}
+            >Opcions </button>
+            }
+            logoOnClick={() => saveMenu(props.backend, state.menu).then(() => navigate('/'))}
+            titleOnClick={() => setState(state.WithHelp())}
+            titleText='El&nbsp;meu menú'
+            right={<SaveButton
+                key='save'
 
-                    baseTxt='Tornar'
+                baseTxt='Següent'
 
-                    onSave={() => saveMenu(props.backend, state.menu)}
-                    onSaveTxt='Desant...'
+                onSave={() => saveMenu(props.backend, state.menu).then(() => navigate('/'))}
+                onSaveTxt='Desant...'
 
-                    onAcceptTxt='Desat'
-                    onAccept={() => navigate('/')}
+                onAcceptTxt='Desat'
+                onAccept={() => navigate('/pantry')}
 
-                    onRejectTxt='Error'
-                />}
-                logoOnClick={() => saveMenu(props.backend, state.menu).then(() => navigate('/'))}
-                titleOnClick={() => setState(state.WithHelp())}
-                titleText='El&nbsp;meu menú'
-                right={<SaveButton
-                    key='save'
+                onRejectTxt='Error'
 
-                    baseTxt='Següent'
-
-                    onSave={() => saveMenu(props.backend, state.menu).then(() => navigate('/'))}
-                    onSaveTxt='Desant...'
-
-                    onAcceptTxt='Desat'
-                    onAccept={() => navigate('/pantry')}
-
-                    onRejectTxt='Error'
-
-                />}
-            />
+            />}
+        />
+        <section>
             <div className='Menu'>
                 <table key='menu-table' style={tableStyle}>
                     <tbody>
@@ -206,10 +199,19 @@ export default function RenderMenu(props: Props) {
                         </tr>
                     </tbody>
                 </table>
-                <FocusDialog state={state} setState={setState} key={(state.focus && state.focus.toString()) || 'none'} />
-                <HelpDialog state={state} setState={setState} key={(state.help && 'T') || 'F'} />
             </div>
-        </>
+            <FocusDialog state={state} setState={setState} key={(state.focus && state.focus.toString()) || 'none'} />
+            <HelpDialog state={state} setState={setState} key={(state.help && 'T') || 'F'} />
+            {sidebar && <Sidebar
+                onHelp={() => {
+                    setSidebar(false)
+                    setState(state.WithHelp())
+                }
+                }
+                onNavigate={() => saveMenu(props.backend, state.menu)}
+            />}
+        </section>
+    </div>
     )
 }
 

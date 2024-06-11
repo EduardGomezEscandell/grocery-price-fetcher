@@ -55,7 +55,7 @@ export default function LandingPage(props: Props) {
                     <button onClick={() => navigate('/pantry')}>
                         El meu rebost
                     </button>
-                    <button onClick={() => navigate('/pantry')}>
+                    <button onClick={() => navigate('/shopping-list')}>
                         La meva llista de la compra
                     </button>
                 </div>

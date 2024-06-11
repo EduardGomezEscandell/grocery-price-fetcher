@@ -1,23 +1,11 @@
-.Menu {
-    overflow: auto;
+.Menu td {
+    min-width: 13.5vw;
+    max-width: 1vw;
 
-    height: 100%;
-    flex-grow: 1;
-
-    display: flex;
-    padding: 10px;
-
-    background: lightblue;
-    
-    td {
-        min-width: 13.5vw;
-        max-width: 1vw;
-        
-        border-collapse: collapse;
-        max-width: 800px;
-        padding: 5px;
-        vertical-align: top;
-    }
+    border-collapse: collapse;
+    max-width: 800px;
+    padding: 5px;
+    vertical-align: top;
 }
 
 .Menu .Day {
@@ -44,7 +32,7 @@
     border-bottom-left-radius: 0px;
     border-bottom-right-radius: 0px;
 
-    
+
     display: flex;
     align-items: center;
     justify-content: center;
@@ -76,5 +64,3 @@
         padding: 5px;
     }
 }
-
-

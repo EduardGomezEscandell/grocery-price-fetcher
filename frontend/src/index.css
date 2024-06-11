@@ -47,10 +47,10 @@ button {
 
   height: 40px;
   margin: 10px;
-  
+
   border: none;
   border-radius: 5px;
-  
+
   cursor: pointer;
 }
 
@@ -108,7 +108,7 @@ dialog {
     background-color: rgb(255, 196, 85);
     height: 50px;
     width: 100%;
-    
+
     border-radius: inherit;
     border-top-left-radius: 0px;
     border-top-right-radius: 0px;
@@ -128,7 +128,7 @@ dialog {
       border-radius: inherit;
       border: none;
       background: inherit;
-      
+
       &#dialog-left {
         border-top: 1px solid black;
         border-radius: inherit;
@@ -146,23 +146,6 @@ dialog {
 }
 
 .scroll-table {
-  #left {
-      text-align: left;
-      padding-left: 20px;
-  }
-
-  #right {
-      text-align: right;
-      padding-right: 20px;
-  }
-
-  #clear {
-    margin: 0px;
-    padding: 0px;
-    height: 30px;
-    width: 30px;
-  }
-
   overflow: auto;
   width: 100%;
 
@@ -173,52 +156,83 @@ dialog {
   justify-content: center;
 
   table {
-      border-collapse: collapse;
-      border-left: 1px solid #1a237e;
-      border-right: 1px solid #1a237e;
+    border-collapse: collapse;
+    border-left: 1px solid #1a237e;
+    border-right: 1px solid #1a237e;
 
-      max-width: 100% !important;
-      width: 800px;
-      font: inherit;
+    max-width: 100% !important;
+    width: 800px;
+    font: inherit;
 
-      thead {
-          position: sticky;
-          top: 0;
-          max-height: 5vh !important;
-          height: 60px;
-          text-align: center;
+    thead {
+      position: sticky;
+      top: 0;
+      max-height: 5vh !important;
+      height: 60px;
+      text-align: center;
+    }
+
+    tbody {
+      overflow: auto;
+
+      td {
+        cursor: pointer;
+        padding: 10px;
+        text-align: center;
+        min-width: fit-content;
+
+        input[type="number"] {
+          width: 80px;
+          text-align: right;
+          font: inherit;
+
+          border: none;
+          box-shadow: 0 0 3px 0 black;
+
+          border-radius: 10px;
+        }
+
+        input[type="checkbox"] {
+          border-radius: 10px;
+        }
       }
+    }
 
-      tbody {
-          overflow: auto;
-          
-          td {
-              cursor: pointer;
-              padding: 10px;
-              text-align: center;
-              min-width: fit-content;
-
-              input[type="number"] {
-                  width: 80px;
-                  text-align: right;
-                  font: inherit;
-
-                  border: none;
-                  box-shadow: 0 0 3px 0 black;
-
-                  border-radius: 10px;
-              }
-
-              input[type="checkbox"] {
-                border-radius: 10px;
-            }
-          }
-      }
-
-      tfoot {
-          position: sticky;
-          bottom: 0;
-          height: 60px;
-      }
+    tfoot {
+      position: sticky;
+      bottom: 0;
+      height: 60px;
+    }
   }
+}
+
+.scroll-table #left {
+  text-align: left;
+  padding-left: 20px;
+}
+
+.scroll-table #right {
+  text-align: right;
+  padding-right: 20px;
+}
+
+.scroll-table #clear {
+  margin: 0px;
+  padding: 0px;
+  height: 30px;
+  width: 30px;
+}
+
+div#rootdiv {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: lightblue;
+}
+
+section {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow: auto;
 }
