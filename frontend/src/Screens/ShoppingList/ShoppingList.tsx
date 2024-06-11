@@ -6,12 +6,11 @@ import SaveButton from '../../SaveButton/SaveButton.tsx';
 import ShoppingItem, { Column } from './ShoppingItem.tsx';
 import { asEuro } from '../../Numbers/Numbers.ts';
 import './ShoppingList.css';
+import { useNavigate } from 'react-router-dom';
 
 interface Props {
     backend: Backend;
     sessionName: string;
-    onBackToPantry: () => void;
-    onGotoHome: () => void;
 }
 
 enum Dialog {
@@ -48,6 +47,8 @@ export default function Shopping(props: Props): JSX.Element {
         tableStyle.filter = 'blur(5px)'
     }
 
+    const navigate = useNavigate()
+
     return (
         <>
             <TopBar
@@ -58,12 +59,12 @@ export default function Shopping(props: Props): JSX.Element {
                     onSave={() => saveShoppingList(props.backend, shoppingList)}
                     onSaveTxt='Desant...'
 
-                    onAccept={() => props.onBackToPantry()}
+                    onAccept={() => navigate("/pantry")}
                     onAcceptTxt='Desat'
 
                     onRejectTxt='Error'
                 />}
-                logoOnClick={() => saveShoppingList(props.backend, shoppingList).then(props.onGotoHome) 
+                logoOnClick={() => saveShoppingList(props.backend, shoppingList).then(() => navigate("/")) 
                 }
                 titleOnClick={() => setDialog(Dialog.HELP)}
                 titleText="La&nbsp;meva compra"

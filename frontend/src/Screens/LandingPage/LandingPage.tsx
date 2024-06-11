@@ -1,10 +1,11 @@
 import React from 'react'
 import Backend from '../../Backend/Backend.ts';
 import './LandingPage.css';
+import { Outlet, useNavigate } from 'react-router-dom';
 
 interface Props {
     backend: Backend;
-    onGotoMenu: () => void
+    sessionName: string;
 }
 
 enum DialogState {
@@ -20,6 +21,8 @@ export default function LandingPage(props: Props) {
     if (commingSoon) {
         baseStyle.filter = 'blur(5px)'
     }
+
+    const navigate = useNavigate()
 
     return (
         <div className='LandingPage'>
@@ -43,9 +46,10 @@ export default function LandingPage(props: Props) {
                 }}>
                     Les meves receptes
                 </button>
-                <button onClick={props.onGotoMenu}>
+                <button onClick={() => navigate('/menu')}>
                     La meva compra
                 </button>
+                <Outlet />
             </div>
             {commingSoon === DialogState.CommingSoon && (
                 <dialog open>

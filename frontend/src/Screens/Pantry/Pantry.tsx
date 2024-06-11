@@ -6,13 +6,11 @@ import SaveButton from '../../SaveButton/SaveButton.tsx';
 import IngredientRow from './PantryIngredient.tsx';
 import IngredientDialog from './IngredientDialog.tsx';
 import { IngredientUsage } from '../../Backend/endpoints/IngredientUse.tsx';
+import { useNavigate } from 'react-router-dom';
 
 interface Props {
     backend: Backend;
     sessionName: string;
-    onBackToMenu: () => void;
-    onGotoHome: () => void;
-    onComplete: () => void;
 }
 
 interface Focus {
@@ -24,6 +22,7 @@ export default function RenderPantry(pp: Props) {
     const [pantry, setPantry] = useState<Pantry>(new Pantry())
     const [help, setHelp] = useState(false)
     const [focussed, setFocussed] = useState<Focus | undefined>(undefined)
+    const navigate = useNavigate()
 
     const tableStyle: React.CSSProperties = {}
     if (focussed || help) {
@@ -52,12 +51,12 @@ export default function RenderPantry(pp: Props) {
                     onSave={() => pp.backend.Pantry(pp.sessionName).PUT(pantry)}
                     onSaveTxt='Desant...'
 
-                    onAccept={() => pp.onBackToMenu()}
+                    onAccept={() => navigate("/menu")}
                     onAcceptTxt='Desat'
 
                     onRejectTxt='Error'
                 />}
-                logoOnClick={() => { pp.backend.Pantry(pp.sessionName).PUT(pantry).then(pp.onGotoHome) }}
+                logoOnClick={() => { pp.backend.Pantry(pp.sessionName).PUT(pantry).then(() => navigate("/")) }}
                 titleOnClick={() => setHelp(true)}
                 titleText='El&nbsp;meu rebost'
                 right={<SaveButton
@@ -67,7 +66,7 @@ export default function RenderPantry(pp: Props) {
                     onSave={() => pp.backend.Pantry(pp.sessionName).PUT(pantry)}
                     onSaveTxt='Desant...'
 
-                    onAccept={() => pp.onComplete()}
+                    onAccept={() => navigate("/shopping-list")}
                     onAcceptTxt='Desat'
 
                     onReject={(reason: any) => console.log('Error saving pantry: ', reason || 'Unknown error')}
