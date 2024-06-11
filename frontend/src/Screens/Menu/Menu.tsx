@@ -83,12 +83,8 @@ export default class MenuTable extends React.Component<Props> {
 
         if (!this.state.loaded) {
             Promise.all([
-                this.props.backend
-                    .Dishes()
-                    .GET(),
-                this.props.backend.Menu()
-                    .GET()
-                    .then(menu => menu.find(m => m.name === this.props.sessionName) || new Menu())
+                this.props.backend.Dishes().GET(),
+                this.props.backend.Menu(this.props.sessionName).GET(),
             ])
                 .then(([dishes, menu]) => {
                     this.setMenu(menu, {
@@ -377,5 +373,5 @@ function DishItem(pp: { name: string, amount: number, id: string, onMouseEnter: 
 }
 
 async function saveMenu(backend: Backend, menu: Menu): Promise<void> {
-    backend.Menu().PUT(menu)
+    backend.Menu(menu.name).PUT(menu)
 }
