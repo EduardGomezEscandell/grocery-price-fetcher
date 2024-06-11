@@ -98,17 +98,10 @@ export default function RenderPantry(pp: Props) {
                                         if (focussed) {
                                             setFocussed(undefined)
                                         } else {
-                                            pp.backend.IngredientUse().POST({
-                                                MenuName: pp.sessionName,
-                                                IngredientName: i.name
-                                            }).then((usage) => {
-                                                setFocussed({
-                                                    item: i,
-                                                    usage: usage
-                                                })
-                                            }).catch((reason) => {
-                                                console.log('Error getting ingredient usage: ', reason || 'Unknown error')
-                                            })
+                                            pp.backend.IngredientUse(pp.sessionName, i.name)
+                                                .GET()
+                                                .then(usage => setFocussed({item: i, usage: usage}))
+                                                .catch(reason => console.log('Error getting ingredient usage: ', reason || 'Unknown error'))
                                         }
                                     }}
                                 />
@@ -160,7 +153,7 @@ function filterPantry(pantry: Pantry, needs: ShoppingNeeds): Pantry {
     const filtered = new Pantry()
     pantry.contents.sort((a, b) => a.name.localeCompare(b.name))
     needs.items.sort((a, b) => a.name.localeCompare(b.name))
-    
+
     let i = 0;
     let j = 0;
 

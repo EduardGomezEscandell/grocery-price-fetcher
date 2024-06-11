@@ -1,34 +1,24 @@
 export class IngredientUseEndpoint {
-    protected static path: string = '/api/ingredient-use'
+    path: string
+    constructor(menu: string, ingredient: string) {
+        this.path = `/api/ingredient-use/${menu}/${ingredient}`
+    }
 
-    static Path(): string {
+    Path(): string {
         return this.path
     }
 
-    async POST(req: reqBody): Promise<IngredientUsage[]> {
-        return fetch(IngredientUseEndpoint.path, {
-            method: 'POST',
+    async GET(): Promise<IngredientUsage[]> {
+        return fetch(this.path, {
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
-            body: toJSON(req)
         })
             .then(response => response.json())
             .then(data => fromJSON(data))
     }
-}
-
-interface reqBody {
-    MenuName: string;
-    IngredientName: string;
-}
-
-function toJSON(r: reqBody): string {
-    return JSON.stringify({
-        menu_name: r.MenuName,
-        ingredient_name: r.IngredientName
-    } as any)
 }
 
 function fromJSON(obj: any[]): IngredientUsage[] {
@@ -50,19 +40,18 @@ export class IngredientUsage {
 }
 
 export class MockIngredientUseEndpoint extends IngredientUseEndpoint {
-    async POST(req: reqBody): Promise<IngredientUsage[]> {
-        console.log(`POST to ${MockIngredientUseEndpoint.path}:`)
-        console.log(toJSON(req).substring(0, 30), '...') // Ensure toJSON is called without errors
+    async GET(): Promise<IngredientUsage[]> {
+        console.log(`GET to ${this.path}:`)
         return new Promise(resolve => setTimeout(resolve, 100))
-            .then(() => [
-                { day: "Dilluns", meal: "Esmorzar", dish: "Torrada i suc de taronja", amount: 1 } as IngredientUsage,
-                { day: "Divendres", meal: "Esmorzar", dish: "Flocs de civada", amount: 3 } as IngredientUsage,
-                { day: "Dissabte", meal: "Dinar", dish: "Macarrons amb sofregit", amount: 1.7 } as IngredientUsage,
-                { day: "Dissabte", meal: "Dinar", dish: "Macarrons amb sofregit", amount: 1.7 } as IngredientUsage,
-                { day: "Dissabte", meal: "Dinar", dish: "Macarrons amb sofregit", amount: 1.7 } as IngredientUsage,
-                { day: "Dissabte", meal: "Dinar", dish: "Macarrons amb sofregit", amount: 1.7 } as IngredientUsage,
-                { day: "Dissabte", meal: "Dinar", dish: "Macarrons amb sofregit", amount: 1.7 } as IngredientUsage,
-                { day: "Dissabte", meal: "Dinar", dish: "Macarrons amb sofregit", amount: 1.7 } as IngredientUsage,
-            ])
+            .then(() => fromJSON([
+                { day: "Dilluns", meal: "Esmorzar", dish: "Torrada i suc de taronja", amount: 1 },
+                { day: "Divendres", meal: "Esmorzar", dish: "Flocs de civada", amount: 3 },
+                { day: "Dissabte", meal: "Dinar", dish: "Macarrons amb sofregit", amount: 1.7 },
+                { day: "Dissabte", meal: "Dinar", dish: "Macarrons amb sofregit", amount: 1.7 },
+                { day: "Dissabte", meal: "Dinar", dish: "Macarrons amb sofregit", amount: 1.7 },
+                { day: "Dissabte", meal: "Dinar", dish: "Macarrons amb sofregit", amount: 1.7 },
+                { day: "Dissabte", meal: "Dinar", dish: "Macarrons amb sofregit", amount: 1.7 },
+                { day: "Dissabte", meal: "Dinar", dish: "Macarrons amb sofregit", amount: 1.7 },
+            ]))
     }
 }
