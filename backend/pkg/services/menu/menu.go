@@ -51,7 +51,7 @@ func (s Service) Name() string {
 }
 
 func (s Service) Path() string {
-	return "/api/menu"
+	return "/api/menu/{menu}"
 }
 
 func (s Service) Enabled() bool {
@@ -74,12 +74,17 @@ func (s *Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 		return httputils.Errorf(http.StatusBadRequest, "unsupported format: %s", r.Header.Get("Accept"))
 	}
 
-	menus, err := s.db.Menus()
-	if err != nil {
-		return httputils.Errorf(http.StatusInternalServerError, "could not get menus: %v", err)
+	m := r.PathValue("menu")
+	if m == "" {
+		return httputils.Error(http.StatusBadRequest, "missing menu")
 	}
 
-	if err := json.NewEncoder(w).Encode(menus); err != nil {
+	menu, ok := s.db.LookupMenu(m)
+	if !ok {
+		return httputils.Errorf(http.StatusNotFound, "menu %s not found", m)
+	}
+
+	if err := json.NewEncoder(w).Encode(menu); err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "could not write menus to output: %w", err)
 	}
 
@@ -91,6 +96,11 @@ func (s *Service) handlePut(log logger.Logger, w http.ResponseWriter, r *http.Re
 		return httputils.Errorf(http.StatusBadRequest, "unsupported content type: %s", r.Header.Get("Content-Type"))
 	}
 
+	name := r.PathValue("menu")
+	if name == "" {
+		return httputils.Error(http.StatusBadRequest, "missing menu")
+	}
+
 	out, err := io.ReadAll(r.Body)
 	if err != nil {
 		return httputils.Error(http.StatusBadRequest, "failed to read request")
@@ -98,7 +108,7 @@ func (s *Service) handlePut(log logger.Logger, w http.ResponseWriter, r *http.Re
 	r.Body.Close()
 
 	menu := dbtypes.Menu{
-		Name: "default",
+		Name: name,
 	}
 
 	if err := json.Unmarshal(out, &menu); err != nil {

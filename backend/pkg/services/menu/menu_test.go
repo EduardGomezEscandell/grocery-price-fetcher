@@ -27,10 +27,10 @@ func TestMenuEndpoint(t *testing.T) {
 		wantBody string
 	}{
 		"GET":               {method: "GET", wantCode: http.StatusOK, wantBody: "!golden"},
-		"GET with empty DB": {method: "GET", wantCode: http.StatusOK, wantBody: "[]\n"},
+		"GET with empty DB": {method: "GET", wantCode: http.StatusNotFound},
 
-		"PUT":          {method: "PUT", wantCode: http.StatusCreated, wantBody: ""},
-		"PUT override": {method: "PUT", wantCode: http.StatusCreated, wantBody: ""},
+		"PUT":          {method: "PUT", wantCode: http.StatusCreated},
+		"PUT override": {method: "PUT", wantCode: http.StatusCreated},
 
 		"DELETE": {method: "DELETE", wantCode: http.StatusMethodNotAllowed},
 		"PATCH":  {method: "PATCH", wantCode: http.StatusMethodNotAllowed},
@@ -56,7 +56,7 @@ func TestMenuEndpoint(t *testing.T) {
 
 			testutils.TestEndpoint(t, testutils.ResponseTestOptions{
 				ServePath: sv.Path(),
-				ReqPath:   "/api/menu",
+				ReqPath:   "/api/menu/testmenu1",
 				Endpoint:  sv.Handle,
 				Method:    tc.method,
 				Body:      string(out),

@@ -15,8 +15,8 @@ class Backend {
 
     private mock: boolean = false
 
-    Menu(): MenuEndpoint {
-        return this.mock ? new MockMenuEndpoint() : new MenuEndpoint()
+    Menu(which: string): MenuEndpoint {
+        return this.mock ? new MockMenuEndpoint(which) : new MenuEndpoint(which)
     }
 
     Dishes(): DishesEndpoint {
@@ -31,8 +31,8 @@ class Backend {
         return this.mock ? new MockNeedsEndpoint(which) : new NeedsEndpoint(which)
     }
 
-    IngredientUse(): IngredientUseEndpoint {
-        return this.mock ? new MockIngredientUseEndpoint() : new IngredientUseEndpoint()
+    IngredientUse(menu: string, ingredient: string): IngredientUseEndpoint {
+        return this.mock ? new MockIngredientUseEndpoint(menu, ingredient) : new IngredientUseEndpoint(menu, ingredient)
     }
 
     ShoppingList(menu: string, pantry: string): ShoppingListEndpoint {

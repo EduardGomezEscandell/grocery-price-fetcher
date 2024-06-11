@@ -37,16 +37,11 @@ func (s Service) Name() string {
 }
 
 func (s Service) Path() string {
-	return "/api/ingredient-use"
+	return "/api/ingredient-use/{menu}/{ingredient}"
 }
 
 func (s Service) Enabled() bool {
 	return s.settings.Enable
-}
-
-type reqBody struct {
-	MenuName       string `json:"menu_name"`
-	IngredientName string `json:"ingredient_name"`
 }
 
 type respBodyItem struct {
@@ -57,24 +52,14 @@ type respBodyItem struct {
 }
 
 func (s Service) Handle(_ logger.Logger, w http.ResponseWriter, r *http.Request) error {
-	if r.Method != http.MethodPost {
+	if r.Method != http.MethodGet {
 		return httputils.Errorf(http.StatusMethodNotAllowed, "method %s not allowed", r.Method)
 	}
 
-	var b reqBody
-	if err := json.NewDecoder(r.Body).Decode(&b); err != nil {
-		return httputils.Errorf(http.StatusBadRequest, "failed to decode request body: %v", err)
-	}
+	menu := r.PathValue("menu")
+	ingredient := r.PathValue("ingredient")
 
-	if b.MenuName == "" {
-		return httputils.Errorf(http.StatusBadRequest, "menu_name is required")
-	}
-
-	if b.IngredientName == "" {
-		return httputils.Errorf(http.StatusBadRequest, "ingredient is required")
-	}
-
-	resp, err := s.compute(b)
+	resp, err := s.compute(menu, ingredient)
 	if err != nil {
 		return err
 	}
@@ -86,10 +71,10 @@ func (s Service) Handle(_ logger.Logger, w http.ResponseWriter, r *http.Request)
 	return nil
 }
 
-func (s *Service) compute(b reqBody) ([]respBodyItem, error) {
-	menu, ok := s.db.LookupMenu(b.MenuName)
+func (s *Service) compute(menuName, ingredientName string) ([]respBodyItem, error) {
+	menu, ok := s.db.LookupMenu(menuName)
 	if !ok {
-		return nil, httputils.Errorf(http.StatusNotFound, "menu %q not found", b.MenuName)
+		return nil, httputils.Errorf(http.StatusNotFound, "menu %q not found", menuName)
 	}
 
 	resp := make([]respBodyItem, 0)
@@ -104,7 +89,7 @@ func (s *Service) compute(b reqBody) ([]respBodyItem, error) {
 				}
 
 				for _, ingredient := range recipe.Ingredients {
-					if ingredient.Name == b.IngredientName {
+					if ingredient.Name == ingredientName {
 						resp = append(resp, respBodyItem{
 							Day:    day.Name,
 							Meal:   meal.Name,
