@@ -33,8 +33,12 @@
     font-weight: bold;
 }
 
-.sidebar #inactive {
+.sidebar #disabled {
     color: grey;
+}
+
+.sidebar #current {
+    font-weight: bold;
 }
 
 .sidebar #inactive:hover {

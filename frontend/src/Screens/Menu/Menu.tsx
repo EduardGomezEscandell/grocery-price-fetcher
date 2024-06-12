@@ -226,8 +226,7 @@ interface DayColumnProps extends SubProps {
 
 function DayColumn({ state, setState, path }: DayColumnProps): JSX.Element {
     const m = state.menu
-    console.log(path)
-
+    
     return (
         <div className='Day'>
             <div className='Header' id='header1'>
