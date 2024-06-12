@@ -123,6 +123,11 @@ export class Pantry {
     name: string = 'default'
     contents: Array<PantryItem> = []
 
+    constructor(name: string) {
+        this.name = name
+        this.contents = []
+    }
+
     static fromJSON(json: any): Pantry {
         try {
             let pantry = new Pantry()

@@ -16,9 +16,10 @@ export class PantryEndpoint {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-            }
+            },
         })
-            .then(response => response.json())
+            .then(r => r.ok ? r : Promise.reject(r))
+            .then(r => r.json())
             .then(data => Pantry.fromJSON(data))
     }
 
@@ -31,6 +32,20 @@ export class PantryEndpoint {
             },
             body: JSON.stringify(msg)
         })
+            .then(r => r.ok ? r : Promise.reject(r))
+            .then(() => { })
+            .catch((error) => { console.error('Error:', error) })
+    }
+
+    async DELETE(): Promise<void> {
+        return fetch(this.path, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            }
+        })
+            .then(r => r.ok ? r : Promise.reject(r))
             .then(() => { })
             .catch((error) => { console.error('Error:', error) })
     }
@@ -60,6 +75,11 @@ export class MockPantryEndpoint extends PantryEndpoint {
     async PUT(msg: Pantry): Promise<void> {
         console.log(`PUT to ${this.path}:`)
         console.log(JSON.stringify(msg)) // Ensure toJSON is called without errors
+        return new Promise(resolve => setTimeout(resolve, 100))
+    }
+
+    async DELETE(): Promise<void> {
+        console.log(`DELETE from ${this.path}`)
         return new Promise(resolve => setTimeout(resolve, 100))
     }
 }

@@ -1,0 +1,25 @@
+[{
+    "name": "pantry1",
+    "contents": [
+        {
+            "name": "Apple",
+            "amount": 5
+        },
+        {
+            "name": "Banana",
+            "amount": 3
+        }
+    ]
+},{
+    "name": "pantry2",
+    "contents": [
+        {
+            "name": "Apple",
+            "amount": 100000000000
+        },
+        {
+            "name": "Banana",
+            "amount": 89321
+        }
+    ]
+}]

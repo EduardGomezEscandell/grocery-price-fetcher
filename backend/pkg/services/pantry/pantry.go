@@ -55,6 +55,8 @@ func (s *Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Reque
 		return s.handleGet(log, w, r)
 	case http.MethodPut:
 		return s.handlePut(log, w, r)
+	case http.MethodDelete:
+		return s.handleDelete(log, w, r)
 	default:
 		return httputils.Errorf(http.StatusMethodNotAllowed, "method %s not allowed", r.Method)
 	}
@@ -87,10 +89,6 @@ func (s *Service) handlePut(log logger.Logger, w http.ResponseWriter, r *http.Re
 		return httputils.Errorf(http.StatusBadRequest, "unsupported content type: %s", r.Header.Get("Content-Type"))
 	}
 
-	if r.Header.Get("Accept") != "application/json" {
-		return httputils.Errorf(http.StatusBadRequest, "unsupported format: %s", r.Header.Get("Accept"))
-	}
-
 	out, err := io.ReadAll(r.Body)
 	if err != nil {
 		return httputils.Error(http.StatusBadRequest, "failed to read request")
@@ -117,5 +115,23 @@ func (s *Service) handlePut(log logger.Logger, w http.ResponseWriter, r *http.Re
 	}
 
 	w.WriteHeader(http.StatusCreated)
+	return nil
+}
+
+func (s *Service) handleDelete(_ logger.Logger, w http.ResponseWriter, r *http.Request) error {
+	if r.Header.Get("Content-Type") != "application/json" {
+		return httputils.Errorf(http.StatusBadRequest, "unsupported content type: %s", r.Header.Get("Content-Type"))
+	}
+
+	p := r.PathValue("pantry")
+	if p == "" {
+		return httputils.Error(http.StatusBadRequest, "missing pantry")
+	}
+
+	if err := s.db.DeletePantry(p); err != nil {
+		return httputils.Errorf(http.StatusInternalServerError, "could not delete pantry: %w", err)
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 	return nil
 }

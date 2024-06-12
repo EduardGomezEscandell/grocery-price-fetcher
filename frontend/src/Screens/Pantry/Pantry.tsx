@@ -8,6 +8,8 @@ import IngredientDialog from './IngredientDialog.tsx';
 import { IngredientUsage } from '../../Backend/endpoints/IngredientUse.tsx';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../SideBar/Sidebar.tsx';
+import DangerDialog from '../DangerDialog/DangerDialog.tsx';
+import { PantryEndpoint } from '../../Backend/endpoints/Pantry.tsx';
 
 interface Props {
     backend: Backend;
@@ -19,20 +21,30 @@ interface Focus {
     usage: IngredientUsage[]
 }
 
+enum Dialog {
+    OFF,
+    HELP,
+    FOCUS,
+    CONFIRM,
+}
+
 export default function RenderPantry(pp: Props) {
-    const [pantry, setPantry] = useState<Pantry>(new Pantry())
-    const [help, setHelp] = useState(false)
-    const [focussed, setFocussed] = useState<Focus | undefined>(undefined)
+    const [pantry, setPantry] = useState<Pantry>(new Pantry(pp.sessionName))
+    const [focussed, setFocussed] = useState<Focus>({ item: new PantryItem(), usage: [] })
     const navigate = useNavigate()
 
+    const [dialog, setDialog] = useState(Dialog.OFF)
+
     const tableStyle: React.CSSProperties = {}
-    if (focussed || help) {
+    if (dialog !== Dialog.OFF) {
         tableStyle.filter = 'blur(5px)'
     }
 
     useEffect(() => {
         Promise.all([
-            pp.backend.Pantry(pp.sessionName).GET(),
+            pp.backend.Pantry(pp.sessionName)
+                .GET()
+                .then(p => p, () => new Pantry(pp.sessionName)),
             pp.backend.Needs(pp.sessionName).GET(),
         ])
             .then(([pantry, needs]) => filterPantry(pantry, needs))
@@ -50,9 +62,9 @@ export default function RenderPantry(pp: Props) {
                 left={<button className='save-button' id='idle'
                     onClick={() => setSidebar(!sidebar)}
                 >Opcions </button>
-            }
+                }
                 logoOnClick={() => { pp.backend.Pantry(pp.sessionName).PUT(pantry).then(() => navigate("/")) }}
-                titleOnClick={() => setHelp(true)}
+                titleOnClick={() => setDialog(Dialog.HELP)}
                 titleText='El&nbsp;meu rebost'
                 right={<SaveButton
                     key='save'
@@ -73,7 +85,10 @@ export default function RenderPantry(pp: Props) {
                     <table style={tableStyle}>
                         <thead>
                             <tr key='header' id='header1'>
-                                <th id="left">Producte</th>
+                                <th id="left">
+                                    <button id='X' onClick={async () => setDialog(Dialog.CONFIRM)}>X</button>
+                                    Producte
+                                </th>
                                 <th id="right">Tens</th>
                             </tr>
                         </thead>
@@ -90,53 +105,27 @@ export default function RenderPantry(pp: Props) {
                                             setPantry(pantry)
                                         }}
                                         onClick={() => {
-                                            if (focussed) {
-                                                setFocussed(undefined)
-                                            } else {
-                                                pp.backend.IngredientUse(pp.sessionName, i.name)
-                                                    .GET()
-                                                    .then(usage => setFocussed({ item: i, usage: usage }))
-                                                    .catch(reason => console.log('Error getting ingredient usage: ', reason || 'Unknown error'))
-                                            }
+                                            pp.backend.IngredientUse(pp.sessionName, i.name)
+                                                .GET()
+                                                .then(usage => setFocussed({ item: i, usage: usage }))
+                                                .then(() => setDialog(Dialog.FOCUS))
+                                                .catch(reason => console.log('Error getting ingredient usage: ', reason || 'Unknown error'))
+
                                         }}
                                     />
                                 ))
                             }
                         </tbody>
                     </table>
-                    {
-                        focussed && <IngredientDialog
-                            item={focussed.item}
-                            usage={focussed.usage}
-                            onClose={() => setFocussed(undefined)}
-                        />
-                    }
-                    {
-                        help && <dialog open>
-                            <h2 id="header">El meu rebost</h2>
-                            <div id="body">
-                                <p>
-                                    Aquesta pàgina mostra una llista dels ingredients que necessites per al teu menú setmanal.
-                                </p>
-                                <p>
-                                    Per a cada ingredient, indica quant en tens al teu rebost i
-                                    així <i>La compra de l'Edu</i> podrà calcular quant en necessites comprar.
-                                </p>
-                                <p>
-                                    Si fas clic en un ingredient, veuràs quins dies, àpats i receptes l'utilitzen en el teu menu.
-                                </p>
-                            </div>
-                            <div id="footer">
-                                <button onClick={() => setHelp(false)}>
-                                    D'acord
-                                </button>
-                            </div>
-                        </dialog>
-                    }
+                    {renderDialog(
+                        { state: dialog, setState: setDialog },
+                        focussed,
+                        pp.backend.Pantry(pp.sessionName)
+                    )}
                 </div>
                 {sidebar && <Sidebar
                     onHelp={() => {
-                        setHelp(true)
+                        setDialog(Dialog.HELP)
                         setSidebar(false)
                     }}
                     onNavigate={() => pp.backend.Pantry(pp.sessionName).PUT(pantry)}
@@ -144,6 +133,57 @@ export default function RenderPantry(pp: Props) {
             </section>
         </ div>
     )
+}
+
+interface Stateful<T> {
+    state: T
+    setState: (s: T) => void
+}
+
+function renderDialog(d: Stateful<Dialog>, focus: Focus, pantryEP: PantryEndpoint) {
+    switch (d.state) {
+        case Dialog.OFF:
+            return null
+        case Dialog.FOCUS:
+            return <IngredientDialog
+                item={focus.item}
+                usage={focus.usage}
+                onClose={() => d.setState(Dialog.OFF)}
+            />
+        case Dialog.HELP:
+            return <dialog open>
+                <h2 id="header">El meu rebost</h2>
+                <div id="body">
+                    <p>
+                        Aquesta pàgina mostra una llista dels ingredients que necessites per al teu menú setmanal.
+                    </p>
+                    <p>
+                        Per a cada ingredient, indica quant en tens al teu rebost i
+                        així <i>La compra de l'Edu</i> podrà calcular quant en necessites comprar.
+                    </p>
+                    <p>
+                        Si fas clic en un ingredient, veuràs quins dies, àpats i receptes l'utilitzen en el teu menu.
+                    </p>
+                </div>
+                <div id="footer">
+                    <button onClick={() => d.setState(Dialog.OFF)}>
+                        D'acord
+                    </button>
+                </div>
+            </dialog>
+        case Dialog.CONFIRM:
+            return <DangerDialog
+                onAccept={() => {
+                    pantryEP.DELETE().then(() => window.location.reload())
+                }}
+                onReject={() => d.setState(Dialog.OFF)}
+            >
+                <h3 id='header'>Confirmació</h3>
+                <div id='body'>Segur que vols esborrar el rebost?</div>
+            </DangerDialog>
+        default:
+            return null
+    }
 }
 
 // This function is used to filter the pantry contents against the shopping needs
