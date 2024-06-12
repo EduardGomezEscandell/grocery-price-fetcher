@@ -1,0 +1,51 @@
+.sidebar {
+    height: 100%;
+    width: 250px;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    background-color: white;
+    border: 1px solid black;
+    overflow-x: hidden;
+
+
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar #header {
+    cursor: pointer;
+    padding-left: 10px;
+    border-bottom: 1px solid black;
+    width: 250px;
+}
+
+.sidebar #header:hover {
+    font-weight: bolder;
+}
+
+.sidebar #body {
+    padding-left: 10px;
+}
+
+.sidebar p:hover {
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.sidebar #inactive {
+    color: grey;
+}
+
+.sidebar #inactive:hover {
+    font-weight: normal;
+}
+
+.sidebar #footer {
+    padding-left: 10px;
+    width: 240px;
+
+    position: fixed;
+    bottom: 0;
+    border-top: 1px solid black;
+}

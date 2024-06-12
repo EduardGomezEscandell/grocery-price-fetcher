@@ -1,10 +1,11 @@
 import React from 'react'
 import Backend from '../../Backend/Backend.ts';
 import './LandingPage.css';
+import { Outlet, useNavigate } from 'react-router-dom';
 
 interface Props {
     backend: Backend;
-    onGotoMenu: () => void
+    sessionName: string;
 }
 
 enum DialogState {
@@ -21,6 +22,8 @@ export default function LandingPage(props: Props) {
         baseStyle.filter = 'blur(5px)'
     }
 
+    const navigate = useNavigate()
+
     return (
         <div className='LandingPage'>
             <div id="title" style={baseStyle}>
@@ -28,24 +31,35 @@ export default function LandingPage(props: Props) {
                 <h1>La&nbsp;compra de&nbsp;l'Edu</h1>
             </div>
             <div id="content" style={baseStyle}>
-                <button onClick={() => {
-                    setDialog(DialogState.Help)
-                }}>
-                    Com funciona?
-                </button>
-                <button id="inactive" onClick={() => {
-                    setDialog(DialogState.CommingSoon)
-                }}>
-                    Els meus productes
-                </button>
-                <button id="inactive" onClick={() => {
-                    setDialog(DialogState.CommingSoon)
-                }}>
-                    Les meves receptes
-                </button>
-                <button onClick={props.onGotoMenu}>
-                    La meva compra
-                </button>
+                <div id="iconrow">
+                    <button onClick={() => {
+                        setDialog(DialogState.Help)
+                    }}>
+                        Com funciona?
+                    </button>
+                    <button id="inactive" onClick={() => {
+                        setDialog(DialogState.CommingSoon)
+                    }}>
+                        Els meus productes
+                    </button>
+                    <button id="inactive" onClick={() => {
+                        setDialog(DialogState.CommingSoon)
+                    }}>
+                        Les meves receptes
+                    </button>
+                </div>
+                <div id="iconrow">
+                    <button onClick={() => navigate('/menu')}>
+                        El meu menú
+                    </button>
+                    <button onClick={() => navigate('/pantry')}>
+                        El meu rebost
+                    </button>
+                    <button onClick={() => navigate('/shopping-list')}>
+                        La meva llista de la compra
+                    </button>
+                </div>
+                <Outlet />
             </div>
             {commingSoon === DialogState.CommingSoon && (
                 <dialog open>

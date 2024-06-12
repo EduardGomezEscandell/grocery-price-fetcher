@@ -6,12 +6,12 @@ import SaveButton from '../../SaveButton/SaveButton.tsx';
 import ShoppingItem, { Column } from './ShoppingItem.tsx';
 import { asEuro } from '../../Numbers/Numbers.ts';
 import './ShoppingList.css';
+import { useNavigate } from 'react-router-dom';
+import Sidebar from '../../SideBar/Sidebar.tsx';
 
 interface Props {
     backend: Backend;
     sessionName: string;
-    onBackToPantry: () => void;
-    onGotoHome: () => void;
 }
 
 enum Dialog {
@@ -48,22 +48,18 @@ export default function Shopping(props: Props): JSX.Element {
         tableStyle.filter = 'blur(5px)'
     }
 
+    const navigate = useNavigate()
+
+    const [sidebar, setSidebar] = useState(false)
+
     return (
-        <>
+        <div id='rootdiv'>
             <TopBar
-                left={<SaveButton
-                    key='save'
-
-                    baseTxt='Tornar'
-                    onSave={() => saveShoppingList(props.backend, shoppingList)}
-                    onSaveTxt='Desant...'
-
-                    onAccept={() => props.onBackToPantry()}
-                    onAcceptTxt='Desat'
-
-                    onRejectTxt='Error'
-                />}
-                logoOnClick={() => saveShoppingList(props.backend, shoppingList).then(props.onGotoHome) 
+                left={<button className='save-button' id='idle'
+                    onClick={() => setSidebar(!sidebar)}
+                >Opcions </button>
+            }
+                logoOnClick={() => saveShoppingList(props.backend, shoppingList).then(() => navigate("/")) 
                 }
                 titleOnClick={() => setDialog(Dialog.HELP)}
                 titleText="La&nbsp;meva compra"
@@ -77,6 +73,7 @@ export default function Shopping(props: Props): JSX.Element {
                     onRejectTxt='Error'
                 />}
             />
+            <section>
             <div className='scroll-table'>
                 <table style={tableStyle}>
                     <thead id='header1'>
@@ -152,7 +149,15 @@ export default function Shopping(props: Props): JSX.Element {
                     />
                 }
             </div>
-        </>
+            {sidebar && <Sidebar
+                    onHelp={() => {
+                        setDialog(Dialog.HELP)
+                        setSidebar(false)
+                    }}
+                    onNavigate={() => saveShoppingList(props.backend, shoppingList)}
+                />}
+            </section>
+        </ div>
     )
 }
 
