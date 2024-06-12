@@ -8,6 +8,7 @@ import { asEuro } from '../../Numbers/Numbers.ts';
 import './ShoppingList.css';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../SideBar/Sidebar.tsx';
+import DangerDialog from '../DangerDialog/DangerDialog.tsx';
 
 interface Props {
     backend: Backend;
@@ -40,7 +41,7 @@ export default function Shopping(props: Props): JSX.Element {
         props.backend
             .ShoppingList(props.sessionName, props.sessionName)
             .GET()
-            .then((sl)=> setShoppingList(sl))
+            .then((sl) => setShoppingList(sl))
     }, [props])
 
     const tableStyle: React.CSSProperties = {}
@@ -58,8 +59,8 @@ export default function Shopping(props: Props): JSX.Element {
                 left={<button className='save-button' id='idle'
                     onClick={() => setSidebar(!sidebar)}
                 >Opcions </button>
-            }
-                logoOnClick={() => saveShoppingList(props.backend, shoppingList).then(() => navigate("/")) 
+                }
+                logoOnClick={() => saveShoppingList(props.backend, shoppingList).then(() => navigate("/"))
                 }
                 titleOnClick={() => setDialog(Dialog.HELP)}
                 titleText="La&nbsp;meva compra"
@@ -74,82 +75,88 @@ export default function Shopping(props: Props): JSX.Element {
                 />}
             />
             <section>
-            <div className='scroll-table'>
-                <table style={tableStyle}>
-                    <thead id='header1'>
-                        <tr>
-                            <th>
-                                <button id='clear' onClick={() => {
-                                    setDialog(Dialog.RESTORE)
-                                }}>x</button>
-                            </th>
-                            <th id='left'>Ingredient</th>
-                            <th id='right'>
-                                <select
-                                    value={column}
-                                    onChange={e => setColumn(e.target.selectedIndex as Column)}
-                                >
-                                    <option value={Column.UNITS}>Unitats</option>
-                                    <option value={Column.PACKS}>Paquets</option>
-                                    <option value={Column.COST}>Cost</option>
-                                </select>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {
-                            shoppingList.items.map((item, idx) =>
-                                <ShoppingItem
-                                    item={item}
-                                    idx={idx}
-                                    key={`${k}-${idx}-${column}`}
-                                    show={column}
-                                    setSelection={(v: boolean) => {
-                                        item.done = v
-                                        setShoppingList(shoppingList)
-                                    }}
+                <div className='scroll-table'>
+                    <table style={tableStyle}>
+                        <thead id='header1'>
+                            <tr>
+                                <th>
+                                    <button id='clear' onClick={() => {
+                                        setDialog(Dialog.RESTORE)
+                                    }}>x</button>
+                                </th>
+                                <th id='left'>Ingredient</th>
+                                <th id='right'>
+                                    <select
+                                        value={column}
+                                        onChange={e => setColumn(e.target.selectedIndex as Column)}
+                                    >
+                                        <option value={Column.UNITS}>Unitats</option>
+                                        <option value={Column.PACKS}>Paquets</option>
+                                        <option value={Column.COST}>Cost</option>
+                                    </select>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {
+                                shoppingList.items.map((item, idx) =>
+                                    <ShoppingItem
+                                        item={item}
+                                        idx={idx}
+                                        key={`${k}-${idx}-${column}`}
+                                        show={column}
+                                        setSelection={(v: boolean) => {
+                                            item.done = v
+                                            setShoppingList(shoppingList)
+                                        }}
                                     />
-                            )
-                        }
-                    </tbody>
-                    <tfoot id='header2'>
-                        <tr>
-                            <td></td>
-                            <td id='left'>Cost total</td>
-                            <td id='right'>
-                                {
-                                    (() => {
-                                        const cost = shoppingList.items.reduce((acc, i) => acc + i.cost, 0)
-                                        return (<>{asEuro(cost)}</>)
-                                    })()
-                                }
-                            </td>
-                        </tr>
-                    </tfoot>
-                </table>
-                {(dialog === Dialog.RESTORE || dialog === Dialog.CLOSING) &&
-                    <ResetDialog
-                        onReset={() => {
-                            if (!setDialog(Dialog.CLOSING)) {
-                                return
+                                )
                             }
-                            shoppingList.items.forEach(i => i.done = false)
-                            props.backend
-                                .ShoppingList(props.sessionName, props.sessionName)
-                                .DELETE()
-                                .then(() => setDialog(Dialog.OFF))
-                                .then(() => forceReload())
-                        }}
-                        onExit={() => setDialog(Dialog.OFF)}
-                    />
-                }{
-                    dialog === Dialog.HELP &&
-                    <HelpDialog
-                        onClose={() => setDialog(Dialog.OFF)}
-                    />
-                }
-            </div>
-            {sidebar && <Sidebar
+                        </tbody>
+                        <tfoot id='header2'>
+                            <tr>
+                                <td></td>
+                                <td id='left'>Cost total</td>
+                                <td id='right'>
+                                    {
+                                        (() => {
+                                            const cost = shoppingList.items.reduce((acc, i) => acc + i.cost, 0)
+                                            return (<>{asEuro(cost)}</>)
+                                        })()
+                                    }
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    {(dialog === Dialog.RESTORE || dialog === Dialog.CLOSING) &&
+                        <DangerDialog
+                            onAccept={() => {
+                                if (!setDialog(Dialog.CLOSING)) {
+                                    return
+                                }
+                                shoppingList.items.forEach(i => i.done = false)
+                                props.backend
+                                    .ShoppingList(props.sessionName, props.sessionName)
+                                    .DELETE()
+                                    .then(() => setDialog(Dialog.OFF))
+                                    .then(() => forceReload())
+                            }}
+                            onReject={() => setDialog(Dialog.OFF)}
+                        >
+                            <h3 id='header'>Restaurar la llista de la compra?</h3>
+                            <div id='body'>
+                                <p>Tots els elements marcats com a comprats es desmarcaran</p>
+                                <p>Prem <i>No</i> per a tornar enrere, prem <i>Sí</i> per a continuar</p>
+                            </div>
+                        </DangerDialog>
+                    }{
+                        dialog === Dialog.HELP &&
+                        <HelpDialog
+                            onClose={() => setDialog(Dialog.OFF)}
+                        />
+                    }
+                </div>
+                {sidebar && <Sidebar
                     onHelp={() => {
                         setDialog(Dialog.HELP)
                         setSidebar(false)
@@ -161,26 +168,7 @@ export default function Shopping(props: Props): JSX.Element {
     )
 }
 
-function ResetDialog(props: {
-    onReset: () => void
-    onExit: () => void
-}): JSX.Element {
-    return (
-        <dialog open>
-            <h3 id='header'>
-                Restaurar la llista de la compra?
-            </h3>
-            <div id='body'>
-                <p>Tots els elements marcats com a comprats es desmarcaran</p>
-                <p>Aquesta acció és irreversible, prem Tornar si no vols realitzar-la</p>
-            </div>
-            <div id='footer'>
-                <button id='dialog-left' onClick={props.onExit}>Tornar</button>
-                <button id='dialog-right' onClick={props.onReset}>Restaurar</button>
-            </div>
-        </dialog>
-    )
-}
+
 
 function HelpDialog(props: {
     onClose: () => void

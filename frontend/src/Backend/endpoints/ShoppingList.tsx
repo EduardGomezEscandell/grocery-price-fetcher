@@ -19,7 +19,8 @@ export class ShoppingListEndpoint {
                 'Accept': 'application/json',
             }
         })
-            .then(response => response.json())
+            .then(r => r.ok ? r : Promise.reject(r))
+            .then(r => r.json())
             .then(data => ShoppingList.fromJSON(data))
     }
 
@@ -32,8 +33,8 @@ export class ShoppingListEndpoint {
             },
             body: JSON.stringify(items)
         })
+            .then(r => r.ok ? r : Promise.reject(r))
             .then(() => { })
-            .catch((error) => { console.error('Error:', error) })
     }
 
     async DELETE(): Promise<void> {
@@ -44,8 +45,8 @@ export class ShoppingListEndpoint {
                 'Accept': 'application/json',
             }
         })
+            .then(r => r.ok ? r : Promise.reject(r))
             .then(() => { })
-            .catch((error) => { console.error('Error:', error) })
     }
 }
 

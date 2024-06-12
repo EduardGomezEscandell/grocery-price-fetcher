@@ -100,7 +100,7 @@ dialog {
 
     display: flex;
     flex-direction: column;
-    justify-content: top;
+    justify-content: space-evenly;
     min-height: 100px;
   }
 

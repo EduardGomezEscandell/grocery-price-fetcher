@@ -26,12 +26,12 @@ func TestPantryEndpoint(t *testing.T) {
 		wantCode int
 		wantBody string
 	}{
-		"GET": {method: "GET", wantCode: http.StatusOK, wantBody: "!golden"},
-		"PUT": {method: "PUT", wantCode: http.StatusCreated},
+		"GET":    {method: "GET", wantCode: http.StatusOK, wantBody: "!golden"},
+		"PUT":    {method: "PUT", wantCode: http.StatusCreated},
+		"DELETE": {method: "DELETE", wantCode: http.StatusNoContent},
 
-		"DELETE": {method: "DELETE", wantCode: http.StatusMethodNotAllowed},
-		"PATCH":  {method: "PATCH", wantCode: http.StatusMethodNotAllowed},
-		"POST":   {method: "POST", wantCode: http.StatusMethodNotAllowed},
+		"PATCH": {method: "PATCH", wantCode: http.StatusMethodNotAllowed},
+		"POST":  {method: "POST", wantCode: http.StatusMethodNotAllowed},
 	}
 
 	for name, tc := range testCases {
