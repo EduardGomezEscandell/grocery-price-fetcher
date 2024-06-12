@@ -192,7 +192,7 @@ function renderDialog(d: Stateful<Dialog>, focus: Focus, pantryEP: PantryEndpoin
 // - If an item is in the needs the amount defaults to 0.
 // - Items are sorted alphabetically.
 function filterPantry(pantry: Pantry, needs: ShoppingNeeds): Pantry {
-    const filtered = new Pantry()
+    const filtered = new Pantry(pantry.name)
     pantry.contents.sort((a, b) => a.name.localeCompare(b.name))
     needs.items.sort((a, b) => a.name.localeCompare(b.name))
 
