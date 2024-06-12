@@ -16,7 +16,8 @@ export class IngredientUseEndpoint {
                 'Accept': 'application/json',
             },
         })
-            .then(response => response.json())
+            .then(r => r.ok ? r : Promise.reject(r))
+            .then(r => r.json())
             .then(data => fromJSON(data))
     }
 }

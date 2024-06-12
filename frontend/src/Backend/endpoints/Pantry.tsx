@@ -34,7 +34,6 @@ export class PantryEndpoint {
         })
             .then(r => r.ok ? r : Promise.reject(r))
             .then(() => { })
-            .catch((error) => { console.error('Error:', error) })
     }
 
     async DELETE(): Promise<void> {
@@ -47,7 +46,6 @@ export class PantryEndpoint {
         })
             .then(r => r.ok ? r : Promise.reject(r))
             .then(() => { })
-            .catch((error) => { console.error('Error:', error) })
     }
 }
 
