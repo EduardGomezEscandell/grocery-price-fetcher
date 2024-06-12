@@ -39,7 +39,7 @@ jobs:
       working-directory: ${{ github.workspace }}/${{ matrix.module}}
       run: make build
     - name: Lint
-      uses: golangci/golangci-lint-action@v4
+      uses: golangci/golangci-lint-action@v6
       with:
         version: latest
         working-directory: ${{ github.workspace }}/${{ matrix.module}}
