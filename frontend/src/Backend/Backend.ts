@@ -8,7 +8,7 @@ import { MockNeedsEndpoint, NeedsEndpoint } from './endpoints/Needs.tsx'
 
 class Backend {
     constructor() {
-        if (process.env.REACT_APP_MOCK_BACKEND !== "") {
+        if (import.meta.env.VITE_APP_MOCK_BACKEND !== "") {
             this.mock = true
         }
     }
