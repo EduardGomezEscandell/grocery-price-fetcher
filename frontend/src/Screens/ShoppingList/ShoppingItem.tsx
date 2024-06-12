@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { ShoppingListItem } from '../../State/State.tsx';
-import { asEuro, round2 } from '../../Numbers/Numbers.ts';
+import { ShoppingListItem } from '../../State/State';
+import { asEuro, round2 } from '../../Numbers/Numbers';
 
 interface Props {
     item: ShoppingListItem;

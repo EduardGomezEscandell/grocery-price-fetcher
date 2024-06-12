@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { PantryItem } from '../../State/State.tsx'
+import { PantryItem } from '../../State/State'
 import './Pantry.css'
 
 interface Props {

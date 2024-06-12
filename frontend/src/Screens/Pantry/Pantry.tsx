@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react'
-import { Pantry, PantryItem, ShoppingNeeds, ShoppingNeedsItem } from '../../State/State.tsx';
-import Backend from '../../Backend/Backend.tsx';
-import TopBar from '../../TopBar/TopBar.tsx';
-import SaveButton from '../../SaveButton/SaveButton.tsx';
-import IngredientRow from './PantryIngredient.tsx';
-import IngredientDialog from './IngredientDialog.tsx';
-import { IngredientUsage } from '../../Backend/endpoints/IngredientUse.tsx';
+import { Pantry, PantryItem, ShoppingNeeds, ShoppingNeedsItem } from '../../State/State';
+import Backend from '../../Backend/Backend';
+import TopBar from '../../TopBar/TopBar';
+import SaveButton from '../../SaveButton/SaveButton';
+import IngredientRow from './PantryIngredient';
+import IngredientDialog from './IngredientDialog';
+import { IngredientUsage } from '../../Backend/endpoints/IngredientUse';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../../SideBar/Sidebar.tsx';
-import DangerDialog from '../DangerDialog/DangerDialog.tsx';
-import { PantryEndpoint } from '../../Backend/endpoints/Pantry.tsx';
+import Sidebar from '../../SideBar/Sidebar';
+import DangerDialog from '../DangerDialog/DangerDialog';
+import { PantryEndpoint } from '../../Backend/endpoints/Pantry';
 
 interface Props {
     backend: Backend;
@@ -30,7 +30,7 @@ enum Dialog {
 
 export default function RenderPantry(pp: Props) {
     const [pantry, setPantry] = useState<Pantry>(new Pantry(pp.sessionName))
-    const [focussed, setFocussed] = useState<Focus>({ item: new PantryItem(), usage: [] })
+    const [focussed, setFocussed] = useState<Focus>({ item: new PantryItem("", 0), usage: [] })
     const navigate = useNavigate()
 
     const [dialog, setDialog] = useState(Dialog.OFF)

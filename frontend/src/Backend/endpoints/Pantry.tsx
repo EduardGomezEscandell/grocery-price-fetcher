@@ -1,4 +1,4 @@
-import { Pantry } from '../../State/State.tsx'
+import { Pantry } from '../../State/State'
 
 export class PantryEndpoint {
     protected path: string

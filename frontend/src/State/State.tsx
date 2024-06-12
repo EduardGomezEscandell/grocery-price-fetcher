@@ -44,6 +44,11 @@ export class Meal {
 }
 
 export class Day {
+    constructor(name: string, meals: Array<Meal> = []) {
+        this.name = name
+        this.meals = meals
+    }
+
     name: string;
     meals: Array<Meal>;
 }
@@ -58,16 +63,17 @@ export class Menu {
         try {
             menu.name = either(json, 'name', 'Unnamed menu')
             menu.days = either(json, 'days', []).map((day: any) => {
-                let d = new Day()
-                d.name = day.name
-                d.meals = either(day, 'meals', []).map((meal: any) => {
-                    let m = new Meal()
-                    m.name = either(meal, 'name', 'Unnamed meal')
-                    m.dishes = either(meal, 'dishes', []).map((dish: any) => {
-                        return new Dish(dish.name, dish.amount)
+                let d = new Day(
+                    day.name,
+                    either(day, 'meals', []).map((meal: any) => {
+                        let m = new Meal()
+                        m.name = either(meal, 'name', 'Unnamed meal')
+                        m.dishes = either(meal, 'dishes', []).map((dish: any) => {
+                            return new Dish(dish.name, dish.amount)
+                        })
+                        return m
                     })
-                    return m
-                })
+                )
                 return d
             })
 
@@ -88,33 +94,40 @@ export class Menu {
     }
 
     toJSON(): string {
-        const copy = {}
-        copy['name'] = this.name
-        copy['days'] = this.days.map(day => {
-            const d = {}
-            d['name'] = day.name
-            d['meals'] = day.meals
-                .filter(meal => meal.name !== "")
-                .map(meal => {
-                    const m = {}
-                    m['name'] = meal.name
-                    m['dishes'] = meal.dishes
-                        .filter(dish => dish.name !== "")
-                        .map(dish => {
+        const copy = {
+            name: this.name,
+            days: this.days.map(day => {
+                return {
+                    name: day.name,
+                    meals: day.meals
+                        .filter(meal => meal.name !== "")
+                        .map(meal => {
                             return {
-                                name: dish.name,
-                                amount: dish.amount
+                                name: meal.name,
+                                dishes: meal.dishes
+                                    .filter(dish => dish.name !== "")
+                                    .map(dish => {
+                                        return {
+                                            name: dish.name,
+                                            amount: dish.amount
+                                        }
+                                    })
                             }
                         })
-                    return m
-                })
-            return d
-        })
+
+                }
+            })
+        }
         return JSON.stringify(copy)
     }
 }
 
 export class PantryItem {
+    constructor(name: string, amount: number) {
+        this.name = name
+        this.amount = amount
+    }
+
     name: string
     amount: number
 }
@@ -123,26 +136,21 @@ export class Pantry {
     name: string = 'default'
     contents: Array<PantryItem> = []
 
-    constructor(name: string) {
+    constructor(name: string, contents: Array<PantryItem> = []) {
         this.name = name
-        this.contents = []
+        this.contents = contents
     }
 
     static fromJSON(json: any): Pantry {
-        try {
-            let pantry = new Pantry()
-            pantry.name = either(json, 'name', 'Default')
-            pantry.contents = either(json, 'contents', []).map((content: any): PantryItem => {
+        return new Pantry(
+            either(json, 'name', 'Default'),
+            either(json, 'contents', []).map((content: any): PantryItem => {
                 return {
                     name: either(content, 'name', 'Unnamed ingredient'),
                     amount: either(content, 'amount', 0),
                 }
             })
-            return pantry
-        } catch (e) {
-            console.error(e)
-            return new Pantry()
-        }
+        )
     }
 }
 
@@ -175,7 +183,7 @@ export class ShoppingNeeds {
     items: Array<ShoppingNeedsItem> = [];
 }
 
-export class ShoppingListItem {
+export interface ShoppingListItem {
     name: string
     done: boolean
     units: number
@@ -199,7 +207,7 @@ export class ShoppingList {
                 units: either(name, 'units', 0),
                 packs: either(name, 'packs', 0),
                 cost: either(name, 'cost', 0),
-            } as ShoppingListItem
+            }
         })
         return shoppingList
     }

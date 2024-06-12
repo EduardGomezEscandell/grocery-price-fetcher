@@ -1,4 +1,4 @@
-import { Menu } from '../../State/State.tsx'
+import { Menu } from '../../State/State'
 
 export class MenuEndpoint {
     protected path: string

@@ -1,148 +1,21 @@
 import React, { useState } from 'react'
-import Backend from '../../Backend/Backend.ts';
-import { Day, Meal, Dish, Menu } from '../../State/State.tsx';
-import TopBar from '../../TopBar/TopBar.tsx';
-import DishPicker from './DishPicker.tsx'
+import Backend from '../../Backend/Backend';
+import { Day, Meal, Dish, Menu } from '../../State/State';
+import TopBar from '../../TopBar/TopBar';
+import DishPicker from './DishPicker'
 import './Menu.css'
-import { round2 } from '../../Numbers/Numbers.ts';
-import SaveButton from '../../SaveButton/SaveButton.tsx';
+import { round2 } from '../../Numbers/Numbers';
+import SaveButton from '../../SaveButton/SaveButton';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../../SideBar/Sidebar.tsx';
+import Sidebar from '../../SideBar/Sidebar';
 
 interface Props {
     backend: Backend;
     sessionName: string;
 }
 
-class Path {
-    constructor(day: number, meal: number = 0, dish: number = 0) {
-        this.day = day
-        this.meal = meal
-        this.dish = dish
-    }
-
-    day: number
-    meal: number
-    dish: number
-
-    Day(m: Menu): Day {
-        return m.days[this.day]
-    }
-
-    Meal(m: Menu): Meal {
-        return this.Day(m).meals[this.meal]
-    }
-
-    Dish(m: Menu): Dish {
-        return this.Meal(m).dishes[this.dish]
-    }
-
-    toString(): string {
-        return `${this.day}/${this.meal}/${this.dish}`
-    }
-}
-
-interface IState {
-    // Data loaded
-    loaded?: boolean
-
-    // Menu data
-    days?: string[]
-    mealSizes?: number[]
-    dishes?: string[]
-    menu?: Menu
-
-    // UI state
-    focus?: Path
-    help?: boolean
-    highlight?: string
-}
-
-class State {
-    // Data loaded
-    loaded: boolean
-
-    // Menu data
-    days: string[]
-    mealSizes: number[]
-    dishes: string[]
-    menu: Menu
-
-    // UI state
-    focus: Path | undefined
-    help: boolean
-    highlight: string | undefined
-
-    static New(argv: IState = {}): State {
-        const s = new State()
-        s.loaded = argv.loaded || false
-        s.focus = argv.focus || undefined
-        s.help = argv.help || false
-        s.highlight = argv.highlight || undefined
-        s.days = argv.days || []
-        s.mealSizes = argv.mealSizes || []
-        s.menu = argv.menu || new Menu()
-        s.dishes = argv.dishes || []
-        return s
-    }
-
-    With(argv: IState): State {
-        return State.New({
-            ...this,
-            ...argv
-        })
-    }
-
-    WithMenu(menu: Menu): State {
-        return this.With({
-            menu: menu,
-            days: menu.days.map(d => d.name),
-            mealSizes: State.computeMealSizes(menu),
-        })
-    }
-
-    private static computeMealSizes(menu: Menu): number[] {
-        return menu.days.map((day: Day) => {
-            return day.meals.map(m => m.dishes.length)
-        }).reduce((acc: number[], val: number[]): number[] => {
-            return acc.map((v, i) => Math.max(v, val[i] || 0)).concat(val.slice(acc.length))
-        }, [])
-    }
-
-    WithFocus(path: Path): State {
-        return this.With({ focus: path, help: false, })
-    }
-
-    WithoutFocus(): State {
-        return this.With({ focus: undefined })
-    }
-
-    WithHighlight(dish: string): State {
-        if (this.focus !== undefined) { return this }
-        if (this.help) { return this }
-        return this.With({ highlight: dish })
-    }
-
-    WithoutHighlight(): State {
-        if (this.focus !== undefined) { return this }
-        if (this.help) { return this }
-        return this.With({ highlight: undefined })
-    }
-
-    WithHelp() {
-        if (this.focus !== undefined) { return this }
-        return this.With({ help: true, highlight: undefined })
-    }
-
-    WithoutHelp() {
-        if (this.focus !== undefined) { return this }
-        return this.With({ help: false })
-    }
-}
-
-
 export default function RenderMenu(props: Props) {
-    const [state, setState] = useState(State.New())
+    const [state, setState] = useState(new State())
 
     const tableStyle: React.CSSProperties = {}
     if (state.focus !== undefined || state.help) {
@@ -226,7 +99,7 @@ interface DayColumnProps extends SubProps {
 
 function DayColumn({ state, setState, path }: DayColumnProps): JSX.Element {
     const m = state.menu
-    
+
     return (
         <div className='Day'>
             <div className='Header' id='header1'>
@@ -373,3 +246,128 @@ function DishItem(pp: { name: string, amount: number, id: string, onMouseEnter: 
 async function saveMenu(backend: Backend, menu: Menu): Promise<void> {
     backend.Menu(menu.name).PUT(menu)
 }
+
+class Path {
+    constructor(day: number, meal: number = 0, dish: number = 0) {
+        this.day = day
+        this.meal = meal
+        this.dish = dish
+    }
+
+    day: number
+    meal: number
+    dish: number
+
+    Day(m: Menu): Day {
+        return m.days[this.day]
+    }
+
+    Meal(m: Menu): Meal {
+        return this.Day(m).meals[this.meal]
+    }
+
+    Dish(m: Menu): Dish {
+        return this.Meal(m).dishes[this.dish]
+    }
+
+    toString(): string {
+        return `${this.day}/${this.meal}/${this.dish}`
+    }
+}
+
+interface IState {
+    // Data loaded
+    loaded?: boolean
+
+    // Menu data
+    days?: string[]
+    mealSizes?: number[]
+    dishes?: string[]
+    menu?: Menu
+
+    // UI state
+    focus?: Path
+    help?: boolean
+    highlight?: string
+}
+
+class State {
+    // Data loaded
+    loaded: boolean
+
+    // Menu data
+    days: string[]
+    mealSizes: number[]
+    dishes: string[]
+    menu: Menu
+
+    // UI state
+    focus: Path | undefined
+    help: boolean
+    highlight: string | undefined
+
+    constructor(argv: IState = {}) {
+        this.loaded = argv.loaded || false
+        this.focus = argv.focus || undefined
+        this.help = argv.help || false
+        this.highlight = argv.highlight || undefined
+        this.days = argv.days || []
+        this.mealSizes = argv.mealSizes || []
+        this.menu = argv.menu || new Menu()
+        this.dishes = argv.dishes || []
+    }
+
+    With(argv: IState): State {
+        return new State({
+            ...this,
+            ...argv
+        })
+    }
+
+    WithMenu(menu: Menu): State {
+        return this.With({
+            menu: menu,
+            days: menu.days.map(d => d.name),
+            mealSizes: State.computeMealSizes(menu),
+        })
+    }
+
+    private static computeMealSizes(menu: Menu): number[] {
+        return menu.days.map((day: Day) => {
+            return day.meals.map(m => m.dishes.length)
+        }).reduce((acc: number[], val: number[]): number[] => {
+            return acc.map((v, i) => Math.max(v, val[i] || 0)).concat(val.slice(acc.length))
+        }, [])
+    }
+
+    WithFocus(path: Path): State {
+        return this.With({ focus: path, help: false, })
+    }
+
+    WithoutFocus(): State {
+        return this.With({ focus: undefined })
+    }
+
+    WithHighlight(dish: string): State {
+        if (this.focus !== undefined) { return this }
+        if (this.help) { return this }
+        return this.With({ highlight: dish })
+    }
+
+    WithoutHighlight(): State {
+        if (this.focus !== undefined) { return this }
+        if (this.help) { return this }
+        return this.With({ highlight: undefined })
+    }
+
+    WithHelp() {
+        if (this.focus !== undefined) { return this }
+        return this.With({ help: true, highlight: undefined })
+    }
+
+    WithoutHelp() {
+        if (this.focus !== undefined) { return this }
+        return this.With({ help: false })
+    }
+}
+
