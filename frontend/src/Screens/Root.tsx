@@ -1,9 +1,9 @@
 import React from 'react'
-import Backend from "../Backend/Backend.ts";
-import LandingPage from "./LandingPage/LandingPage.tsx";
-import RenderMenu from "./Menu/Menu.tsx";
-import RenderPantry from "./Pantry/Pantry.tsx";
-import ShoppingList from './ShoppingList/ShoppingList.tsx';
+import Backend from "../Backend/Backend";
+import LandingPage from "./LandingPage/LandingPage";
+import RenderMenu from "./Menu/Menu";
+import RenderPantry from "./Pantry/Pantry";
+import ShoppingList from './ShoppingList/ShoppingList';
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 export default function Root(): JSX.Element {

@@ -1,10 +1,9 @@
-import { process } from 'react'
-import { MenuEndpoint, MockMenuEndpoint } from './endpoints/Menu.tsx'
-import { DishesEndpoint, MockDishesEndpoint } from './endpoints/Dishes.tsx'
-import { PantryEndpoint, MockPantryEndpoint } from './endpoints/Pantry.tsx'
-import { MockShoppingListEndpoint, ShoppingListEndpoint } from './endpoints/ShoppingList.tsx'
-import { MockIngredientUseEndpoint, IngredientUseEndpoint } from './endpoints/IngredientUse.tsx'
-import { MockNeedsEndpoint, NeedsEndpoint } from './endpoints/Needs.tsx'
+import { MenuEndpoint, MockMenuEndpoint } from './endpoints/Menu'
+import { DishesEndpoint, MockDishesEndpoint } from './endpoints/Dishes'
+import { PantryEndpoint, MockPantryEndpoint } from './endpoints/Pantry'
+import { MockShoppingListEndpoint, ShoppingListEndpoint } from './endpoints/ShoppingList'
+import { MockIngredientUseEndpoint, IngredientUseEndpoint } from './endpoints/IngredientUse'
+import { MockNeedsEndpoint, NeedsEndpoint } from './endpoints/Needs'
 
 class Backend {
     constructor() {

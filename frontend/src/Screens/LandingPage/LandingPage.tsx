@@ -1,5 +1,5 @@
 import React from 'react'
-import Backend from '../../Backend/Backend.ts';
+import Backend from '../../Backend/Backend';
 import './LandingPage.css';
 import { Outlet, useNavigate } from 'react-router-dom';
 

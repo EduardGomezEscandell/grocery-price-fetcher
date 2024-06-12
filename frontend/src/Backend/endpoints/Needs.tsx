@@ -1,4 +1,4 @@
-import { ShoppingNeeds } from '../../State/State.tsx'
+import { ShoppingNeeds } from '../../State/State'
 
 export class NeedsEndpoint {
     protected path: string

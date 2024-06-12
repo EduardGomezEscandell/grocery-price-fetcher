@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react'
-import Backend from '../../Backend/Backend.tsx';
-import TopBar from '../../TopBar/TopBar.tsx';
-import { ShoppingList } from '../../State/State.tsx';
-import SaveButton from '../../SaveButton/SaveButton.tsx';
-import ShoppingItem, { Column } from './ShoppingItem.tsx';
-import { asEuro } from '../../Numbers/Numbers.ts';
+import Backend from '../../Backend/Backend';
+import TopBar from '../../TopBar/TopBar';
+import { ShoppingList } from '../../State/State';
+import SaveButton from '../../SaveButton/SaveButton';
+import ShoppingItem, { Column } from './ShoppingItem';
+import { asEuro } from '../../Numbers/Numbers';
 import './ShoppingList.css';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../../SideBar/Sidebar.tsx';
-import DangerDialog from '../DangerDialog/DangerDialog.tsx';
+import Sidebar from '../../SideBar/Sidebar';
+import DangerDialog from '../DangerDialog/DangerDialog';
 
 interface Props {
     backend: Backend;
