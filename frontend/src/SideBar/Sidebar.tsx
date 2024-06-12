@@ -1,6 +1,6 @@
 import React from 'react'
 import './Sidebar.css'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 interface Props {
     onHelp: () => void
@@ -9,7 +9,7 @@ interface Props {
 
 export default function Sidebar(props: Props) {
     const n = useNavigate()
-    const navigate = (path: string) =>{
+    const navigate = (path: string) => {
         if (props.onNavigate) {
             props.onNavigate()
         }
@@ -22,21 +22,21 @@ export default function Sidebar(props: Props) {
                 <h1>La&nbsp;compra de&nbsp;l'Edu</h1>
             </div>
             <div id='body'>
-                <p id="inactive">
+                <Goto disabled={true}>
                     Els meus productes
-                </p>
-                <p id="inactive">
+                </Goto>
+                <Goto disabled={true}>
                     Les meves receptes
-                </p>
-                <p onClick={() => navigate('/menu')}>
+                </Goto>
+                <Goto path={'/menu'}>
                     El meu menú
-                </p>
-                <p onClick={() => navigate('/pantry')}>
+                </Goto>
+                <Goto path={'/pantry'}>
                     El meu rebost
-                </p>
-                <p onClick={() => navigate('/shopping-list')}>
+                </Goto>
+                <Goto path={'/shopping-list'}>
                     La meva llista de la compra
-                </p>
+                </Goto>
             </div>
             <div id='footer'>
                 <p onClick={props.onHelp}>
@@ -44,6 +44,27 @@ export default function Sidebar(props: Props) {
                 </p>
             </div>
         </div>
+    )
+}
+
+function Goto(props: {
+    path?: string,
+    children: string,
+    disabled?: boolean,
+}) {
+    const navigate = useNavigate()
+    const location = useLocation()
+
+    
+    let id = props.disabled ? 'disabled' : 'enabled'
+    if (props.path === location.pathname) {
+        id = 'current'
+    }
+
+    return (
+        <p onClick={() => props.path && navigate(props.path)} id={id}>
+            {props.children}
+        </p>
     )
 }
 
