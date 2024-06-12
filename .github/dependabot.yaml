@@ -1,0 +1,30 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    commit-message:
+      prefix: "deps(gh-actions): "
+    schedule:
+      interval: "weekly"
+      day: "thursday"
+  - package-ecosystem: "gomod"
+    directory: "/backend"
+    commit-message:
+      prefix: "deps(backend): "
+    schedule:
+      interval: "weekly"
+      day: "thursday"
+  - package-ecosystem: "gomod"
+    directory: "/end-to-end"
+    commit-message:
+      prefix: "deps(backend): "
+    schedule:
+      interval: "weekly"
+      day: "thursday"
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    commit-message:
+      prefix: "deps(frontend): "
+    schedule:
+      interval: "weekly"
+      day: "thursday"
