@@ -1,0 +1,15 @@
+.not-found {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+
+    font-size: 130%;
+}
+
+.not-found button {
+    margin: 20px;
+    width: 200px;
+}

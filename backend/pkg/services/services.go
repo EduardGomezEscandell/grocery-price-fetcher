@@ -12,6 +12,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers/blank"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers/bonpreu"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers/mercadona"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/frontend"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/helloworld"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/ingredientuse"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/menu"
@@ -31,10 +32,12 @@ type Manager struct {
 	db           database.DB
 	pricing      *pricing.Service
 	httpServices map[string]HTTPService
+	frontEnd     frontend.Service
 }
 
 type Settings struct {
 	Database      database.Settings
+	FrontEnd      frontend.Settings
 	HelloWorld    helloworld.Settings
 	IngredientUse ingredientuse.Settings
 	Menu          menu.Settings
@@ -90,6 +93,7 @@ func New(ctx context.Context, logger logger.Logger, settings Settings) (*Manager
 		pricing: pricing.New(ctx, settings.Pricing, logger, db),
 
 		httpServices: map[string]HTTPService{},
+		frontEnd:     frontend.New(settings.FrontEnd),
 	}
 
 	for _, s := range []HTTPService{
@@ -108,14 +112,15 @@ func New(ctx context.Context, logger logger.Logger, settings Settings) (*Manager
 	return m, nil
 }
 
-func (s *Manager) Register(registerer func(endpoint string, handler httputils.Handler)) {
+func (s *Manager) Register(registerer func(endpoint string, handler func(http.ResponseWriter, *http.Request))) {
+	registerer(s.frontEnd.Path(), s.frontEnd.HandleHTTP)
+
 	for _, p := range s.httpServices {
 		if !p.Enabled() {
 			s.log.Infof("Skipping dynamic endpoint %s", p.Name())
 			continue
 		}
-
-		registerer(p.Path(), p.Handle)
+		registerer(p.Path(), httputils.HandleRequest(s.log.WithField("service", p.Name()), p.Handle))
 	}
 }
 
