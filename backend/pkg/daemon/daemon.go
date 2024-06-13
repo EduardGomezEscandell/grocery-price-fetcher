@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 )
 
@@ -30,26 +29,20 @@ type Daemon struct {
 	log      logger.Logger
 	settings Settings
 
-	static  map[string]string
-	dynamic map[string]httputils.Handler
+	endpoints map[string]func(http.ResponseWriter, *http.Request)
 }
 
 func New(logger logger.Logger, s Settings) Daemon {
 	return Daemon{
-		log:      logger,
-		settings: s,
-		static:   make(map[string]string),
-		dynamic:  make(map[string]httputils.Handler),
+		log:       logger,
+		settings:  s,
+		endpoints: make(map[string]func(http.ResponseWriter, *http.Request)),
 	}
 }
 
-func (d *Daemon) RegisterStaticEndpoint(path string, contentPath string) {
-	d.static[path] = contentPath
-}
-
-func (d *Daemon) RegisterDynamicEndpoint(path string, handler httputils.Handler) {
-	d.log.Infof("Registering dynamic endpoint: %s", path)
-	d.dynamic[path] = handler
+func (d *Daemon) RegisterEndpoint(path string, handler func(http.ResponseWriter, *http.Request)) {
+	d.log.Infof("Registering endpoint: %s", path)
+	d.endpoints[path] = handler
 }
 
 func (d *Daemon) Serve(ctx context.Context) (err error) {
@@ -84,13 +77,8 @@ func (d *Daemon) Serve(ctx context.Context) (err error) {
 func (d *Daemon) multiplexer() *http.ServeMux {
 	mux := http.NewServeMux()
 
-	for path, fsPath := range d.static {
-		fs := http.FileServer(http.Dir(fsPath))
-		mux.Handle(path, fs)
-	}
-
-	for path, handler := range d.dynamic {
-		mux.HandleFunc(path, httputils.HandleRequest(d.log, handler))
+	for path, handler := range d.endpoints {
+		mux.HandleFunc(path, handler)
 	}
 
 	return mux

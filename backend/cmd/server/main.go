@@ -31,8 +31,7 @@ func main() {
 	defer s.Stop()
 
 	daemon := daemon.New(log, sett.Daemon)
-	daemon.RegisterStaticEndpoint("/", sett.FrontEnd)
-	s.Register(daemon.RegisterDynamicEndpoint)
+	s.Register(daemon.RegisterEndpoint)
 
 	if err := daemon.Serve(ctx); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
