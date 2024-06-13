@@ -2,7 +2,6 @@ package frontend
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"os"
 	"path"
@@ -41,7 +40,6 @@ func (s Service) HandleHTTP(w http.ResponseWriter, r *http.Request) {
 	if p, ok := s.resolvePath(w, r.URL.Path); !ok {
 		return
 	} else {
-		fmt.Printf("Resolved path %s to %s\n", r.URL.Path, p)
 		r.URL.Path = p
 	}
 
