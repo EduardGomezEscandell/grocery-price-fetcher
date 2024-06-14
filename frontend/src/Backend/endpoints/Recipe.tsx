@@ -1,17 +1,19 @@
+import Cache from "../cache/Cache"
+
 export default class RecipeEndpoint {
     path: string
-    cache: Map<string, Recipe>
+    cache: Cache
 
-    constructor(namespace: string, recipe: string) {
+    constructor(namespace: string, recipe: string, cache?: Cache) {
         this.path = `/api/recipe/${namespace}/${recipe}/`
-        this.cache = new Map<string, Recipe>()
+        this.cache = cache || new Cache()
     }
 
     Path(): string {
         return this.path
     }
 
-    async GET(): Promise<Recipe> {
+    protected async get_uncached(): Promise<Recipe> {
         return fetch(this.path, {
             method: 'GET',
             headers: {
@@ -24,7 +26,21 @@ export default class RecipeEndpoint {
             .then((data: any[]) => Recipe.fromJSON(data))
     }
 
-    async PUT(recipe: Recipe): Promise<void> {
+    async GET(): Promise<Recipe> {
+        const cached = this.cache.get<Recipe>(this.path)
+        if (cached) return cached
+
+        return this
+            .get_uncached()
+            .then((recipe) => {
+                this.cache.set(this.path, recipe)
+                return recipe
+            })
+    }
+
+    protected async put_uncached(recipe: Recipe): Promise<void> {
+        this.cache.delete(this.path)
+
         return fetch(this.path, {
             method: 'PUT',
             headers: {
@@ -36,18 +52,49 @@ export default class RecipeEndpoint {
             .then(r => r.ok ? r : Promise.reject(r))
             .then(() => { })
     }
+
+    async PUT(recipe: Recipe): Promise<void> {
+        return this.put_uncached(recipe)
+    }
+
+    protected async delete_uncached(): Promise<void> {
+        this.cache.delete(this.path)
+
+        return fetch(this.path, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+        })
+            .then(r => r.ok ? r : Promise.reject(r))
+            .then(() => { })
+    }
+
+    async DELETE(): Promise<void> {
+        return this.delete_uncached()
+    }
 }
 
 export class MockRecipeEndpoint extends RecipeEndpoint {
     recipe: string
-    constructor(namespace: string, recipe: string) {
-        super(namespace, recipe)
+    constructor(namespace: string, recipe: string, cache?: Cache) {
+        super(namespace, recipe, cache)
         this.recipe = recipe
     }
 
-    async GET(): Promise<Recipe> {
+    protected async get_uncached(): Promise<Recipe> {
         console.log(`GET to ${this.path}:`)
-        return new Promise(resolve => setTimeout(resolve, 100))
+        
+        // Pseudo-random number between 2 and 7 so that the frontend can test
+        // recipe loading with different amounts of ingredients
+        let pseudoRandom = 0
+        for (let i = 0; i < this.recipe.length; i++) {
+            pseudoRandom += this.recipe.charCodeAt(i)
+        }
+        pseudoRandom = 2 + (pseudoRandom % 6)
+
+        return new Promise(resolve => setTimeout(resolve, 1000))
             .then(() => Recipe.fromJSON({
                 name: this.recipe,
                 ingredients: [
@@ -58,13 +105,18 @@ export class MockRecipeEndpoint extends RecipeEndpoint {
                     { name: "Oli", unitPrice: 0.2, amount: 0.1 },
                     { name: "Sal", unitPrice: 2.1, amount: 0.01 },
                     { name: "Pebre", unitPrice: 1.57, amount: 0.01 }
-                ]
+                ].slice(0, pseudoRandom)
             }))
     }
 
-    async PUT(recipe: Recipe): Promise<void> {
+    protected async put_uncached(recipe: Recipe): Promise<void> {
         console.log(`PUT to ${this.path}:`)
         console.log(JSON.stringify(recipe))
+        return new Promise(resolve => setTimeout(resolve, 100))
+    }
+
+    protected async delete_uncached(): Promise<void> {
+        console.log(`DELETE to ${this.path}:`)
         return new Promise(resolve => setTimeout(resolve, 100))
     }
 }
