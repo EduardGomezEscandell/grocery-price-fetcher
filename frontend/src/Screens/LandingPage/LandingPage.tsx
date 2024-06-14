@@ -42,9 +42,7 @@ export default function LandingPage(props: Props) {
                     }}>
                         Els meus productes
                     </button>
-                    <button id="inactive" onClick={() => {
-                        setDialog(DialogState.CommingSoon)
-                    }}>
+                    <button onClick={() => { navigate('/recipes') }}>
                         Les meves receptes
                     </button>
                 </div>
