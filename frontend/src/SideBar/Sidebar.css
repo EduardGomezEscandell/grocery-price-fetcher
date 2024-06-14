@@ -28,13 +28,16 @@
     padding-left: 10px;
 }
 
-.sidebar p:hover {
-    cursor: pointer;
+.sidebar p#enabled:hover {
     font-weight: bold;
 }
 
 .sidebar #disabled {
     color: grey;
+}
+
+.sidebar #enabled {
+    cursor: pointer;
 }
 
 .sidebar #current {
