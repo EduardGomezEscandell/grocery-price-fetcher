@@ -1,32 +1,28 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import TopBar from '../../TopBar/TopBar'
 import Sidebar from '../../SideBar/Sidebar'
 import Backend from '../../Backend/Backend';
-import './Recipes.css';
-import { c } from 'vite/dist/node/types.d-aGj9QkWt';
-import { Dish } from '../../State/State';
+import RecipeEditor from './RecipeEditor';
+import './Recipes.css'
+import { useNavigate } from 'react-router-dom';
 
 interface Props {
     backend: Backend;
     sessionName: string;
 }
 
-enum Focus {
-    NONE,
-    SIDEBAR,
-    HELP,
-}
-
 export default function Recipes(props: Props) {
-    const { } = props
+    const [sideBar, setSidebar] = useState(false)
+    const [help, setHelp] = useState(false)
 
     const [recipes, setRecipes] = useState<comparableString[]>([])
     const [loaded, setLoaded] = useState(false)
-
-    const [focus, setFocus] = useState(Focus.NONE)
     const [query, setQuery] = useState(new comparableString(''))
+    const [hidden, setHidden] = useState<string[]>([])
 
-    const result = recipes.filter((r) => r.contains(query))
+    const result = recipes
+        .filter(r => !hidden.includes(r.displayName))
+        .filter((r) => r.contains(query))
 
     if (!loaded) {
         props.backend.Dishes()
@@ -36,33 +32,41 @@ export default function Recipes(props: Props) {
             .then(() => setLoaded(true))
     }
 
+    const navigate = useNavigate()
+    
     return (
         <div id='rootdiv'>
             <TopBar
-                left={<button onClick={() => setFocus(focus === Focus.SIDEBAR ? Focus.NONE : Focus.SIDEBAR)}> Opcions </button>}
+                left={<button onClick={() => setSidebar(!sideBar)}> Opcions </button>}
                 right={<></>}
                 titleText="Les meves receptes"
+                logoOnClick={() => {
+                    props.backend.ClearCache()
+                    navigate('/')
+                }}
+                titleOnClick={() => setHelp(true)}
             />
+            <div className='recipe-table-search'>
+                <input id={result.length === 0 ? 'error' : 'search'}
+                    type='text'
+                    placeholder='Cerca receptes...'
+                    value={query.displayName}
+                    onChange={(q) => setQuery(new comparableString(q.target.value))}
+                />
+            </div>
             <section>
-                <div className='Recipes'>
-                    <div id='header'>
-                        <input id={result.length === 0 ? 'error' : 'search'}
-                            type='text'
-                            placeholder='Cerca receptes...'
-                            value={query.displayName}
-                            onChange={(q) => setQuery(new comparableString(q.target.value))}
-                        />
-                    </div>
+                <div className='recipe-table'>
                     <div id='body' key={query.compareName}>
                         {
-                            result.map((r, i) => {
-                                return (
-                                    <div
-                                        className='recipe'
-                                        key={query.compareName + r.compareName}
-                                        id='even'>
-                                        {r.displayName}
-                                    </div>
+                            result.map((r) => {
+                                return hidden.includes(r.displayName) ? null : (
+                                    <RecipeEditor
+                                        key={r.displayName}
+                                        backend={props.backend}
+                                        sessionName={props.sessionName}
+                                        dish={r.displayName}
+                                        setHidden={() => setHidden([...hidden, r.displayName])}
+                                    />
                                 )
                             })
                         }
@@ -75,9 +79,30 @@ export default function Recipes(props: Props) {
                         <p></p>
                     </div>
                 </div>
-                {renderFocus(focus, setFocus)}
+                {help && <HelpDialog onClose={() => setHelp(false)} />}
+                {sideBar && <Sidebar onHelp={() => setHelp(true)} onNavigate={() => { props.backend.ClearCache() }} />}
             </section>
         </div>
+    )
+}
+
+
+
+function HelpDialog(props: { onClose: () => void }): JSX.Element {
+    return (
+        <dialog open>
+            <h2 id="header">Les meves receptes</h2>
+            <div id="body">
+                <p>
+                    Aquesta pàgina pàgina et permet veure les teves receptes, i crear-ne de noves.
+                </p>
+            </div>
+            <div id="footer">
+                <button onClick={props.onClose}>
+                    D'acord
+                </button>
+            </div>
+        </dialog>
     )
 }
 
@@ -101,39 +126,3 @@ class comparableString {
     }
 }
 
-
-function renderFocus(focus: Focus, setFocus: (focus: Focus) => void): JSX.Element {
-    switch (focus) {
-        default:
-            return <></>
-        case Focus.HELP:
-            return (
-                <HelpDialog onClose={() => setFocus(Focus.NONE)} />
-            )
-        case Focus.SIDEBAR:
-            return (
-                <Sidebar
-                    onHelp={() => setFocus(Focus.HELP)}
-                    onNavigate={() => setFocus(Focus.NONE)}
-                />
-            )
-    }
-}
-
-function HelpDialog(props: { onClose: () => void }): JSX.Element {
-    return (
-        <dialog open>
-            <h2 id="header">Les meves receptes</h2>
-            <div id="body">
-                <p>
-                    Aquesta pàgina pàgina et permet veure les teves receptes, i crear-ne de noves.
-                </p>
-            </div>
-            <div id="footer">
-                <button onClick={props.onClose}>
-                    D'acord
-                </button>
-            </div>
-        </dialog>
-    )
-}

@@ -5,7 +5,7 @@ export default class RecipeEndpoint {
     cache: Cache
 
     constructor(namespace: string, recipe: string, cache?: Cache) {
-        this.path = `/api/recipe/${namespace}/${recipe}/`
+        this.path = `/api/recipe/${namespace}/${recipe}`
         this.cache = cache || new Cache()
     }
 
@@ -98,13 +98,13 @@ export class MockRecipeEndpoint extends RecipeEndpoint {
             .then(() => Recipe.fromJSON({
                 name: this.recipe,
                 ingredients: [
-                    { name: "Macarrons", unitPrice: 1.33, amount: 0.25 },
-                    { name: "Ceba", unitPrice: 0.76, amount: 0.5 },
-                    { name: "All", unitPrice: 0.88, amount: 0.1 },
-                    { name: "Tomàquet", unitPrice: 0.44, amount: 2 },
-                    { name: "Oli", unitPrice: 0.2, amount: 0.1 },
-                    { name: "Sal", unitPrice: 2.1, amount: 0.01 },
-                    { name: "Pebre", unitPrice: 1.57, amount: 0.01 }
+                    { name: "Macarrons", unit_price: 1.33, amount: 0.25 },
+                    { name: "Ceba", unit_price: 0.76, amount: 0.5 },
+                    { name: "All", unit_price: 0.88, amount: 0.1 },
+                    { name: "Tomàquet", unit_price: 0.44, amount: 2 },
+                    { name: "Oli", unit_price: 0.2, amount: 0.1 },
+                    { name: "Sal", unit_price: 2.1, amount: 0.01 },
+                    { name: "Pebre", unit_price: 1.57, amount: 0.01 }
                 ].slice(0, pseudoRandom)
             }))
     }
@@ -140,19 +140,19 @@ export class Recipe {
 
 export class Ingredient {
     name: string
-    unitPrice: number
+    unit_price: number
     amount: number
 
-    constructor(name: string, unitPrice: number, amount: number) {
+    constructor(name: string, unit_price: number, amount: number) {
         this.name = name
-        this.unitPrice = unitPrice
+        this.unit_price = unit_price
         this.amount = amount
     }
 
     static fromJSON(obj: any): Ingredient {
         return new Ingredient(
             obj.name && String(obj.name) || "Unknown",
-            obj.unitPrice && Number(obj.unitPrice) || 0,
+            obj.unit_price && Number(obj.unit_price) || 0,
             obj.amount && Number(obj.amount) || 0
         )
     }
