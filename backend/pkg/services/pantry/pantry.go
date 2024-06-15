@@ -85,10 +85,6 @@ func (s *Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 }
 
 func (s *Service) handlePut(log logger.Logger, w http.ResponseWriter, r *http.Request) error {
-	if r.Header.Get("Content-Type") != "application/json" {
-		return httputils.Errorf(http.StatusBadRequest, "unsupported content type: %s", r.Header.Get("Content-Type"))
-	}
-
 	out, err := io.ReadAll(r.Body)
 	if err != nil {
 		return httputils.Error(http.StatusBadRequest, "failed to read request")
@@ -119,10 +115,6 @@ func (s *Service) handlePut(log logger.Logger, w http.ResponseWriter, r *http.Re
 }
 
 func (s *Service) handleDelete(_ logger.Logger, w http.ResponseWriter, r *http.Request) error {
-	if r.Header.Get("Content-Type") != "application/json" {
-		return httputils.Errorf(http.StatusBadRequest, "unsupported content type: %s", r.Header.Get("Content-Type"))
-	}
-
 	p := r.PathValue("pantry")
 	if p == "" {
 		return httputils.Error(http.StatusBadRequest, "missing pantry")

@@ -20,7 +20,7 @@ type Settings struct {
 
 func (s Settings) Defaults() Settings {
 	return Settings{
-		Enabled: false,
+		Enabled: true,
 		Path:    "/run/secrets/frontend",
 	}
 }

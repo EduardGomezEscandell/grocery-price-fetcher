@@ -31,8 +31,6 @@ func (Settings) Defaults() Settings {
 	}
 }
 
-var Version = "dev"
-
 func New(settings Settings, db database.DB) *Service {
 	return &Service{
 		settings: settings,
