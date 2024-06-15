@@ -4,6 +4,7 @@ import { PantryEndpoint, MockPantryEndpoint } from './endpoints/Pantry'
 import { MockShoppingListEndpoint, ShoppingListEndpoint } from './endpoints/ShoppingList'
 import { MockIngredientUseEndpoint, IngredientUseEndpoint } from './endpoints/IngredientUse'
 import { MockNeedsEndpoint, NeedsEndpoint } from './endpoints/Needs'
+import RecipeEndpoint, { MockRecipeEndpoint } from './endpoints/Recipe'
 
 class Backend {
     constructor() {
@@ -13,6 +14,10 @@ class Backend {
     }
 
     private mock: boolean = false
+
+    Recipe(namespace: string, which: string): RecipeEndpoint {
+        return this.mock ? new MockRecipeEndpoint(namespace, which) : new RecipeEndpoint(namespace, which)
+    }
 
     Menu(which: string): MenuEndpoint {
         return this.mock ? new MockMenuEndpoint(which) : new MenuEndpoint(which)
