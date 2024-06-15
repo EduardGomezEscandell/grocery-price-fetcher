@@ -6,6 +6,7 @@ import { MockIngredientUseEndpoint, IngredientUseEndpoint } from './endpoints/In
 import { MockNeedsEndpoint, NeedsEndpoint } from './endpoints/Needs'
 import RecipeEndpoint, { MockRecipeEndpoint } from './endpoints/Recipe'
 import Cache from './cache/Cache'
+import ProductsEndpoint, { MockProductsEndpoint } from './endpoints/Products'
 
 class Backend {
     constructor() {
@@ -16,6 +17,10 @@ class Backend {
 
     private mock: boolean = false
     cache: Cache = new Cache()
+
+    Products(namespace: string): ProductsEndpoint {
+        return this.mock ? new MockProductsEndpoint(namespace, this.cache) : new ProductsEndpoint(namespace, this.cache)
+    }
     
     Recipe(namespace: string, which: string): RecipeEndpoint {
         return this.mock ? new MockRecipeEndpoint(namespace, which, this.cache) : new RecipeEndpoint(namespace, which, this.cache)
