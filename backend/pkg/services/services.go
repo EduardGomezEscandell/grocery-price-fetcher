@@ -18,6 +18,8 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/menu"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/pantry"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/pricing"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/products"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/recipe"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/recipes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/shoppinglist"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/shoppingneeds"
@@ -43,6 +45,8 @@ type Settings struct {
 	Menu          menu.Settings
 	Pantry        pantry.Settings
 	Pricing       pricing.Settings
+	Products      products.Settings
+	Recipe        recipe.Settings
 	Recipes       recipes.Settings
 	ShoppingList  shoppinglist.Settings
 	ShoppingNeeds shoppingneeds.Settings
@@ -57,6 +61,8 @@ func (Settings) Defaults() Settings {
 		Menu:          menu.Settings{}.Defaults(),
 		Pantry:        pantry.Settings{}.Defaults(),
 		Pricing:       pricing.Settings{}.Defaults(),
+		Products:      products.Settings{}.Defaults(),
+		Recipe:        recipe.Settings{}.Defaults(),
 		Recipes:       recipes.Settings{}.Defaults(),
 		ShoppingList:  shoppinglist.Settings{}.Defaults(),
 		ShoppingNeeds: shoppingneeds.Settings{}.Defaults(),
@@ -101,6 +107,8 @@ func New(ctx context.Context, logger logger.Logger, settings Settings) (*Manager
 		ingredientuse.New(settings.IngredientUse, db),
 		menu.New(settings.Menu, db),
 		pantry.New(settings.Pantry, db),
+		products.New(settings.Products, db),
+		recipe.New(settings.Recipe, db),
 		recipes.New(settings.Recipes, db),
 		shoppinglist.New(settings.ShoppingList, db),
 		shoppingneeds.New(settings.ShoppingNeeds, db),

@@ -1,0 +1,59 @@
+.recipe-table-search {
+    align-self: center;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+
+    margin-top: 20px;
+    margin-bottom: 5px;
+
+    width: 95%;
+}
+
+.recipe-table-search input {
+    width: 100%;
+    height: 50px;
+    background: whitesmoke;
+
+    max-width: 500px;
+    align-self: center;
+
+    border: none;
+    font-size: 150%;
+
+    text-align: center;
+}
+
+.recipe-table {
+    display: flex;
+    flex-wrap: wrap;
+    align-self: center;
+
+    width: 95%;
+    max-width: 500px;
+}
+
+.recipe-table #body {
+    width: 100%;
+    font: inherit;
+
+    display: flex;
+    flex-direction: column;
+
+    margin: none;
+    padding: none;
+}
+
+#error {
+    color: darkred;
+}
+
+.recipe-table #body #error {
+    width: 100%;
+    margin-top: 10px;
+    margin-bottom: 10px;
+
+    font-weight: bold;
+    text-align: center;
+}

@@ -25,7 +25,7 @@ export default function Sidebar(props: Props) {
                 <Goto disabled={true}>
                     Els meus productes
                 </Goto>
-                <Goto disabled={true}>
+                <Goto path={'/recipes'}>
                     Les meves receptes
                 </Goto>
                 <Goto path={'/menu'}>

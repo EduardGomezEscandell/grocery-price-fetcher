@@ -1,0 +1,159 @@
+.recipe-editor {
+    width: 100%;
+
+    display: block;
+
+    align-self: center;
+    border-radius: 20px;
+
+    margin-top: 10px;
+    margin-bottom: 10px;
+    
+    background-color: white;
+}
+
+.recipe-editor #header {
+    margin: 20px;
+    cursor: pointer;
+
+    text-align: left;
+    font-size: 150%;
+    font-weight: bold;
+}
+
+.recipe-editor #header div {
+    width: 100%;
+    height: 50px;
+    border: 1px solid transparent;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font: inherit;
+}
+
+.recipe-editor #header input {
+    width: 100%;
+    height: 50px;
+    font: inherit;
+
+    margin: none;
+    border: 1px solid black;
+}
+
+.recipe-editor #body>div {
+    align-self: center;
+    margin: 0px 20px 20px 20px;
+    width: calc(100% - 40px);
+}
+
+.recipe-editor #body #buttons {
+    width: 100%;
+    align-self: center;
+    flex-direction: row;
+    display: flex;
+    justify-content: space-between;
+}
+
+.recipe-editor #body #buttons button {
+    width: 100%;
+    margin: none;
+    padding: none;
+
+    border: none;
+    border-radius: 10px;
+
+    color: black;
+    font-weight: bold;
+    font-size: 80%;
+    text-align: center;
+}
+
+.recipe-editor #body #buttons #happy {
+    background-color: lightgreen;
+}
+
+.recipe-editor #body #buttons #revert {
+    background-color: hsl(60, 90%, 50%);
+}
+
+.recipe-editor #body #buttons #delete {
+    background-color: hsl(0, 79%, 85%);
+}
+
+.recipe-editor .ingredient {
+    width: 100%;
+    align-self: center;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    height: 50px;
+}
+
+.recipe-editor .ingredient #amount {
+    width: 100px;
+    margin: 10px;
+    text-align: right;
+}
+
+.recipe-editor .ingredient #amount span {
+    width: 100%;
+    height: 100%;
+    border: 1px solid transparent;
+    margin: inherit;
+    text-align: inherit;
+    font: inherit;
+}
+
+.recipe-editor .ingredient #amount input {
+    width: 100%;
+    height: 100%;
+    padding: none;
+    margin: none;
+    border: 1px solid black;
+    font: inherit;
+    text-align: right;
+}
+
+.recipe-editor .ingredient #amount input#error {
+    background-color: hsl(0, 79%, 85%);
+    text-align: right;
+}
+
+.recipe-editor .ingredient #name {
+    width: 100%;
+    margin: 10px;
+    text-align: left;
+}
+
+.recipe-editor .ingredient #price {
+    width: 50px;
+    margin: 10px;
+    text-align: right;
+}
+
+.recipe-editor #total .ingredient {
+    font-weight: bold;
+    border-top: 1px solid black;
+}
+
+.recipe-editor .ingredient button {
+    width: 50px;
+    margin: 10px;
+    padding: none;
+
+    border: none;
+    border-radius: 10px;
+
+    color: black;
+    font-weight: bold;
+}
+
+.recipe-editor .ingredient button#remove {
+    background-color: hsl(0, 79%, 85%);
+}
+
+.recipe-editor .ingredient button#add {
+    background-color: lightblue;
+}

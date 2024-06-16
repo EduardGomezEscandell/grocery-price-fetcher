@@ -9,6 +9,14 @@ export class Product {
         this.batch_size = batch_size
     }
 
+    static fromJSON(json: any): Product {
+        return new Product(
+            json.name,
+            json.price,
+            json.batch_size,
+        )
+    }
+
     name: string;
     price: number; // Price per batch
     batch_size: number;

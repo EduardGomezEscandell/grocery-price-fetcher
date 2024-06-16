@@ -80,11 +80,11 @@ export default function Shopping(props: Props): JSX.Element {
                         <thead id='header1'>
                             <tr>
                                 <th>
-                                    <button id='clear' onClick={() => {
+                                    <button id='X' onClick={() => {
                                         setDialog(Dialog.RESTORE)
                                     }}>x</button>
                                 </th>
-                                <th id='left'>Ingredient</th>
+                                <th id='left'>Producte</th>
                                 <th id='right'>
                                     <select
                                         value={column}

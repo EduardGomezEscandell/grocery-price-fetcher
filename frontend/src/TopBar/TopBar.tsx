@@ -1,5 +1,6 @@
 import React from 'react'
 import './TopBar.css'
+import { useNavigate } from 'react-router-dom'
 
 interface Props {
     left: JSX.Element
@@ -15,6 +16,8 @@ export default function TopBar(pp: Props): JSX.Element {
         display: 'flex',
     }
 
+    const navigate = useNavigate()
+
     return (
         <div className='TopBar'>
             <div style={{...style, justifyContent: 'flex-start'}}>
@@ -22,8 +25,8 @@ export default function TopBar(pp: Props): JSX.Element {
             </div>
             <div style={{...style, justifyContent: 'center'}}>
                 <Title
-                    logoOnClick={pp.logoOnClick || (() => {})}
-                    titleOnClick={pp.titleOnClick || (() => {})}
+                    logoOnClick={pp.logoOnClick || (() => navigate("/"))}
+                    titleOnClick={pp.titleOnClick || (() => navigate("/"))}
                     titleText={pp.titleText}
                     />
             </div>

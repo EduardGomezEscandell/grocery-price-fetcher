@@ -81,12 +81,12 @@ export default function RenderPantry(pp: Props) {
                 />}
             />
             <section>
-                <div className='scroll-table' key='pantry'>
+                <div className='scroll-table'>
                     <table style={tableStyle}>
                         <thead>
                             <tr key='header' id='header1'>
                                 <th id="left">
-                                    <button id='X' onClick={async () => setDialog(Dialog.CONFIRM)}>X</button>
+                                    <button id='X' onClick={async () => setDialog(Dialog.CONFIRM)}>x</button>
                                     Producte
                                 </th>
                                 <th id="right">Tens</th>

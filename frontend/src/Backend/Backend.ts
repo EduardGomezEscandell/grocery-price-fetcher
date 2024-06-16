@@ -4,6 +4,9 @@ import { PantryEndpoint, MockPantryEndpoint } from './endpoints/Pantry'
 import { MockShoppingListEndpoint, ShoppingListEndpoint } from './endpoints/ShoppingList'
 import { MockIngredientUseEndpoint, IngredientUseEndpoint } from './endpoints/IngredientUse'
 import { MockNeedsEndpoint, NeedsEndpoint } from './endpoints/Needs'
+import RecipeEndpoint, { MockRecipeEndpoint } from './endpoints/Recipe'
+import Cache from './cache/Cache'
+import ProductsEndpoint, { MockProductsEndpoint } from './endpoints/Products'
 
 class Backend {
     constructor() {
@@ -13,6 +16,15 @@ class Backend {
     }
 
     private mock: boolean = false
+    cache: Cache = new Cache()
+
+    Products(namespace: string): ProductsEndpoint {
+        return this.mock ? new MockProductsEndpoint(namespace, this.cache) : new ProductsEndpoint(namespace, this.cache)
+    }
+    
+    Recipe(namespace: string, which: string): RecipeEndpoint {
+        return this.mock ? new MockRecipeEndpoint(namespace, which, this.cache) : new RecipeEndpoint(namespace, which, this.cache)
+    }
 
     Menu(which: string): MenuEndpoint {
         return this.mock ? new MockMenuEndpoint(which) : new MenuEndpoint(which)
@@ -36,6 +48,10 @@ class Backend {
 
     ShoppingList(menu: string, pantry: string): ShoppingListEndpoint {
         return this.mock ? new MockShoppingListEndpoint(menu, pantry) : new ShoppingListEndpoint(menu, pantry)
+    }
+
+    ClearCache() {
+        this.cache.clear()
     }
 }
 
