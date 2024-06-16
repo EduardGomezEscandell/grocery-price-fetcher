@@ -61,6 +61,7 @@ function RecipeCard(props: RecipeCardProps): JSX.Element {
     const [total, _setTotal] = useState(0)
     const [backup, setBackup] = useState(new Recipe(props.recipe, ingredients))
     const [editing, setEditing] = useState(false)
+    const [deletePage, setDeletePage] = useState(false)
 
     const setIngredients = (i: Ingredient[]) => {
         _setIngredients(i)
@@ -70,13 +71,41 @@ function RecipeCard(props: RecipeCardProps): JSX.Element {
     if (!loaded) {
         props.recipeEP
             .GET()
-            .then((r) => setIngredients(r.ingredients))
+            .then((r) => {
+                setBackup(deepNewRecipe(r.name, r.ingredients))
+                setIngredients(r.ingredients)
+            })
             .then(() => setLoaded(true))
 
         return <>
             <div key='header' id='header' onClick={props.setFolded}><div>{title}</div></div>
             <div id='body' key='body'><div><h3>Descarregant ingredients...</h3></div></div>
         </>
+    }
+
+    if (deletePage) {
+        return (
+            <>
+                <div key='header' id='header' onClick={props.setFolded}><div>{title}</div></div>
+                <div id='body' key='body'>
+                    <div>
+                        Segur que vols eliminar la recepta?
+                        <div key='buttons' id='buttons'>
+                            <button id='happy' onClick={() => {
+                                setDeletePage(false)
+                            }
+                            }>No</button>
+                            <button id='delete' onClick={() => {
+                                props.recipeEP
+                                    .DELETE()
+                                    .then(() => props.setDeleted(), () => alert("No s'ha pogut eliminar"))
+                                    .finally(() => setEditing(false))
+                            }}>Sí</button>
+                        </div>
+                    </div>
+                </div>
+            </>
+        )
     }
 
     return (
@@ -134,10 +163,10 @@ function RecipeCard(props: RecipeCardProps): JSX.Element {
                                 .finally(() => setEditing(false))
                         }}
                         onDelete={() => {
-                            props.recipeEP
-                                .DELETE()
-                                .then(() => props.setDeleted(), () => alert("No s'ha pogut eliminar"))
-                                .finally(() => setEditing(false))
+                            setTitle(backup.name)
+                            setIngredients(backup.ingredients)
+                            setEditing(false)
+                            setDeletePage(true)
                         }}
                         editing={false}
                     />
@@ -184,7 +213,7 @@ const HTTPStatusConflict = 409
 
 // Save the recipe, retrying if the name is already taken
 // Returns the saved recipe
-async function saveRecipe(recipeEP: RecipeEndpoint, r: Recipe, altName: string|null): Promise<Recipe> {
+async function saveRecipe(recipeEP: RecipeEndpoint, r: Recipe, altName: string | null): Promise<Recipe> {
     return recipeEP
         .POST(r)
         .then(
