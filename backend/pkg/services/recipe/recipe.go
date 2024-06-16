@@ -49,8 +49,8 @@ func (s Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Reques
 	switch r.Method {
 	case http.MethodGet:
 		return s.handleGet(log, w, r)
-	case http.MethodPut:
-		return s.handlePut(log, w, r)
+	case http.MethodPost:
+		return s.handlePost(log, w, r)
 	case http.MethodDelete:
 		return s.handleDelete(log, w, r)
 	default:
@@ -106,7 +106,7 @@ func (s Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Reque
 	return nil
 }
 
-func (s Service) handlePut(log logger.Logger, w http.ResponseWriter, r *http.Request) error {
+func (s Service) handlePost(log logger.Logger, w http.ResponseWriter, r *http.Request) error {
 	if r.Header.Get("Content-Type") != "application/json" {
 		return httputils.Errorf(http.StatusBadRequest, "unsupported format: %s", r.Header.Get("Content-Type"))
 	}
@@ -153,20 +153,32 @@ func (s Service) handlePut(log logger.Logger, w http.ResponseWriter, r *http.Req
 		})
 	}
 
+	// Simple case: Recipe is being edited
+	if name == dbRecipe.Name {
+		if err := s.db.SetRecipe(dbRecipe); err != nil {
+			return httputils.Errorf(http.StatusInternalServerError, "failed to save recipe: %v", err)
+		}
+		w.WriteHeader(http.StatusCreated)
+		return nil
+	}
+
+	// Recipe is being renamed (and possibly edited)
+	if _, ok := s.db.LookupRecipe(body.Name); ok {
+		// No accidental overwrites
+		return httputils.Errorf(http.StatusConflict, "recipe %s already exists", body.Name)
+	}
+
+	// Write new recipe, then delete old one
 	if err := s.db.SetRecipe(dbRecipe); err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "failed to save recipe: %v", err)
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("Location", path.Join("/api/recipe/%s/%s", ns, dbRecipe.Name))
-
-	// Delete old recipe if it exists
-	if name != dbRecipe.Name {
-		if err := s.db.DeleteRecipe(name); err != nil {
-			log.Errorf("failed to delete old recipe during re-naming from %s to %s: %v", name, body.Name, err)
-		}
+	if err := s.db.DeleteRecipe(name); err != nil {
+		log.Errorf("failed to delete old recipe during re-naming from %s to %s: %v", name, body.Name, err)
 	}
 
+	w.Header().Set("Location", path.Join("/api/recipe/%s/%s", ns, dbRecipe.Name))
+	w.WriteHeader(http.StatusCreated)
 	return nil
 }
 

@@ -38,11 +38,11 @@ export default class RecipeEndpoint {
             })
     }
 
-    protected async put_uncached(recipe: Recipe): Promise<void> {
+    protected async post_uncached(recipe: Recipe): Promise<void> {
         this.cache.delete(this.path)
 
         return fetch(this.path, {
-            method: 'PUT',
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
@@ -53,8 +53,8 @@ export default class RecipeEndpoint {
             .then(() => { })
     }
 
-    async PUT(recipe: Recipe): Promise<void> {
-        return this.put_uncached(recipe)
+    async POST(recipe: Recipe): Promise<void> {
+        return this.post_uncached(recipe)
     }
 
     protected async delete_uncached(): Promise<void> {
@@ -109,7 +109,7 @@ export class MockRecipeEndpoint extends RecipeEndpoint {
             }))
     }
 
-    protected async put_uncached(recipe: Recipe): Promise<void> {
+    protected async post_uncached(recipe: Recipe): Promise<void> {
         console.log(`PUT to ${this.path}:`)
         console.log(JSON.stringify(recipe))
         return new Promise(resolve => setTimeout(resolve, 100))

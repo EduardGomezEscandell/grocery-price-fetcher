@@ -1,6 +1,8 @@
 .recipe-editor {
     width: 100%;
 
+    display: block;
+
     align-self: center;
     border-radius: 20px;
 
@@ -10,7 +12,7 @@
     background-color: white;
 }
 
-.recipe-editor #header #title {
+.recipe-editor #header {
     margin: 20px;
     cursor: pointer;
 
@@ -19,9 +21,29 @@
     font-weight: bold;
 }
 
+.recipe-editor #header div {
+    width: 100%;
+    height: 50px;
+    border: 1px solid transparent;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font: inherit;
+}
+
+.recipe-editor #header input {
+    width: 100%;
+    height: 50px;
+    font: inherit;
+
+    margin: none;
+    border: 1px solid black;
+}
+
 .recipe-editor #body>div {
     align-self: center;
-    margin: 20px;
+    margin: 0px 20px 20px 20px;
     width: calc(100% - 40px);
 }
 

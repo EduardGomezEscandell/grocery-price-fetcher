@@ -16,49 +16,51 @@ interface RecipeDialogProps {
 }
 
 export default function RecipeEditor(props: RecipeDialogProps): JSX.Element {
-    const [expanded, setExpanded] = useState(false)
-    const [editing, setEditing] = useState(false)
+    const [folded, setFolded] = useState(true)
+    const [title, setTitle] = useState<string>(props.dish)
 
     return (
-        <div className='recipe-editor'>
-            <div key='header' id='header' onClick={() => {
-                setExpanded(!expanded)
-            }}>
-                <div id='title'>
-                    <span>{props.dish}</span>
-                    {/* TODO: Make editable */}
+        <div className='recipe-editor' key={'recipe-editor'}>
+            {folded
+                ? <div key='header' id='header' onClick={() => {
+                    setFolded(false)
+                }}>
+                    <div id='title'>
+                        <span>{title}</span>
+                    </div>
                 </div>
-            </div>
-            {expanded &&
-                <CardBody
-                    recipeEP={props.backend.Recipe(props.sessionName, props.dish)}
+                : <RecipeCard
+                    recipeEP={props.backend.Recipe(props.sessionName, title)}
                     productsEP={props.backend.Products(props.sessionName)}
-                    recipe={props.dish}
-                    key={props.dish}
-                    setEditing={setEditing}
+                    recipe={title}
+                    setRecipe={setTitle}
+                    key={title}
                     setDeleted={props.setHidden}
+                    setFolded={() => setFolded(true)}
                 />
             }
         </div>
     )
 }
 
-interface CardBodyProps {
+interface RecipeCardProps {
     recipeEP: RecipeEndpoint
     productsEP: ProductsEndpoint
-    recipe: string
 
-    setEditing: (editing: boolean) => void
+    recipe: string
+    setRecipe: (r: string) => void
+
+    setFolded: () => void
     setDeleted: () => void
 }
 
-function CardBody(props: CardBodyProps): JSX.Element {
+function RecipeCard(props: RecipeCardProps): JSX.Element {
+    const [title, setTitle] = useState(props.recipe)
     const [ingredients, _setIngredients] = useState<Ingredient[]>([])
     const [loaded, setLoaded] = useState(false)
     const [total, _setTotal] = useState(0)
     const [backup, setBackup] = useState(new Recipe(props.recipe, ingredients))
-    const [editing, _setEditing] = useState(false)
-    const setEditing = (e: boolean) => { props.setEditing(e); _setEditing(e) }
+    const [editing, setEditing] = useState(false)
 
     const setIngredients = (i: Ingredient[]) => {
         _setIngredients(i)
@@ -70,77 +72,131 @@ function CardBody(props: CardBodyProps): JSX.Element {
             .GET()
             .then((r) => setIngredients(r.ingredients))
             .then(() => setLoaded(true))
-        
-        return <div id='body' key='body'><div><h3>Descarregant ingredients...</h3></div></div>
+
+        return <>
+            <div key='header' id='header' onClick={props.setFolded}><div>{title}</div></div>
+            <div id='body' key='body'><div><h3>Descarregant ingredients...</h3></div></div>
+        </>
     }
 
     return (
-        <div id='body' key='body'>
-            <div>
-            <EditButtons
-                key='buttons'
-                onEdit={() => {
-                    setBackup(deepNewIngredient(props.recipe, ingredients))
-                    setEditing(true)
-                }}
-                onRestore={() => {
-                    setIngredients(backup.ingredients)
-                    setEditing(false)
-                }}
-                onSave={() => {
-                    props.recipeEP
-                        .PUT(new Recipe(props.recipe, ingredients))
-                        .then(() => setIngredients(ingredients.filter(i => i.amount > 0)))
-                        .catch(() => {
-                            alert("No s'ha pogut desar")
-                            setIngredients(backup.ingredients)
-                        })
-                        .finally(() => setEditing(false))
-                }}
-                onDelete={() => {
-                    props.recipeEP
-                        .DELETE()
-                        .then(() => props.setDeleted(), () => alert("No s'ha pogut eliminar"))
-                        .finally(() => setEditing(false))
-                }}
-                editing={false}
-            />
-            <h3>Ingredients</h3>
-            {
-                ingredients.map((ing, idx) => (
-                    <IngredientRow
-                        key={ing + idx.toString() + editing}
-                        ingredient={ing}
-                        editing={editing}
-                        onChange={(newData: Ingredient) => {
-                            setIngredients(ingredients.map((x, i) => i === idx ? newData : x))
-                        }} />
-                ))
-            }
-            {
-                editing &&
-                <NewIngredientRow
-                    key='new-ingredient'
-                    productsEP={props.productsEP}
-                    onChange={(newData: Ingredient) => {
-                        setIngredients([...ingredients, newData])
-                    }} />
-            }
-            <span id='total'>
-                {loaded &&
-                    <IngredientRow key={'total-' + total.toFixed()} ingredient={{
-                        name: 'Total',
-                        unit_price: total,
-                        amount: NaN
-                    }}
-                        editing={false}
-                        isTotal={true}
-                        onChange={() => { }} />
+        <>
+            <div key='header' id='header' onClick={() => {
+                if (editing) {
+                    return
                 }
-            </span>
+                props.setFolded()
+            }}>
+                {
+                    editing
+                        ? <input
+                            key='title'
+                            value={title}
+                            onChange={(e) => {
+                                setTitle(e.target.value)
+                            }}
+                        />
+                        : <div>{title}</div>
+                }
             </div>
-        </div>
+            <div id='body' key='body'>
+                <div>
+                    <EditButtons
+                        key='buttons'
+                        onEdit={() => {
+                            setBackup(deepNewRecipe(props.recipe, ingredients))
+                            setEditing(true)
+                        }}
+                        onRestore={() => {
+                            setTitle(backup.name)
+                            setIngredients(backup.ingredients)
+                            setEditing(false)
+                        }}
+                        onSave={() => {
+                            saveRecipe(props.recipeEP, new Recipe(title, ingredients), backup.name)
+                                .then((r) => {
+                                    setTitle(r.name)
+                                    setIngredients(r.ingredients)
+                                }, (e) => {
+                                    if (e instanceof Response) {
+                                        e.text().then(
+                                            (t) => alert(`No s'ha pogut desar:\nError ${e.status}. ${t}`),
+                                            () => {
+                                                setTitle(backup.name)
+                                                setIngredients(backup.ingredients)
+                                                alert("No s'ha pogut desar")
+                                            }
+                                        )
+                                    }
+                                    setTitle(backup.name)
+                                    setIngredients(backup.ingredients)
+                                })
+                                .finally(() => setEditing(false))
+                        }}
+                        onDelete={() => {
+                            props.recipeEP
+                                .DELETE()
+                                .then(() => props.setDeleted(), () => alert("No s'ha pogut eliminar"))
+                                .finally(() => setEditing(false))
+                        }}
+                        editing={false}
+                    />
+                    <h3>Ingredients</h3>
+                    {
+                        ingredients.map((ing, idx) => (
+                            <IngredientRow
+                                key={ing + idx.toString() + editing}
+                                ingredient={ing}
+                                editing={editing}
+                                onChange={(newData: Ingredient) => {
+                                    setIngredients(ingredients.map((x, i) => i === idx ? newData : x))
+                                }} />
+                        ))
+                    }
+                    {
+                        editing &&
+                        <NewIngredientRow
+                            key='new-ingredient'
+                            productsEP={props.productsEP}
+                            onChange={(newData: Ingredient) => {
+                                setIngredients([...ingredients, newData])
+                            }} />
+                    }
+                    <span id='total'>
+                        {loaded &&
+                            <IngredientRow key={'total-' + total.toFixed()} ingredient={{
+                                name: 'Total',
+                                unit_price: total,
+                                amount: NaN
+                            }}
+                                editing={false}
+                                isTotal={true}
+                                onChange={() => { }} />
+                        }
+                    </span>
+                </div>
+            </div>
+        </>
     )
+}
+
+const HTTPStatusConflict = 409
+
+// Save the recipe, retrying if the name is already taken
+// Returns the saved recipe
+async function saveRecipe(recipeEP: RecipeEndpoint, r: Recipe, altName: string|null): Promise<Recipe> {
+    return recipeEP
+        .POST(r)
+        .then(
+            () => {
+                return r
+            }, (e) => {
+                if (altName && e instanceof Response && e.status === HTTPStatusConflict) {
+                    alert("Ja existeix una recepta amb aquest nom")
+                    return saveRecipe(recipeEP, new Recipe(altName, r.ingredients), null)
+                }
+                return Promise.reject(e)
+            })
 }
 
 interface ButtonsProps {
@@ -283,7 +339,7 @@ function NewIngredientRow(props: NewIngredientProps): JSX.Element {
             <div id={'amount'} key='amount'>
                 <input
                     key='amount'
-                    id={(selected && atof(amount)===0) ? 'error' : 'ok'}
+                    id={(selected && atof(amount) === 0) ? 'error' : 'ok'}
                     value={amount}
                     onChange={(e) => {
                         setAmount(e.target.value)
@@ -326,7 +382,7 @@ function NewIngredientRow(props: NewIngredientProps): JSX.Element {
                     value={selected ? { value: selected, label: selected.name } : null}
                     options={prods}
                     isSearchable
-                    placeholder='Selecciona...'
+                    placeholder='Afegeix...'
                 />
             </div>
             <div id='price' key='price'>{selected && asEuro(atof(amount) * selected.price / selected.batch_size) || '0.00'}</div>
@@ -347,7 +403,7 @@ function NewIngredientRow(props: NewIngredientProps): JSX.Element {
     )
 }
 
-function deepNewIngredient(name: string, ingredients: Ingredient[]): Recipe {
+function deepNewRecipe(name: string, ingredients: Ingredient[]): Recipe {
     return new Recipe(name, ingredients.map(i => ({ ...i })))
 }
 
