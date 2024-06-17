@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"path"
+	"sync"
 	"time"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
@@ -32,10 +33,14 @@ type Daemon struct {
 	settings Settings
 
 	endpoints map[string]func(http.ResponseWriter, *http.Request)
+
+	mu    sync.Mutex
+	http  *http.Server
+	https *http.Server
 }
 
-func New(logger logger.Logger, s Settings) Daemon {
-	return Daemon{
+func New(logger logger.Logger, s Settings) *Daemon {
+	return &Daemon{
 		log:       logger,
 		settings:  s,
 		endpoints: make(map[string]func(http.ResponseWriter, *http.Request)),
@@ -94,6 +99,10 @@ func (d *Daemon) serveHTTPS(ctx context.Context) error {
 		return fmt.Errorf("could not listen: %v", err)
 	}
 
+	d.mu.Lock()
+	d.https = &sv
+	d.mu.Unlock()
+
 	d.log.Infof("Listening on %s", ln.Addr())
 
 	if err := sv.ServeTLS(ln, "", ""); errors.Is(err, http.ErrServerClosed) {
@@ -125,12 +134,16 @@ func (d *Daemon) serveHTTP(ctx context.Context) error {
 		return fmt.Errorf("could not listen: %v", err)
 	}
 
+	d.mu.Lock()
+	d.http = &sv
+	d.mu.Unlock()
+
 	d.log.Infof("Listening on %s", ln.Addr())
 
 	if err := sv.Serve(ln); errors.Is(err, http.ErrServerClosed) {
 		return nil
 	} else if err != nil {
-		return fmt.Errorf("error serving HTTPS: %v", err)
+		return fmt.Errorf("error serving HTTP: %v", err)
 	}
 
 	return nil
@@ -156,4 +169,23 @@ func (d *Daemon) tlsConfig() (*tls.Config, error) {
 		Certificates: []tls.Certificate{cert},
 		MinVersion:   tls.VersionTLS12,
 	}, nil
+}
+
+func (d *Daemon) Stop() error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	var err error
+
+	if d.http != nil {
+		d.log.Infof("Stopping HTTP server")
+		err = errors.Join(err, d.http.Shutdown(context.Background()))
+	}
+
+	if d.https != nil {
+		d.log.Infof("Stopping HTTPS server")
+		err = errors.Join(err, d.https.Shutdown(context.Background()))
+	}
+
+	return err
 }
