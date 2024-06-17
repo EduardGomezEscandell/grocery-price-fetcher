@@ -2,7 +2,7 @@
 # All paths and ports are as seen from inside the container.
 verbosity: 1
 daemon:
-  address: '[::]:443'
+  host: '0.0.0.0'
   certfile: /run/secrets/cert
   keyfile: /run/secrets/key
 services:

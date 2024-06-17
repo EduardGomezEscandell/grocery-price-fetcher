@@ -14,14 +14,14 @@ import (
 )
 
 type Settings struct {
-	Address  string
+	Host     string
 	CertFile string
 	KeyFile  string
 }
 
 func (s Settings) Defaults() Settings {
 	return Settings{
-		Address:  "localhost:443",
+		Host:     "localhost",
 		CertFile: "/run/secrets/cert.pem",
 		KeyFile:  "/run/secrets/key.pem",
 	}
@@ -78,7 +78,7 @@ func (d *Daemon) serveHTTPS(ctx context.Context) error {
 	}
 
 	sv := http.Server{
-		Addr:         net.JoinHostPort(d.settings.Address, "443"),
+		Addr:         net.JoinHostPort(d.settings.Host, "443"),
 		Handler:      d.multiplexer(),
 		ReadTimeout:  time.Minute,
 		WriteTimeout: time.Minute,
@@ -108,7 +108,7 @@ func (d *Daemon) serveHTTPS(ctx context.Context) error {
 // serveHTTP serves a redirect from HTTP to HTTPS.
 func (d *Daemon) serveHTTP(ctx context.Context) error {
 	sv := http.Server{
-		Addr: net.JoinHostPort(d.settings.Address, "80"),
+		Addr: net.JoinHostPort(d.settings.Host, "80"),
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "https://"+path.Join(r.Host, r.RequestURI), http.StatusMovedPermanently)
 		}),
