@@ -3,23 +3,25 @@ package daemon
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
+	"path"
 	"time"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 )
 
 type Settings struct {
-	Address  string
+	Host     string
 	CertFile string
 	KeyFile  string
 }
 
 func (s Settings) Defaults() Settings {
 	return Settings{
-		Address:  "localhost:443",
+		Host:     "localhost",
 		CertFile: "/run/secrets/cert.pem",
 		KeyFile:  "/run/secrets/key.pem",
 	}
@@ -45,19 +47,47 @@ func (d *Daemon) RegisterEndpoint(path string, handler func(http.ResponseWriter,
 	d.endpoints[path] = handler
 }
 
-func (d *Daemon) Serve(ctx context.Context) (err error) {
+func (d *Daemon) Serve(ctx context.Context) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	ch := make(chan error)
+	go func() { ch <- d.serveHTTPS(ctx) }()
+	go func() { ch <- d.serveHTTP(ctx) }()
+
+	var err error
+	for range 2 {
+		err = errors.Join(err, <-ch)
+		cancel()
+	}
+	close(ch)
+
+	if err != nil {
+		d.log.Errorf("Server: stopped serving: %v", err)
+		return err
+	}
+
+	d.log.Infof("Server: stopped serving")
+	return nil
+}
+
+func (d *Daemon) serveHTTPS(ctx context.Context) error {
 	tlsConfig, err := d.tlsConfig()
 	if err != nil {
 		return fmt.Errorf("could not load TLS config: %v", err)
 	}
 
 	sv := http.Server{
-		Addr:         d.settings.Address,
+		Addr:         net.JoinHostPort(d.settings.Host, "443"),
 		Handler:      d.multiplexer(),
 		ReadTimeout:  time.Minute,
 		WriteTimeout: time.Minute,
 		TLSConfig:    tlsConfig,
 	}
+
+	context.AfterFunc(ctx, func() {
+		_ = sv.Shutdown(context.Background())
+	})
 
 	ln, err := (&net.ListenConfig{}).Listen(ctx, "tcp", sv.Addr)
 	if err != nil {
@@ -66,11 +96,43 @@ func (d *Daemon) Serve(ctx context.Context) (err error) {
 
 	d.log.Infof("Listening on %s", ln.Addr())
 
-	if err := sv.ServeTLS(ln, "", ""); err != nil {
-		return err
+	if err := sv.ServeTLS(ln, "", ""); errors.Is(err, http.ErrServerClosed) {
+		return nil
+	} else if err != nil {
+		return fmt.Errorf("error serving HTTPS: %v", err)
 	}
 
-	d.log.Infof("Server: stopped serving")
+	return nil
+}
+
+// serveHTTP serves a redirect from HTTP to HTTPS.
+func (d *Daemon) serveHTTP(ctx context.Context) error {
+	sv := http.Server{
+		Addr: net.JoinHostPort(d.settings.Host, "80"),
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.Redirect(w, r, "https://"+path.Join(r.Host, r.RequestURI), http.StatusMovedPermanently)
+		}),
+		ReadTimeout:  time.Minute,
+		WriteTimeout: time.Minute,
+	}
+
+	context.AfterFunc(ctx, func() {
+		_ = sv.Shutdown(context.Background())
+	})
+
+	ln, err := (&net.ListenConfig{}).Listen(ctx, "tcp", sv.Addr)
+	if err != nil {
+		return fmt.Errorf("could not listen: %v", err)
+	}
+
+	d.log.Infof("Listening on %s", ln.Addr())
+
+	if err := sv.Serve(ln); errors.Is(err, http.ErrServerClosed) {
+		return nil
+	} else if err != nil {
+		return fmt.Errorf("error serving HTTPS: %v", err)
+	}
+
 	return nil
 }
 
