@@ -2,13 +2,13 @@ package e2e
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
+	"strings"
 	"testing"
 	"time"
 
@@ -40,55 +40,82 @@ func Make(ctx context.Context, verb string) ([]byte, error) {
 }
 
 func Setup(ctx context.Context) error {
-	timestamp := time.Now().Format("2006-01-02 15:04:05")
-
-	if _, err := Make(ctx, "build-docker"); err != nil {
-		return fmt.Errorf("could not build container: %v", err)
-	}
-
-	if _, err := Make(ctx, "install"); err != nil {
-		return fmt.Errorf("could not install service: %v", err)
-	}
-
-	if _, err := Make(ctx, "start"); err != nil {
-		return fmt.Errorf("could not start service: %v", err)
-	}
-
-	const tick = 5 * time.Second
 	ctx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
 
-	for {
+	// Stop the service and remove data
+	if _, err := Make(ctx, "clean"); err != nil {
+		return fmt.Errorf("could not uninstall service: %v", err)
+	}
+
+	start := time.Now().Format("2006-01-02 15:04:05")
+
+	ch := make(chan error)
+	go func() {
+		defer close(ch)
+		err := func() error {
+			if _, err := Make(ctx, "build-docker"); err != nil {
+				return fmt.Errorf("could not build container: %v", err)
+			}
+
+			if _, err := Make(ctx, "install"); err != nil {
+				return fmt.Errorf("could not install service: %v", err)
+			}
+
+			if _, err := Make(ctx, "start"); err != nil {
+				return fmt.Errorf("could not start service: %v", err)
+			}
+
+			return nil
+		}()
+
+		if err != nil {
+			cancel()
+			ch <- err
+		}
+	}()
+
+	cmd := exec.CommandContext(ctx,
+		"journalctl", "--no-pager",
+		"-fu", "grocery-price-fetcher.service",
+		"--output", "cat",
+		"--since", start)
+
+	r, err := cmd.StdoutPipe()
+	if err != nil {
+		cancel()
+		return errors.Join(fmt.Errorf("journalctl: %w", err), <-ch)
+	}
+
+	cmd.Stderr = cmd.Stdout
+
+	if err := cmd.Start(); err != nil {
+		cancel()
+		return errors.Join(fmt.Errorf("journalctl: %w", err), <-ch)
+	}
+	defer cmd.Wait() //nolint:errcheck // we don't care about the error
+
+	sc := bufio.NewScanner(r)
+	for sc.Scan() {
 		select {
 		case <-ctx.Done():
-			return errors.New("timed out waiting for server to come online")
-		case <-time.After(tick):
+			return errors.Join(fmt.Errorf("timeout: %w", ctx.Err()), <-ch)
+		default:
 		}
 
-		ok, err := func() (bool, error) {
-			ctx, cancel := context.WithTimeout(ctx, tick)
-			defer cancel()
-
-			out, err := exec.CommandContext(ctx,
-				"journalctl", "--no-pager",
-				"-u", "grocery-price-fetcher.service",
-				"--since", timestamp).CombinedOutput()
-			if err != nil {
-				return false, fmt.Errorf("could not access journalctl: %v: %s", err, out)
-			}
-			if !bytes.Contains(out, []byte("Listening on [::]:443")) {
-				return false, nil
-			}
-			return true, nil
-		}()
-		if err != nil {
-			return err
-		} else if ok {
-			break
+		fmt.Println(sc.Text())
+		if strings.Contains(sc.Text(), "Listening on [::]:443") {
+			cancel()
+			return <-ch
 		}
 	}
 
-	return nil
+	if err := sc.Err(); err != nil {
+		cancel()
+		return errors.Join(fmt.Errorf("error reading journalctl: %v", err), <-ch)
+	}
+
+	return errors.Join(fmt.Errorf("unexpected end of journalctl"), <-ch)
 }
 
 func Cleanup(ctx context.Context) error {
