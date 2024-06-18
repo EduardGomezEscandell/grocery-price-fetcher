@@ -48,7 +48,8 @@ type Settings struct {
 
 func (s Settings) Defaults() Settings {
 	return Settings{
-		Type: "json",
+		Type:    "json",
+		Options: jsondb.DefaultSettings(),
 	}
 }
 
@@ -82,6 +83,8 @@ func (s *Settings) UnmarshalYAML(node *yaml.Node) error {
 	}
 
 	switch raw.Type {
+	case "":
+		*s = s.Defaults()
 	case "json":
 		s.Type = raw.Type
 		opt := jsondb.DefaultSettings()
