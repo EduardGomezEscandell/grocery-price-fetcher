@@ -28,7 +28,7 @@ export default function ShoppingItem(props: Props) {
         switch(props.show) {
             case Column.UNITS: return round2(item.units)
             case Column.PACKS: return round2(item.packs)
-            case Column.COST: return asEuro(item.cost * item.packs)
+            case Column.COST: return asEuro(item.cost)
         }
     })()
 
