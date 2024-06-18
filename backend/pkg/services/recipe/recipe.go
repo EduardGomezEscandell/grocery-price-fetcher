@@ -17,12 +17,12 @@ type Service struct {
 }
 
 type Settings struct {
-	Enabled bool
+	Enable bool
 }
 
 func (s Settings) Defaults() Settings {
 	return Settings{
-		Enabled: true,
+		Enable: true,
 	}
 }
 
@@ -42,7 +42,7 @@ func (s Service) Path() string {
 }
 
 func (s Service) Enabled() bool {
-	return s.settings.Enabled
+	return s.settings.Enable
 }
 
 func (s Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Request) error {
