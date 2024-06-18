@@ -56,6 +56,10 @@ func (s Service) Handle(_ logger.Logger, w http.ResponseWriter, r *http.Request)
 		return httputils.Errorf(http.StatusMethodNotAllowed, "method %s not allowed", r.Method)
 	}
 
+	if err := httputils.ValidateAccepts(r, "application/json"); err != nil {
+		return err
+	}
+
 	menu := r.PathValue("menu")
 	ingredient := r.PathValue("ingredient")
 
