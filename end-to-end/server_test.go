@@ -45,6 +45,24 @@ func TestMenu(t *testing.T) {
 	require.NotEmpty(t, resp.Body, "Body should not be empty")
 }
 
+func TestFrontEnd(t *testing.T) {
+	t.Parallel()
+	resp, err := request(t, http.MethodGet, "", nil)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code %s", resp.Status)
+	require.NotEmpty(t, resp.Body, "Body should not be empty")
+	require.Contains(t, resp.Body, "</html>", "Frontend should contain the HTML tag")
+}
+
+func TestFrontEndRouting(t *testing.T) {
+	t.Parallel()
+	resp, err := request(t, http.MethodGet, "menu", nil)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code %s", resp.Status)
+	require.NotEmpty(t, resp.Body, "Body should not be empty")
+	require.Contains(t, resp.Body, "</html>", "Frontend should contain the HTML tag")
+}
+
 //nolint:unparam // Method is always GET in this test
 func request(t *testing.T, method string, endpoint string, body []byte) (*response, error) {
 	t.Helper()
