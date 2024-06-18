@@ -9,7 +9,6 @@ import (
 	"path"
 	"testing"
 
-	e2e "github.com/EduardGomezEscandell/grocery-price-fetcher/end-to-end"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,7 +17,7 @@ func TestHelloWorld(t *testing.T) {
 	resp, err := request(t, http.MethodGet, "api/helloworld", nil)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code %s", resp.Status)
-	e2e.CompareToGolden(t, "testdata/server/result.txt", resp.Body)
+	require.Equal(t, "Hello, world!\n", resp.Body)
 }
 
 func TestVersion(t *testing.T) {
