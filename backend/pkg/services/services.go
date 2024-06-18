@@ -117,28 +117,32 @@ func New(ctx context.Context, logger logger.Logger, settings Settings) (*Manager
 		m.httpServices[s.Name()] = s
 	}
 
+	m.pricing.Run()
+
 	return m, nil
 }
 
-func (s *Manager) Register(registerer func(endpoint string, handler func(http.ResponseWriter, *http.Request))) {
-	registerer(s.frontEnd.Path(), s.frontEnd.HandleHTTP)
+func (m *Manager) Register(registerer func(endpoint string, handler func(http.ResponseWriter, *http.Request))) {
+	registerer(m.frontEnd.Path(), m.frontEnd.HandleHTTP)
 
-	for _, p := range s.httpServices {
+	for _, p := range m.httpServices {
 		if !p.Enabled() {
-			s.log.Infof("Skipping dynamic endpoint %s", p.Name())
+			m.log.Infof("Skipping dynamic endpoint %s", p.Name())
 			continue
 		}
-		registerer(p.Path(), httputils.HandleRequest(s.log.WithField("service", p.Name()), p.Handle))
+		registerer(p.Path(), httputils.HandleRequest(m.log.WithField("service", p.Name()), p.Handle))
 	}
 }
 
-func (s *Manager) Run() {
-	s.pricing.Run()
-}
+func (m *Manager) Stop() error {
+	m.log.Info("Stopping services")
+	defer m.cancel()
 
-func (s *Manager) Stop() {
-	s.log.Info("Stopping services")
+	m.pricing.Stop()
 
-	s.pricing.Stop()
-	s.cancel()
+	if err := m.db.Close(); err != nil {
+		return fmt.Errorf("could not close database: %v", err)
+	}
+
+	return nil
 }

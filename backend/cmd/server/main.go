@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/daemon"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
@@ -24,20 +26,51 @@ func main() {
 
 	s, err := services.New(ctx, log, sett.Services)
 	if err != nil {
-		log.Fatalf("Could not initialize service: %v", err)
+		log.Fatalf("Could not initialize services: %v", err)
 	}
-
-	s.Run()
-	defer s.Stop()
+	defer logOnError(log, s.Stop())
 
 	daemon := daemon.New(log, sett.Daemon)
-	s.Register(daemon.RegisterEndpoint)
+	defer logOnError(log, daemon.Stop())
 
+	installSigtermHandler(ctx, daemon, s)
+
+	s.Register(daemon.RegisterEndpoint)
 	if err := daemon.Serve(ctx); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
 	}
 
 	log.Infof("Exiting")
+}
+
+func logOnError(log logger.Logger, err error) {
+	if err == nil {
+		return
+	}
+
+	log.Errorf("Error: %v", err)
+}
+
+func installSigtermHandler(ctx context.Context, d *daemon.Daemon, s *services.Manager) {
+	ch := make(chan os.Signal, 1)
+
+	signal.Notify(ch, syscall.SIGTERM)
+	go func() {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ch:
+			log.Info("Received SIGTERM, shutting down")
+		}
+
+		if err := d.Stop(); err != nil {
+			log.Errorf("Could not stop daemon: %v", err)
+		}
+
+		if err := s.Stop(); err != nil {
+			log.Errorf("Could not stop service manager: %v", err)
+		}
+	}()
 }
 
 func loadSettings() settings.Settings {
