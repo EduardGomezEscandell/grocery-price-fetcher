@@ -59,7 +59,7 @@ func (s Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Reques
 }
 
 func (s Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Request) error {
-	if err := httputils.ValidateAccepts(r, "application/json"); err != nil {
+	if err := httputils.ValidateAccepts(r, httputils.MediaTypeJSON); err != nil {
 		return err
 	}
 
@@ -107,7 +107,7 @@ func (s Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Reque
 }
 
 func (s Service) handlePost(log logger.Logger, w http.ResponseWriter, r *http.Request) error {
-	if err := httputils.ValidateAccepts(r, "application/json"); err != nil {
+	if err := httputils.ValidateAccepts(r, httputils.MediaTypeJSON); err != nil {
 		return err
 	}
 

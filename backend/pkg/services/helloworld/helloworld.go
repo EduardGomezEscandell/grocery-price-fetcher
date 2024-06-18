@@ -45,7 +45,7 @@ func (s Service) Handle(_ logger.Logger, w http.ResponseWriter, r *http.Request)
 		return httputils.Errorf(http.StatusMethodNotAllowed, "method %s not allowed", r.Method)
 	}
 
-	if err := httputils.ValidateAccepts(r, "text/plain"); err != nil {
+	if err := httputils.ValidateAccepts(r, httputils.MediaTypeText); err != nil {
 		return err
 	}
 
