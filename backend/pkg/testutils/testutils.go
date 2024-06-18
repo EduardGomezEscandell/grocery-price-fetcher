@@ -78,9 +78,6 @@ func MakeRequest(t *testing.T, method, url string, body string) *http.Response {
 	req, err := http.NewRequest(method, url, &buff)
 	require.NoError(t, err)
 
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-
 	resp, err := (&http.Client{}).Do(req)
 	require.NoError(t, err)
 
