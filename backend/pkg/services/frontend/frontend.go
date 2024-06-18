@@ -2,10 +2,13 @@ package frontend
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"path"
 	"strings"
+
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 )
 
 type Service struct {
@@ -37,6 +40,18 @@ func (s Service) Path() string {
 }
 
 func (s Service) HandleHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		msg := fmt.Sprintf("Method %s not allowed", r.Method)
+		http.Error(w, msg, http.StatusMethodNotAllowed)
+		return
+	}
+
+	if err := httputils.ValidateAccepts(r, "text/html"); err != nil {
+		msg := err.(httputils.RequestError).Err.Error() //nolint:forcetypeassert,errorlint // we know it's a RequestError
+		http.Error(w, msg, http.StatusNotAcceptable)
+		return
+	}
+
 	if p, ok := s.resolvePath(w, r.URL.Path); !ok {
 		return
 	} else {
