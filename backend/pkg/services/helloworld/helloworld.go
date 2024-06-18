@@ -45,6 +45,10 @@ func (s Service) Handle(_ logger.Logger, w http.ResponseWriter, r *http.Request)
 		return httputils.Errorf(http.StatusMethodNotAllowed, "method %s not allowed", r.Method)
 	}
 
+	if err := httputils.ValidateAccepts(r, "text/plain"); err != nil {
+		return err
+	}
+
 	fmt.Fprintln(w, "Hello, world!")
 	return nil
 }

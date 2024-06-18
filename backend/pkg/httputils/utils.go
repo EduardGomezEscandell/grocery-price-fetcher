@@ -61,3 +61,33 @@ func Errorf(code int, format string, args ...any) RequestError {
 func (e RequestError) Error() string {
 	return fmt.Sprintf("request error %d: %v", e.Code, e.Err)
 }
+
+func ValidateAccepts(r *http.Request, mediaType string) error {
+	if err := validMediaType(mediaType, r.Header.Get("Accept")); err != nil {
+		return Errorf(http.StatusNotAcceptable, "Incompatible Accept header: %v", err)
+	}
+
+	return nil
+}
+
+func ValidateContentType(r *http.Request, mediaType string) error {
+	if err := validMediaType(mediaType, r.Header.Get("Content-Type")); err != nil {
+		return Errorf(http.StatusNotAcceptable, "Incompatible Content-Type header: %v", err)
+	}
+
+	return nil
+}
+
+func validMediaType(want string, got string) error {
+	switch got {
+	case want:
+		return nil
+	case "*/*":
+		return nil
+	case "":
+		return nil
+	default:
+	}
+
+	return fmt.Errorf("unsupported media type %q, only %q is accepted", got, want)
+}

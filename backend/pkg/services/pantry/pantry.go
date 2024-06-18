@@ -63,8 +63,8 @@ func (s *Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Reque
 }
 
 func (s *Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Request) error {
-	if r.Header.Get("Accept") != "application/json" {
-		return httputils.Errorf(http.StatusBadRequest, "unsupported format: %s", r.Header.Get("Accept"))
+	if err := httputils.ValidateAccepts(r, "application/json"); err != nil {
+		return err
 	}
 
 	p := r.PathValue("pantry")
@@ -85,6 +85,10 @@ func (s *Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 }
 
 func (s *Service) handlePut(log logger.Logger, w http.ResponseWriter, r *http.Request) error {
+	if err := httputils.ValidateContentType(r, "application/json"); err != nil {
+		return err
+	}
+
 	out, err := io.ReadAll(r.Body)
 	if err != nil {
 		return httputils.Error(http.StatusBadRequest, "failed to read request")

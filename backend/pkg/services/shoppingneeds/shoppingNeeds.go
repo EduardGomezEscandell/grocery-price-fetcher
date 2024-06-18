@@ -58,8 +58,8 @@ func (s *Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Reque
 }
 
 func (s *Service) handleGet(log logger.Logger, w http.ResponseWriter, r *http.Request) error {
-	if r.Header.Get("Accept") != "application/json" {
-		return httputils.Errorf(http.StatusBadRequest, "unsupported format: %s", r.Header.Get("Accept"))
+	if err := httputils.ValidateAccepts(r, "application/json"); err != nil {
+		return err
 	}
 
 	menu := r.PathValue("menu")

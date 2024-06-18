@@ -59,8 +59,8 @@ func (s Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Reques
 }
 
 func (s Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Request) error {
-	if r.Header.Get("Accept") != "application/json" {
-		return httputils.Errorf(http.StatusBadRequest, "unsupported format: %s", r.Header.Get("Accept"))
+	if err := httputils.ValidateAccepts(r, "application/json"); err != nil {
+		return err
 	}
 
 	ns := r.PathValue("namespace")
@@ -107,8 +107,8 @@ func (s Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Reque
 }
 
 func (s Service) handlePost(log logger.Logger, w http.ResponseWriter, r *http.Request) error {
-	if r.Header.Get("Content-Type") != "application/json" {
-		return httputils.Errorf(http.StatusBadRequest, "unsupported format: %s", r.Header.Get("Content-Type"))
+	if err := httputils.ValidateAccepts(r, "application/json"); err != nil {
+		return err
 	}
 
 	ns := r.PathValue("namespace")

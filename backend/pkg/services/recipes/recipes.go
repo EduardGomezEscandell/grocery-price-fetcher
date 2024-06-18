@@ -52,6 +52,10 @@ func (s *Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Reque
 		return httputils.Errorf(http.StatusMethodNotAllowed, "method %s not allowed", r.Method)
 	}
 
+	if err := httputils.ValidateAccepts(r, "application/json"); err != nil {
+		return err
+	}
+
 	recs, err := s.db.Recipes()
 	if err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "failed to get recipes: %v", err)
