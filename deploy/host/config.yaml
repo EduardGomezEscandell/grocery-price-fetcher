@@ -13,8 +13,6 @@ services:
       passwordfile: /run/secrets/db_root_password
       host: database
       port: '3306'
-  frontend: 
-    path: /usr/share/grocery-price-fetcher/frontend
   pricing:
     refreshrate: 6h0m0s
 

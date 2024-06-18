@@ -8,16 +8,13 @@ import (
 
 type Settings struct {
 	Verbosity int
-	FrontEnd  string
-
-	Daemon   daemon.Settings
-	Services services.Settings
+	Daemon    daemon.Settings
+	Services  services.Settings
 }
 
 func Defaults() Settings {
 	return Settings{
 		Verbosity: 1,
-		FrontEnd:  "/usr/share/grocery-price-fetcher/frontend",
 		Daemon:    daemon.Settings{}.Defaults(),
 		Services:  services.Settings{}.Defaults(),
 	}
