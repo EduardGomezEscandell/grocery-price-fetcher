@@ -45,6 +45,7 @@ make full-start
    ```
    tar -xvf grocery-price-fetcher.tar.gz
    cd grocery-price-fetcher
+   make install
    make start
    ```
 
