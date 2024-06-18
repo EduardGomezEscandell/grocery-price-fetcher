@@ -56,6 +56,7 @@ type Settings struct {
 func (Settings) Defaults() Settings {
 	return Settings{
 		Database:      database.Settings{}.Defaults(),
+		FrontEnd:      frontend.Settings{}.Defaults(),
 		HelloWorld:    helloworld.Settings{}.Defaults(),
 		IngredientUse: ingredientuse.Settings{}.Defaults(),
 		Menu:          menu.Settings{}.Defaults(),

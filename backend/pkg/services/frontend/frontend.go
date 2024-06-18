@@ -14,14 +14,14 @@ type Service struct {
 }
 
 type Settings struct {
-	Path    string
 	Enable bool
+	Path   string
 }
 
 func (s Settings) Defaults() Settings {
 	return Settings{
-		Path:    "/run/secrets/frontend",
 		Enable: true,
+		Path:   "/usr/share/grocery-price-fetcher/frontend",
 	}
 }
 
