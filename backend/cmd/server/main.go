@@ -28,10 +28,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Could not initialize services: %v", err)
 	}
-	defer logOnError(log, s.Stop())
+	defer func() { logOnError(log, s.Stop()) }()
 
 	daemon := daemon.New(log, sett.Daemon)
-	defer logOnError(log, daemon.Stop())
+	defer func() { logOnError(log, daemon.Stop()) }()
 
 	installSigtermHandler(ctx, daemon, s)
 
