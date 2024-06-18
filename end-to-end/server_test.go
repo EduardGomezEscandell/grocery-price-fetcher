@@ -1,27 +1,82 @@
 package e2e_test
 
 import (
-	"context"
+	"bytes"
 	"crypto/tls"
+	"fmt"
 	"io"
 	"net/http"
+	"path"
 	"testing"
-	"time"
 
-	e2e "github.com/EduardGomezEscandell/grocery-price-fetcher/end-to-end"
 	"github.com/stretchr/testify/require"
 )
 
 func TestHelloWorld(t *testing.T) {
-	const (
-		golden = "testdata/server/result.txt"
-	)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
-	defer cancel()
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://127.0.0.1/api/helloworld", nil)
+	t.Parallel()
+	resp, err := request(t, http.MethodGet, "api/helloworld", nil)
 	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code %s", resp.Status)
+	require.Equal(t, "Hello, world!\n", resp.Body)
+}
+
+func TestVersion(t *testing.T) {
+	t.Parallel()
+	resp, err := request(t, http.MethodGet, "api/version", nil)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code %s", resp.Status)
+	require.NotContains(t, resp.Body, "Dev", "Version was not properly set during build")
+}
+
+func TestRecipes(t *testing.T) {
+	t.Parallel()
+	resp, err := request(t, http.MethodGet, "api/recipes", nil)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code %s", resp.Status)
+	require.NotEmpty(t, resp.Body, "Body should not be empty")
+}
+
+func TestMenu(t *testing.T) {
+	t.Parallel()
+	resp, err := request(t, http.MethodGet, "api/menu/default", nil)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code %s", resp.Status)
+	require.NotEmpty(t, resp.Body, "Body should not be empty")
+}
+
+func TestFrontEnd(t *testing.T) {
+	t.Parallel()
+	resp, err := request(t, http.MethodGet, "", nil)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code %s", resp.Status)
+	require.NotEmpty(t, resp.Body, "Body should not be empty")
+	require.Contains(t, resp.Body, "</html>", "Frontend should contain the HTML tag")
+}
+
+func TestFrontEndRouting(t *testing.T) {
+	t.Parallel()
+	resp, err := request(t, http.MethodGet, "menu", nil)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code %s", resp.Status)
+	require.NotEmpty(t, resp.Body, "Body should not be empty")
+	require.Contains(t, resp.Body, "</html>", "Frontend should contain the HTML tag")
+}
+
+//nolint:unparam // Method is always GET in this test
+func request(t *testing.T, method string, endpoint string, body []byte) (*response, error) {
+	t.Helper()
+
+	var buff bytes.Buffer
+	_, err := buff.Write(body)
+	if err != nil {
+		return nil, fmt.Errorf("could not write body into buffer: %v", err)
+	}
+
+	url := "https://" + path.Join("localhost", endpoint)
+	req, err := http.NewRequest(method, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("could not create request: %v", err)
+	}
 
 	client := http.Client{
 		Transport: &http.Transport{
@@ -33,11 +88,25 @@ func TestHelloWorld(t *testing.T) {
 	}
 
 	resp, err := client.Do(req)
-	require.NoError(t, err)
-	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code %s", http.StatusText(resp.StatusCode))
+	if err != nil {
+		return nil, fmt.Errorf("could not perform request: %v", err)
+	}
+	defer resp.Body.Close()
 
-	rB, err := io.ReadAll(resp.Body)
-	require.NoError(t, err)
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("could not read response body: %v", err)
+	}
 
-	e2e.CompareToGolden(t, golden, string(rB))
+	t.Logf("Response to %s %s: %s\n%s", method, url, resp.Status, string(b))
+
+	return &response{
+		Body:     string(b),
+		Response: resp,
+	}, nil
+}
+
+type response struct {
+	Body string
+	*http.Response
 }
