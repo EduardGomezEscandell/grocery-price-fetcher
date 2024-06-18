@@ -46,7 +46,7 @@ func TestMenu(t *testing.T) {
 
 func TestFrontEnd(t *testing.T) {
 	t.Parallel()
-	resp, err := request(t, http.MethodGet, "", nil)
+	resp, err := request(t, http.MethodGet, "", nil, browserHeaders...)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code %s", resp.Status)
 	require.NotEmpty(t, resp.Body, "Body should not be empty")
@@ -55,15 +55,35 @@ func TestFrontEnd(t *testing.T) {
 
 func TestFrontEndRouting(t *testing.T) {
 	t.Parallel()
-	resp, err := request(t, http.MethodGet, "menu", nil)
+	resp, err := request(t, http.MethodGet, "menu", nil, browserHeaders...)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code %s", resp.Status)
 	require.NotEmpty(t, resp.Body, "Body should not be empty")
 	require.Contains(t, resp.Body, "</html>", "Frontend should contain the HTML tag")
 }
 
+var browserHeaders = []kv{
+	{
+		key:   "Accept",
+		value: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+	},
+	{
+		key:   "Accept-Encoding",
+		value: "gzip, deflate, br, zstd",
+	},
+	{
+		key:   "User-Agent",
+		value: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+	},
+}
+
+type kv struct {
+	key   string
+	value string
+}
+
 //nolint:unparam // Method is always GET in this test
-func request(t *testing.T, method string, endpoint string, body []byte) (*response, error) {
+func request(t *testing.T, method string, endpoint string, body []byte, headers ...kv) (*response, error) {
 	t.Helper()
 
 	var buff bytes.Buffer
@@ -76,6 +96,10 @@ func request(t *testing.T, method string, endpoint string, body []byte) (*respon
 	req, err := http.NewRequest(method, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("could not create request: %v", err)
+	}
+
+	for _, h := range headers {
+		req.Header.Add(h.key, h.value)
 	}
 
 	client := http.Client{
