@@ -22,21 +22,11 @@ export default function Sidebar(props: Props) {
                 <h1>La&nbsp;compra de&nbsp;l'Edu</h1>
             </div>
             <div id='body'>
-                <Goto disabled={true}>
-                    Els meus productes
-                </Goto>
-                <Goto path={'/recipes'}>
-                    Les meves receptes
-                </Goto>
-                <Goto path={'/menu'}>
-                    El meu menú
-                </Goto>
-                <Goto path={'/pantry'}>
-                    El meu rebost
-                </Goto>
-                <Goto path={'/shopping-list'}>
-                    La meva llista de la compra
-                </Goto>
+                <Goto path={'/products'}>Els meus productes</Goto>
+                <Goto path={'/recipes'}>Les meves receptes</Goto>
+                <Goto path={'/menu'}>El meu menú</Goto>
+                <Goto path={'/pantry'}>El meu rebost</Goto>
+                <Goto path={'/shopping-list'}>La meva llista de la compra</Goto>
             </div>
             <div id='footer'>
                 <p onClick={props.onHelp}>
@@ -51,10 +41,32 @@ function Goto(props: {
     path?: string,
     children: string,
     disabled?: boolean,
+    onNavigate?: () => void
 }) {
-    const navigate = useNavigate()
-    const location = useLocation()
 
+    const location = useLocation()
+    const navigate = useNavigate()
+
+    const onClick = () => { 
+        if (props.disabled) {
+            return
+        }
+
+        if (!props.path) {
+            return
+        }
+
+        if (props.path === location.pathname) {
+            return
+        }
+
+        if (props.onNavigate) {
+            props.onNavigate()
+        }
+
+        navigate(props.path)
+    }
+    
     
     let id = props.disabled ? 'disabled' : 'enabled'
     if (props.path === location.pathname) {
@@ -62,7 +74,7 @@ function Goto(props: {
     }
 
     return (
-        <p onClick={() => props.path && navigate(props.path)} id={id}>
+        <p onClick={onClick} id={id}>
             {props.children}
         </p>
     )

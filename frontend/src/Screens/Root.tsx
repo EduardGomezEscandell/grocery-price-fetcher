@@ -7,6 +7,7 @@ import ShoppingList from './ShoppingList/ShoppingList';
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import NotFound from './404/NotFound.tsx/NotFound';
 import Recipes from './Recipes/Recipes';
+import Products from './Ingredients/Products';
 
 export default function Root(): JSX.Element {
     const backend = new Backend();
@@ -16,6 +17,7 @@ export default function Root(): JSX.Element {
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<LandingPage backend={backend} sessionName={sessionName} />} />
+                <Route path="/products" element={<Products backend={backend} sessionName={sessionName} />} />
                 <Route path="/recipes" element={<Recipes backend={backend} sessionName={sessionName} />} />
                 <Route path="/menu" element={<RenderMenu backend={backend} sessionName={sessionName} />} />
                 <Route path="/pantry" element={<RenderPantry backend={backend} sessionName={sessionName} />} />
