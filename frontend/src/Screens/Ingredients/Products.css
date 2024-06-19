@@ -1,0 +1,23 @@
+.search-table-row {
+    background-color: white;
+    border-radius: 10px;
+    margin: 3px 0px 3px 0px;
+    padding: 10px;
+}
+
+.search-table-row:hover {
+    background-color: #f0f0f0;
+}
+
+.search-table-row .title {
+    font-weight: bold;
+}
+
+.search-table-row .details {
+    display: flex;
+    justify-content: space-between;
+    
+
+    font-size: 0.9em;
+    color: #666;
+}

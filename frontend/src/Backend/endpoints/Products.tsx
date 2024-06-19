@@ -49,13 +49,13 @@ export class MockProductsEndpoint extends ProductsEndpoint {
         console.log(`GET to ${this.path}:`)
         return new Promise(resolve => setTimeout(resolve, 1000))
             .then(() => [
-                { name: "Macarrons", price: 1.33, batch_size: 1 },
-                { name: "Ceba", price: 0.76, batch_size: 1 },
-                { name: "All", price: 0.88, batch_size: 1 },
-                { name: "Tomàquet", price: 0.44, batch_size: 1},
-                { name: "Oli", price: 0.2, batch_size: 1 },
-                { name: "Sal", price: 2.1, batch_size: 1 },
-                { name: "Pebre", price: 1.57, batch_size: 1 }
+                { name: "Macarrons", price: 1.33, batch_size: 1, provider: 'Bonpreu' },
+                { name: "Ceba", price: 0.76, batch_size: 1, provider: 'Bonpreu' },
+                { name: "All", price: 0.88, batch_size: 3, provider: 'Mercadona' },
+                { name: "Tomàquet", price: 0.44, batch_size: 1, provider: 'Bonpreu'},
+                { name: "Oli", price: 0.2, batch_size: 1, provider: 'Bonpreu' },
+                { name: "Sal", price: 2.1, batch_size: 1, provider: 'Bonpreu' },
+                { name: "Pebre", price: 1.57, batch_size: 1, provider: 'Carrefour' }
             ])
             .then((data: any[]) => data.map(Product.fromJSON))
     }

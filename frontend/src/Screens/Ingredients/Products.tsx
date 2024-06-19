@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import TopBar from '../../TopBar/TopBar'
 import Sidebar from '../../SideBar/Sidebar'
 import Backend from '../../Backend/Backend';
+import ComparableString from '../../ComparableString/ComparableString';
+import { asEuro, makePlural, round2 } from '../../Numbers/Numbers';
+import { Product } from '../../State/State';
 import './Products.css'
 
 interface Props {
@@ -14,6 +17,24 @@ export default function Products(props: Props) {
     const [sideBar, setSidebar] = useState(false)
     const [help, setHelp] = useState(false)
     const navigate = useNavigate()
+
+    const [products, setProducts] = useState<product[]>([])
+    const [loaded, setLoaded] = useState(false)
+
+    if (!loaded) {
+        props.backend.Products(props.sessionName)
+            .GET()
+            .then((d) => d.map(r => new product(r.name, r.price, r.batch_size, r.provider)))
+            .then(setProducts)
+            .then(() => setLoaded(true))
+    }
+
+    const [query, setQuery] = useState(new ComparableString(''))
+    const [hidden, setHidden] = useState<string[]>([])
+
+    const result = products
+        .filter(r => !hidden.includes(r.name))
+        .filter((r) => r.comp.contains(query))
 
     return (
         <div id='rootdiv'>
@@ -27,15 +48,61 @@ export default function Products(props: Props) {
                 }}
                 titleOnClick={() => setHelp(true)}
             />
-            <div className='product-table-search'>
-                Hello, world!
+            <div className='search-table-search'>
+                <input id={result.length === 0 ? 'error' : 'search'}
+                    type='text'
+                    placeholder='Cerca productes...'
+                    value={query.displayName}
+                    onChange={q => setQuery(new ComparableString(q.target.value))}
+                />
             </div>
             <section>
+                <div className='search-table'>
+                    <div id='body' key={query.compareName}>
+                        {
+                            result.map(r => <ProductRow product={r} />)
+                        }
+                        {
+                            result.length === 0 &&
+                            <div id='error'>
+                                No hi ha resultats
+                            </div>
+                        }
+                        <p></p>
+                    </div>
+                </div>
                 {help && <HelpDialog onClose={() => setHelp(false)} />}
                 {sideBar && <Sidebar onHelp={() => setHelp(true)} onNavigate={() => { props.backend.ClearCache() }} />}
-            </section>
-        </div>
+            </section >
+        </div >
     )
+}
+
+function ProductRow(props: { product: product }): JSX.Element {
+    const { name, batch_size, price, provider } = props.product
+
+    const text = round2(batch_size)
+        + ' '
+        + makePlural(batch_size, 'unitat', 'unitats')
+        + ' a '
+        + asEuro(price)
+
+    return <div key={name} className='search-table-row'>
+        <div className='title'>
+            {name}
+        </div>
+        <div className='details'>
+            <div>
+                {provider}
+            </div>
+            <div>
+                {text}
+            </div>
+            <div>
+                {asEuro(price / batch_size)}/u
+            </div>
+        </div>
+    </div>
 }
 
 function HelpDialog(props: { onClose: () => void }): JSX.Element {
@@ -54,4 +121,13 @@ function HelpDialog(props: { onClose: () => void }): JSX.Element {
             </div>
         </dialog>
     )
+}
+
+class product extends Product {
+    comp: ComparableString;
+
+    constructor(name: string, price: number, batch_size: number, provider: string) {
+        super(name, price, batch_size, provider)
+        this.comp = new ComparableString(name)
+    }
 }
