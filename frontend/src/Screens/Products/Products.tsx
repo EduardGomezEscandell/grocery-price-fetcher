@@ -55,7 +55,6 @@ export default function Products(props: Props) {
                     props.backend.ClearCache()
                     navigate('/')
                 }}
-                titleOnClick={() => setFocus(Dialog.Help)}
             />
             <div className='search-table-search'>
                 <input id={result.length === 0 ? 'error' : 'search'}

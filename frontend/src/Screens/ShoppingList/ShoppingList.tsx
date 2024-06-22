@@ -62,7 +62,6 @@ export default function Shopping(props: Props): JSX.Element {
                 }
                 logoOnClick={() => saveShoppingList(props.backend, shoppingList).then(() => navigate("/"))
                 }
-                titleOnClick={() => setDialog(Dialog.HELP)}
                 titleText="La&nbsp;meva compra"
                 right={<SaveButton
                     key='save'

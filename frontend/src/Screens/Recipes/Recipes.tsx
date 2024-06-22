@@ -45,7 +45,6 @@ export default function Recipes(props: Props) {
                     props.backend.ClearCache()
                     navigate('/')
                 }}
-                titleOnClick={() => setHelp(true)}
             />
             <div className='search-table-search'>
                 <input id={result.length === 0 ? 'error' : 'search'}

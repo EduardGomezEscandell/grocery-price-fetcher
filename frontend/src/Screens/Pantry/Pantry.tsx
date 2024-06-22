@@ -64,7 +64,6 @@ export default function RenderPantry(pp: Props) {
                 >Opcions </button>
                 }
                 logoOnClick={() => { pp.backend.Pantry(pp.sessionName).PUT(pantry).then(() => navigate("/")) }}
-                titleOnClick={() => setDialog(Dialog.HELP)}
                 titleText='El&nbsp;meu rebost'
                 right={<SaveButton
                     key='save'
