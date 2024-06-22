@@ -24,26 +24,36 @@ export default function RecipeEditor(props: Props): JSX.Element {
         _setTitle(t)
     }
 
-    return (
-        <div className='recipe-editor' key={'recipe-editor'}>
-            {folded
-                ? <div key='header' id='header' onClick={() => {
-                    setFolded(false)
-                }}>
-                    <div id='title'>
-                        <span>{title}</span>
-                    </div>
+    if (folded) {
+        return (
+            <div
+                className='search-table-row'
+                key={'recipe-editor'}
+                id='folded'
+                onClick={() => setFolded(!folded)}
+            >
+                <div className='title'>
+                    <span>{title}</span>
                 </div>
-                : <RecipeCard
-                    recipeEP={props.backend.Recipe(props.sessionName, title)}
-                    productsEP={props.backend.Products(props.sessionName)}
-                    recipe={title}
-                    key={title}
-                    setTitle={setTitle}
-                    setDeleted={props.setHidden}
-                    setFolded={() => setFolded(true)}
-                />
-            }
+            </div>
+        )
+    }
+
+    return (
+        <div
+            className='search-table-row'
+            key={'recipe-editor'}
+            id='expanded'
+        >
+            <RecipeCard
+                recipeEP={props.backend.Recipe(props.sessionName, title)}
+                productsEP={props.backend.Products(props.sessionName)}
+                recipe={title}
+                key={title}
+                setTitle={setTitle}
+                setDeleted={props.setHidden}
+                setFolded={() => setFolded(true)}
+            />
         </div>
     )
 }
@@ -82,15 +92,15 @@ function RecipeCard(props: RecipeCardProps): JSX.Element {
             .then(() => setLoaded(true))
 
         return <>
-            <div key='header' id='header' onClick={props.setFolded}><div>{title}</div></div>
-            <div id='body' key='body'><div><h3>Descarregant ingredients...</h3></div></div>
+            <div className='title' onClick={props.setFolded}><div>{title}</div></div>
+            <div id='body' key='body'><div><p>Descarregant ingredients...</p></div></div>
         </>
     }
 
     if (deletePage) {
         return (
-            <>
-                <div key='header' id='header' onClick={props.setFolded}><div>{title}</div></div>
+            <span key='box'>
+                <div className='title'><div>{title}</div></div>
                 <div id='body' key='body'>
                     <div>
                         Segur que vols eliminar la recepta?
@@ -108,13 +118,13 @@ function RecipeCard(props: RecipeCardProps): JSX.Element {
                         </div>
                     </div>
                 </div>
-            </>
+            </span>
         )
     }
 
     return (
-        <>
-            <div key='header' id='header' onClick={() => {
+        <span key='box' id={editing ? 'editing' : undefined}>
+            <div className='title' onClick={() => {
                 if (editing) {
                     return
                 }
@@ -133,49 +143,11 @@ function RecipeCard(props: RecipeCardProps): JSX.Element {
                         : <div>{title}</div>
                 }
             </div>
-            <div id='body' key='body'>
-                <div>
-                    <EditButtons
-                        key='buttons'
-                        onEdit={() => {
-                            setBackup(deepNewRecipe(props.recipe, ingredients))
-                            setEditing(true)
-                        }}
-                        onRestore={() => {
-                            setTitle(backup.name)
-                            setIngredients(backup.ingredients)
-                            setEditing(false)
-                        }}
-                        onSave={() => {
-                            saveRecipe(props.recipeEP, new Recipe(title, ingredients), backup.name)
-                                .then((r) => {
-                                    setTitle(r.name)
-                                    setIngredients(r.ingredients)
-                                }, (e) => {
-                                    if (e instanceof Response) {
-                                        e.text().then(
-                                            (t) => alert(`No s'ha pogut desar:\nError ${e.status}. ${t}`),
-                                            () => {
-                                                setTitle(backup.name)
-                                                setIngredients(backup.ingredients)
-                                                alert("No s'ha pogut desar")
-                                            }
-                                        )
-                                    }
-                                    setTitle(backup.name)
-                                    setIngredients(backup.ingredients)
-                                })
-                                .finally(() => setEditing(false))
-                        }}
-                        onDelete={() => {
-                            setTitle(backup.name)
-                            setIngredients(backup.ingredients)
-                            setEditing(false)
-                            setDeletePage(true)
-                        }}
-                        editing={false}
-                    />
-                    <h3>Ingredients</h3>
+            <div className='body' key='body' >
+                <div onClick={editing && undefined || (() => {
+                    props.setTitle(title)
+                    props.setFolded()
+                })}>
                     {
                         ingredients.map((ing, idx) => (
                             <IngredientRow
@@ -209,8 +181,48 @@ function RecipeCard(props: RecipeCardProps): JSX.Element {
                         }
                     </span>
                 </div>
+                <EditButtons
+                    key='buttons'
+                    onEdit={() => {
+                        setBackup(deepNewRecipe(props.recipe, ingredients))
+                        setEditing(true)
+                    }}
+                    onRestore={() => {
+                        setTitle(backup.name)
+                        setIngredients(backup.ingredients)
+                        setEditing(false)
+                    }}
+                    onSave={() => {
+                        saveRecipe(props.recipeEP, new Recipe(title, ingredients), backup.name)
+                            .then((r) => {
+                                setTitle(r.name)
+                                setIngredients(r.ingredients)
+                            }, (e) => {
+                                if (e instanceof Response) {
+                                    e.text().then(
+                                        (t) => alert(`No s'ha pogut desar:\nError ${e.status}. ${t}`),
+                                        () => {
+                                            setTitle(backup.name)
+                                            setIngredients(backup.ingredients)
+                                            alert("No s'ha pogut desar")
+                                        }
+                                    )
+                                }
+                                setTitle(backup.name)
+                                setIngredients(backup.ingredients)
+                            })
+                            .finally(() => setEditing(false))
+                    }}
+                    onDelete={() => {
+                        setTitle(backup.name)
+                        setIngredients(backup.ingredients)
+                        setEditing(false)
+                        setDeletePage(true)
+                    }}
+                    editing={false}
+                />
             </div>
-        </>
+        </span>
     )
 }
 

@@ -1,61 +1,38 @@
-.recipe-editor {
-    width: 100%;
-
-    display: block;
-
-    align-self: center;
-    border-radius: 20px;
-
-    margin-top: 10px;
-    margin-bottom: 10px;
-    
+.search-table-row#expanded:hover {
     background-color: white;
 }
 
-.recipe-editor #header {
-    margin: 20px;
-    cursor: pointer;
-
-    text-align: left;
-    font-size: 150%;
-    font-weight: bold;
+.search-table-row#expanded #editing {
+    cursor: default;
 }
 
-.recipe-editor #header div {
-    width: 100%;
-    height: 50px;
-    border: 1px solid transparent;
+.search-table-row .title input {
+    width: 95%;
 
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
     font: inherit;
-}
+    font-weight: inherit;
+    
 
-.recipe-editor #header input {
-    width: 100%;
-    height: 50px;
-    font: inherit;
+    text-indent: 5px;
+    margin-left: 5px;
 
-    margin: none;
     border: 1px solid black;
 }
 
-.recipe-editor #body>div {
+.search-table-row .body>div {
     align-self: center;
-    margin: 0px 20px 20px 20px;
+    margin: 0px 20px 0px 20px;
     width: calc(100% - 40px);
 }
 
-.recipe-editor #body #buttons {
-    width: 100%;
+.search-table-row .body #buttons {
     align-self: center;
     flex-direction: row;
     display: flex;
     justify-content: space-between;
 }
 
-.recipe-editor #body #buttons button {
+.search-table-row .body #buttons button {
     width: 100%;
     margin: none;
     padding: none;
@@ -69,19 +46,19 @@
     text-align: center;
 }
 
-.recipe-editor #body #buttons #happy {
+.search-table-row .body #buttons #happy {
     background-color: lightgreen;
 }
 
-.recipe-editor #body #buttons #revert {
+.search-table-row .body #buttons #revert {
     background-color: hsl(60, 90%, 50%);
 }
 
-.recipe-editor #body #buttons #delete {
+.search-table-row .body #buttons #delete {
     background-color: hsl(0, 79%, 85%);
 }
 
-.recipe-editor .ingredient {
+.search-table-row .ingredient {
     width: 100%;
     align-self: center;
     display: flex;
@@ -91,13 +68,13 @@
     height: 50px;
 }
 
-.recipe-editor .ingredient #amount {
+.search-table-row .ingredient #amount {
     width: 100px;
     margin: 10px;
     text-align: right;
 }
 
-.recipe-editor .ingredient #amount span {
+.search-table-row .ingredient #amount span {
     width: 100%;
     height: 100%;
     border: 1px solid transparent;
@@ -106,7 +83,7 @@
     font: inherit;
 }
 
-.recipe-editor .ingredient #amount input {
+.search-table-row .ingredient #amount input {
     width: 100%;
     height: 100%;
     padding: none;
@@ -116,29 +93,29 @@
     text-align: right;
 }
 
-.recipe-editor .ingredient #amount input#error {
+.search-table-row .ingredient #amount input#error {
     background-color: hsl(0, 79%, 85%);
     text-align: right;
 }
 
-.recipe-editor .ingredient #name {
+.search-table-row .ingredient #name {
     width: 100%;
     margin: 10px;
     text-align: left;
 }
 
-.recipe-editor .ingredient #price {
+.search-table-row .ingredient #price {
     width: 50px;
     margin: 10px;
     text-align: right;
 }
 
-.recipe-editor #total .ingredient {
+.search-table-row #total .ingredient {
     font-weight: bold;
     border-top: 1px solid black;
 }
 
-.recipe-editor .ingredient button {
+.search-table-row .ingredient button {
     width: 50px;
     margin: 10px;
     padding: none;
@@ -150,10 +127,10 @@
     font-weight: bold;
 }
 
-.recipe-editor .ingredient button#remove {
+.search-table-row .ingredient button#remove {
     background-color: hsl(0, 79%, 85%);
 }
 
-.recipe-editor .ingredient button#add {
+.search-table-row .ingredient button#add {
     background-color: lightblue;
 }
