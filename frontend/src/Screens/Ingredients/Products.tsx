@@ -33,6 +33,7 @@ export default function Products(props: Props) {
         props.backend.Products(props.sessionName)
             .GET()
             .then((d) => d.map(r => new product(r.name, r.price, r.batch_size, r.provider, r.product_id)))
+            .then(p => p.sort((a, b) => a.comp.localeCompare(b.comp)))
             .then(setProducts)
             .then(() => setLoaded(true))
     }
@@ -68,6 +69,13 @@ export default function Products(props: Props) {
                 <div className='search-table'>
                     <div id='body' key={query.compareName}>
                         {
+                            loaded &&
+                            <NewProductRow onClick={() => {
+                                setCurrProduct(new product(query.displayName, 0, 0, '', ''))
+                                setFocus(Dialog.Editor)
+                            }} />
+                        }
+                        {
                             result.map(r =>
                                 <ProductRow product={r} key={r.name} onClick={() => {
                                     setCurrProduct(r)
@@ -92,7 +100,13 @@ export default function Products(props: Props) {
                     onHide={() => { setHidden([...hidden, currProduct!.name]); setFocus(Dialog.None) }}
                     onChange={(p: Product) => {
                         props.backend.Products(props.sessionName).POST(currProduct!.name, p)
-                        currProduct!.override(p)
+                        const idx = products.findIndex(r => r.name === currProduct!.name)
+                        if (idx !== -1) {
+                            products[idx] = new product(p.name, p.price, p.batch_size, p.provider, p.product_id)
+                        } else {
+                            products.push(new product(p.name, p.price, p.batch_size, p.provider, p.product_id))
+                        }
+                        setProducts(products.sort((a, b) => a.comp.localeCompare(b.comp)))
                     }}
                     onClose={() => setFocus(Dialog.None)}
                 />}
@@ -100,6 +114,19 @@ export default function Products(props: Props) {
             </section >
         </div >
     )
+}
+
+function NewProductRow(props: { onClick: () => void }): JSX.Element {
+    return <div key='add-new-product' className='search-table-row' onClick={props.onClick}>
+        <div className='title'>
+            Afegir un nou producte
+        </div>
+        <div className='details'>
+            <div>
+                Fes clic aquí per afegir un nou producte
+            </div>
+        </div>
+    </div>
 }
 
 function ProductRow(props: { product: product, onClick: () => void }): JSX.Element {
@@ -153,14 +180,5 @@ class product extends Product {
     constructor(name: string, price: number, batch_size: number, provider: string, provider_id: string) {
         super(name, price, batch_size, provider, provider_id)
         this.comp = new ComparableString(name)
-    }
-
-    override(p: Product) {
-        this.name = p.name
-        this.price = p.price
-        this.batch_size = p.batch_size
-        this.provider = p.provider
-        this.product_id = p.product_id
-        this.comp = new ComparableString(p.name)
     }
 }

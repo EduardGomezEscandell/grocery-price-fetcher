@@ -16,4 +16,8 @@ export default class ComparableString {
     contains(other: ComparableString): boolean {
         return this.compareName.includes(other.compareName)
     }
+
+    localeCompare(other: ComparableString): number {
+        return this.compareName.localeCompare(other.compareName)
+    }
 }
