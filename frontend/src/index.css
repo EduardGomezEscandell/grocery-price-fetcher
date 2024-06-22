@@ -74,7 +74,7 @@ dialog {
   margin-top: 100px;
 
   max-width: 90%;
-  width: 500px !important;
+  width: 500px;
 
   border-radius: 20px;
   outline: 1px solid black;
@@ -101,12 +101,18 @@ dialog {
   }
 
   >#body {
-    padding: 10px;
+    width: 100%;
+    margin: 0px;
+    padding: 0px;
 
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
     min-height: 100px;
+
+    >* {
+      margin: 10px;
+    }
   }
 
   >#footer {
@@ -138,6 +144,12 @@ dialog {
         border-top: 1px solid black;
         border-radius: inherit;
         border-bottom-right-radius: 0px;
+      }
+
+      &#dialog-center {
+        border-top: 1px solid black;
+        border-left: 1px solid black;
+        border-radius: 0px;
       }
 
       &#dialog-right {
@@ -252,4 +264,64 @@ input[type='number'] {
 
 input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
   -webkit-appearance: none;
+}
+
+.search-table-search {
+  align-self: center;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+
+  margin-top: 20px;
+  margin-bottom: 5px;
+
+  width: 95%;
+}
+
+.search-table-search input {
+  width: 100%;
+  height: 50px;
+  background: whitesmoke;
+
+  max-width: 500px;
+  align-self: center;
+
+  border: none;
+  font-size: 150%;
+
+  text-align: center;
+}
+
+.search-table {
+  display: flex;
+  flex-wrap: wrap;
+  align-self: center;
+
+  width: 95%;
+  max-width: 500px;
+}
+
+.search-table #body {
+  width: 100%;
+  font: inherit;
+
+  display: flex;
+  flex-direction: column;
+
+  margin: none;
+  padding: none;
+}
+
+#error {
+  color: darkred;
+}
+
+.search-table #body #error {
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 10px;
+
+  font-weight: bold;
+  text-align: center;
 }

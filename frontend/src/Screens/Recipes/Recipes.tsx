@@ -3,8 +3,8 @@ import TopBar from '../../TopBar/TopBar'
 import Sidebar from '../../SideBar/Sidebar'
 import Backend from '../../Backend/Backend';
 import RecipeEditor from './RecipeEditor';
-import './Recipes.css'
 import { useNavigate } from 'react-router-dom';
+import ComparableString from '../../ComparableString/ComparableString';
 
 interface Props {
     backend: Backend;
@@ -15,9 +15,9 @@ export default function Recipes(props: Props) {
     const [sideBar, setSidebar] = useState(false)
     const [help, setHelp] = useState(false)
 
-    const [recipes, setRecipes] = useState<comparableString[]>([])
+    const [recipes, setRecipes] = useState<ComparableString[]>([])
     const [loaded, setLoaded] = useState(false)
-    const [query, setQuery] = useState(new comparableString(''))
+    const [query, setQuery] = useState(new ComparableString(''))
     const [hidden, setHidden] = useState<string[]>([])
 
     const result = recipes
@@ -27,13 +27,13 @@ export default function Recipes(props: Props) {
     if (!loaded) {
         props.backend.Dishes()
             .GET()
-            .then((d) => d.map(r => new comparableString(r)))
+            .then((d) => d.map(r => new ComparableString(r)))
             .then(setRecipes)
             .then(() => setLoaded(true))
     }
 
     const navigate = useNavigate()
-    
+
     return (
         <div id='rootdiv'>
             <TopBar
@@ -46,29 +46,27 @@ export default function Recipes(props: Props) {
                 }}
                 titleOnClick={() => setHelp(true)}
             />
-            <div className='recipe-table-search'>
+            <div className='search-table-search'>
                 <input id={result.length === 0 ? 'error' : 'search'}
                     type='text'
                     placeholder='Cerca receptes...'
                     value={query.displayName}
-                    onChange={(q) => setQuery(new comparableString(q.target.value))}
+                    onChange={(q) => setQuery(new ComparableString(q.target.value))}
                 />
             </div>
             <section>
-                <div className='recipe-table'>
+                <div className='search-table'>
                     <div id='body' key={query.compareName}>
                         {
-                            result.map((r) => {
-                                return hidden.includes(r.displayName) ? null : (
-                                    <RecipeEditor
-                                        key={r.displayName}
-                                        backend={props.backend}
-                                        sessionName={props.sessionName}
-                                        dish={r.displayName}
-                                        setHidden={() => setHidden([...hidden, r.displayName])}
-                                    />
-                                )
-                            })
+                            result.map((r) => (
+                                <RecipeEditor
+                                    key={r.displayName}
+                                    backend={props.backend}
+                                    sessionName={props.sessionName}
+                                    dish={r.displayName}
+                                    setHidden={() => setHidden([...hidden, r.displayName])}
+                                />
+                            ))
                         }
                         {
                             result.length === 0 &&
@@ -105,24 +103,3 @@ function HelpDialog(props: { onClose: () => void }): JSX.Element {
         </dialog>
     )
 }
-
-class comparableString {
-    displayName: string
-    compareName: string
-
-    constructor(displayName: string) {
-        this.displayName = displayName
-        this.compareName = this.localeFold(displayName)
-    }
-
-    private localeFold(s: string): string {
-        return s.normalize("NFKD")               // Decompose unicode characters
-            .replace(/[\u0300-\u036f]/g, "") // Remove accents
-            .toLowerCase()
-    }
-
-    contains(other: comparableString): boolean {
-        return this.compareName.includes(other.compareName)
-    }
-}
-

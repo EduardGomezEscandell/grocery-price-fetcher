@@ -8,17 +8,11 @@ interface Props {
     sessionName: string;
 }
 
-enum DialogState {
-    None,
-    CommingSoon,
-    Help,
-}
-
 export default function LandingPage(props: Props) {
-    const [commingSoon, setDialog] = React.useState(DialogState.None)
+    const [help, setHelp] = React.useState(false)
 
     const baseStyle: React.CSSProperties = {}
-    if (commingSoon) {
+    if (help) {
         baseStyle.filter = 'blur(5px)'
     }
 
@@ -33,13 +27,11 @@ export default function LandingPage(props: Props) {
             <div id="content" style={baseStyle}>
                 <div id="iconrow">
                     <button onClick={() => {
-                        setDialog(DialogState.Help)
+                        setHelp(true)
                     }}>
                         Com funciona?
                     </button>
-                    <button id="inactive" onClick={() => {
-                        setDialog(DialogState.CommingSoon)
-                    }}>
+                    <button onClick={() => { navigate("/products") }}>
                         Els meus productes
                     </button>
                     <button onClick={() => { navigate('/recipes') }}>
@@ -59,39 +51,7 @@ export default function LandingPage(props: Props) {
                 </div>
                 <Outlet />
             </div>
-            {commingSoon === DialogState.CommingSoon && (
-                <dialog open>
-                    <h2 id='header'>No encara!</h2>
-                    <div id="body">
-                        <p>
-                            Aquesta funcionalitat encara no està disponible.
-                        </p>
-                        <p>
-                            De moment hi ha productes i receptes d'exemple,
-                            però d'aquí poc podràs personalitzar-los.
-                        </p>
-                    </div>
-                    <div id='footer'><button onClick={() => setDialog(DialogState.None)}>Entesos</button></div>
-                </dialog>
-            )}
-            {commingSoon === DialogState.Help && (
-                <dialog open>
-                    <h2 id='header'>Com funciona?</h2>
-                    <div id="body">
-                        <p>
-                            <b>La compra de l'Edu</b> t'ajuda a planificar la teva compra setmanal.
-                            Tingues en compte que està en fase experimental.
-                            Dins de cada pàgina, pots obtindre més ajuda clicant el títol de la pàgina.
-                        </p>
-                        <p>A <b>Els meus productes</b> pots afegir productes del supermercat que prefereixis.</p>
-                        <p>A <b>Les meves receptes</b> pots afegir receptes utilitzant els teus productes com a ingredients.</p>
-                        <p>A <b>La meva compra</b> pots crear un menú setmanal. A partir d'aquest menú, <i>La compra de l'Edu</i> calcularà
-                            quant en necessites de cada ingredient i et preguntarà quant en tens de cada al teu rebost. Tot seguit,
-                            et preparà la llista de la compra només amb allò que et faci falta.</p>
-                    </div>
-                    <div id='footer'><button onClick={() => setDialog(DialogState.None)}>Entesos</button></div>
-                </dialog>
-            )}
+            {help && <HelpDialog onClose={() => setHelp(false)} />}
             <div id="footer" style={baseStyle}>
                 <p>
                     La compra de l'Edu és un projecte de codi obert desenvolupat
@@ -99,5 +59,26 @@ export default function LandingPage(props: Props) {
                     disponible a <a href="https://www.github.com/EduardGomezEscandell/grocery-price-fetcher" target="_blank" rel="noreferrer">GitHub</a></p>
             </div>
         </div >
+    )
+}
+
+function HelpDialog(props: { onClose: () => void }): JSX.Element {
+    return (
+        <dialog open>
+            <h2 id='header'>Com funciona?</h2>
+            <div id="body">
+                <p>
+                    <b>La compra de l'Edu</b> t'ajuda a planificar la teva compra setmanal.
+                    Tingues en compte que està en fase experimental.
+                    Dins de cada pàgina, pots obtindre més ajuda clicant el títol de la pàgina.
+                </p>
+                <p>A <b>Els meus productes</b> pots afegir productes del supermercat que prefereixis.</p>
+                <p>A <b>Les meves receptes</b> pots afegir receptes utilitzant els teus productes com a ingredients.</p>
+                <p>A <b>La meva compra</b> pots crear un menú setmanal. A partir d'aquest menú, <i>La compra de l'Edu</i> calcularà
+                    quant en necessites de cada ingredient i et preguntarà quant en tens de cada al teu rebost. Tot seguit,
+                    et preparà la llista de la compra només amb allò que et faci falta.</p>
+            </div>
+            <div id='footer'><button onClick={props.onClose}>D'acord</button></div>
+        </dialog>
     )
 }
