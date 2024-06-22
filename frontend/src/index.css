@@ -146,6 +146,12 @@ dialog {
         border-bottom-right-radius: 0px;
       }
 
+      &#dialog-center {
+        border-top: 1px solid black;
+        border-left: 1px solid black;
+        border-radius: 0px;
+      }
+
       &#dialog-right {
         border-top: 1px solid black;
         border-left: 1px solid black;

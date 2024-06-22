@@ -55,6 +55,18 @@ export default class ProductsEndpoint {
             .then(() => { })
     }
 
+    protected async delete_uncached(name: string): Promise<void> {
+        return fetch(this.Path(name), {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+        })
+            .then(r => r.ok ? r : Promise.reject(r))
+            .then(() => { })
+    }
+
     async GET(): Promise<Product[]> {
         const cached = this.cache?.get<Product[]>(this.Path())
         if (cached) return cached
@@ -85,6 +97,11 @@ export default class ProductsEndpoint {
         return this
             .post_uncached(oldName, product)
             .then(() => { })
+    }
+
+    async DELETE(name: string): Promise<void> {
+        this.cache?.delete(this.Path(name))
+        return this.delete_uncached(name)
     }
 }
 
@@ -119,6 +136,17 @@ export class MockProductsEndpoint extends ProductsEndpoint {
 
     protected async post_uncached(oldName: string, product: Product): Promise<void> {
         console.log(`POST to ${this.Path(oldName)}`)
+        return new Promise(resolve => setTimeout(resolve, 1000))
+            .then(() => { })
+    }
+
+    protected async delete_uncached(name: string): Promise<void> {
+        if (name === 'Sal') {
+            return new Promise(resolve => setTimeout(resolve, 1000))
+                .then(() => Promise.reject(new Response('Bla bla bla terrible error', { status: 500 })))
+        }
+
+        console.log(`DELETE to ${this.Path(name)}`)
         return new Promise(resolve => setTimeout(resolve, 1000))
             .then(() => { })
     }

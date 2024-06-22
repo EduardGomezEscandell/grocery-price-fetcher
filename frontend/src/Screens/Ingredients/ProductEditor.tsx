@@ -27,6 +27,7 @@ export default function ProductEditor(props: Props) {
     const [found, _setFound] = useState(props.product.price != 0.0)
     const [phase, _setPhase] = useState(computePhase(props.product, found))
     const [p, _setProduct] = useState(props.product)
+    const [confirmDelete, setConfirmDelete] = useState(false)
 
     const setProduct = (newProduct: Product, newFound?: boolean) => {
         _setProduct(newProduct)
@@ -38,6 +39,53 @@ export default function ProductEditor(props: Props) {
 
         const newPhase = computePhase(newProduct, newFound)
         newPhase != phase && _setPhase(newPhase)
+    }
+
+    if (confirmDelete) {
+        return (
+            <dialog open className="product-editor">
+                <h2 id="header">Editor de productes</h2>
+                <div id='body'>
+                    <div id='search'>
+                        <h3>Estàs segur que vols eliminar el següent producte?</h3>
+                        <div>
+                            <span>Nom</span>
+                            <p>{p.name}</p>
+                        </div>
+                        <div>
+                            <span>Proveidor</span>
+                            <p>{p.provider}</p>
+                        </div>
+                        <div>
+                            <span>Codi</span>
+                            <p>{p.product_id}</p>
+                        </div>
+                        <div>
+                            <span>Unitats a cada paquet</span>
+                            <p>{p.batch_size}</p>
+                        </div>
+                    </div>
+                </div>
+                <div id='footer'>
+                    <button id='dialog-left' onClick={() => { setConfirmDelete(false) }}>Cancel·lar</button>
+                    <button id='dialog-right' onClick={() => {
+                        props.backend.Products(props.sessionName).DELETE(p.name).then(
+                            () => {
+                                props.onHide()
+                                props.onClose()
+                            },
+                            (e) => {
+                                setConfirmDelete(false)
+                                if (e instanceof Response) {
+                                    e.text().then((t) => alert(`No s'ha pogut eliminar el producte.\n${e.status} ${t}`))
+                                } else {
+                                    alert(`No s'ha pogut eliminar el producte.\n${e}`)
+                                }   
+                            })
+                    }}>Eliminar</button>
+                </div>
+            </dialog>
+        )
     }
 
     return (
@@ -75,7 +123,7 @@ export default function ProductEditor(props: Props) {
                                 product={p}
                                 onSearch={(price: number, found: boolean) => {
                                     if (found) {
-                                        setProduct({...p, price: price}, true)
+                                        setProduct({ ...p, price: price }, true)
                                     } else {
                                         setProduct(p, false)
                                     }
@@ -117,6 +165,7 @@ export default function ProductEditor(props: Props) {
             </div>
             <div id='footer'>
                 <button id='dialog-left' onClick={props.onClose}>Tornar sense desar</button>
+                <button id='dialog-center' onClick={() => setConfirmDelete(true)}>El·liminar producte</button>
                 <button id='dialog-right' onClick={() => {
                     props.onChange(p)
                     props.onClose()
