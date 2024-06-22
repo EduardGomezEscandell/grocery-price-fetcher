@@ -122,11 +122,9 @@ export default function Recipes(props: Props) {
 
 function NewRecipe(props: { onClick: () => void }): JSX.Element {
     return (
-        <div className='recipe-editor' key={'recipe-editor'}>
-            <div key='header' id='header' onClick={props.onClick}>
-                <div id='title'>
-                    <span>Afegir recepta...</span>
-                </div>
+        <div className='search-table-row' key={'recipe-editor'}>
+            <div className='title' onClick={props.onClick}>
+                <span>Afegir recepta...</span>
             </div>
         </div>
     )
