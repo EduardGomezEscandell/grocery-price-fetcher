@@ -13,6 +13,10 @@ export default class ComparableString {
             .toLowerCase()
     }
 
+    equals(other: ComparableString): boolean {
+        return this.compareName === other.compareName
+    }
+
     contains(other: ComparableString): boolean {
         return this.compareName.includes(other.compareName)
     }
