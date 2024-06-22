@@ -28,3 +28,10 @@ export function round2(x: number): string {
 export function makePlural(x: number, singular: string, plural: string): string {
     return x === 1 ? singular : plural
 }
+
+export function parseNumber(x: string): number {
+    if (x === '') {
+        return 0
+    }
+    return parseFloat(x)
+}

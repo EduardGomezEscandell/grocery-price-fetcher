@@ -6,6 +6,7 @@ import Backend from '../../Backend/Backend';
 import ComparableString from '../../ComparableString/ComparableString';
 import { asEuro, makePlural, round2 } from '../../Numbers/Numbers';
 import { Product } from '../../State/State';
+import ProductEditor from './ProductEditor';
 import './Products.css'
 
 interface Props {
@@ -13,18 +14,25 @@ interface Props {
     sessionName: string;
 }
 
+enum Dialog {
+    None,
+    Help,
+    Editor
+}
+
 export default function Products(props: Props) {
     const [sideBar, setSidebar] = useState(false)
-    const [help, setHelp] = useState(false)
+    const [focus, setFocus] = useState(Dialog.None)
     const navigate = useNavigate()
 
     const [products, setProducts] = useState<product[]>([])
     const [loaded, setLoaded] = useState(false)
+    const [currProduct, setCurrProduct] = useState<product | null>(null)
 
     if (!loaded) {
         props.backend.Products(props.sessionName)
             .GET()
-            .then((d) => d.map(r => new product(r.name, r.price, r.batch_size, r.provider)))
+            .then((d) => d.map(r => new product(r.name, r.price, r.batch_size, r.provider, r.product_id)))
             .then(setProducts)
             .then(() => setLoaded(true))
     }
@@ -46,7 +54,7 @@ export default function Products(props: Props) {
                     props.backend.ClearCache()
                     navigate('/')
                 }}
-                titleOnClick={() => setHelp(true)}
+                titleOnClick={() => setFocus(Dialog.Help)}
             />
             <div className='search-table-search'>
                 <input id={result.length === 0 ? 'error' : 'search'}
@@ -60,7 +68,12 @@ export default function Products(props: Props) {
                 <div className='search-table'>
                     <div id='body' key={query.compareName}>
                         {
-                            result.map(r => <ProductRow product={r} />)
+                            result.map(r =>
+                                <ProductRow product={r} key={r.name} onClick={() => {
+                                    setCurrProduct(r)
+                                    setFocus(Dialog.Editor)
+                                }} />
+                            )
                         }
                         {
                             result.length === 0 &&
@@ -71,15 +84,26 @@ export default function Products(props: Props) {
                         <p></p>
                     </div>
                 </div>
-                {help && <HelpDialog onClose={() => setHelp(false)} />}
-                {sideBar && <Sidebar onHelp={() => setHelp(true)} onNavigate={() => { props.backend.ClearCache() }} />}
+                {focus === Dialog.Help && <HelpDialog onClose={() => setFocus(Dialog.None)} />}
+                {focus === Dialog.Editor && <ProductEditor
+                    backend={props.backend}
+                    sessionName={props.sessionName}
+                    product={currProduct!}
+                    onHide={() => { setHidden([...hidden, currProduct!.name]); setFocus(Dialog.None) }}
+                    onChange={(p: Product) => {
+                        props.backend.Products(props.sessionName).POST(currProduct!.name, p)
+                        currProduct!.override(p)
+                    }}
+                    onClose={() => setFocus(Dialog.None)}
+                />}
+                {sideBar && <Sidebar onHelp={() => setFocus(Dialog.Help)} onNavigate={() => { props.backend.ClearCache() }} />}
             </section >
         </div >
     )
 }
 
-function ProductRow(props: { product: product }): JSX.Element {
-    const { name, batch_size, price, provider } = props.product
+function ProductRow(props: { product: product, onClick: () => void }): JSX.Element {
+    const { name, batch_size, price, provider, product_id: provider_id } = props.product
 
     const text = round2(batch_size)
         + ' '
@@ -87,13 +111,13 @@ function ProductRow(props: { product: product }): JSX.Element {
         + ' a '
         + asEuro(price)
 
-    return <div key={name} className='search-table-row'>
+    return <div key={name} className='search-table-row' onClick={props.onClick}>
         <div className='title'>
             {name}
         </div>
         <div className='details'>
             <div>
-                {provider}
+                {provider} #{provider_id}
             </div>
             <div>
                 {text}
@@ -126,8 +150,17 @@ function HelpDialog(props: { onClose: () => void }): JSX.Element {
 class product extends Product {
     comp: ComparableString;
 
-    constructor(name: string, price: number, batch_size: number, provider: string) {
-        super(name, price, batch_size, provider)
+    constructor(name: string, price: number, batch_size: number, provider: string, provider_id: string) {
+        super(name, price, batch_size, provider, provider_id)
         this.comp = new ComparableString(name)
+    }
+
+    override(p: Product) {
+        this.name = p.name
+        this.price = p.price
+        this.batch_size = p.batch_size
+        this.provider = p.provider
+        this.product_id = p.product_id
+        this.comp = new ComparableString(p.name)
     }
 }

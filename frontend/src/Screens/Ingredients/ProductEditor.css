@@ -1,0 +1,112 @@
+.product-editor {
+    margin-top: 0px;
+}
+
+.product-editor #body {
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    justify-content: left;
+
+    width: 100%;
+    height: 100%;
+
+    margin: 10x;
+}
+
+.product-editor #body #search>div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: left;
+    margin-bottom: 15px;
+}
+
+.product-editor #body #search span {
+    color: #777777;
+}
+
+.product-editor #body #search select {
+    color: black;
+    border: 1px solid black;
+    background-color: white;
+
+    font: inherit;
+    height: 50px;
+    padding: 0;
+    width: 100%;
+
+    text-align: left;
+    text-indent: 10px;
+}
+
+.product-editor #body #search input {
+    color: black;
+    border: 1px solid black;
+    background-color: white;
+
+    font: inherit;
+    height: 50px;
+    padding: 0;
+    width: 100%;
+
+    text-align: left;
+    text-indent: 10px;
+}
+
+.product-editor #body a {
+    text-align: center;
+    word-break: break-all;
+}
+
+.product-editor #body #expandable {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.product-editor #body #error {
+    font: inherit;
+    color: darkred;
+}
+
+.product-editor #body #success {
+    font: inherit;
+    color: green;
+}
+
+.product-editor #body #help {
+    align-self: center;
+    background-color: #f0f0f0;
+    border: 1px solid #888888;
+    width: 100%;
+    padding: none;
+    margin-bottom: 20px;
+
+    >* {
+        margin: 10px;
+    }
+}
+
+.product-editor #body #help #expandable-exit {
+    text-decoration: underline;
+    cursor: pointer;
+    text-align: center;
+    color: black;
+    font-weight: bold;
+}
+
+.product-editor #body div#prices {
+    display: flex;
+    flex-direction: row;
+    align-items: left;
+    justify-content: left;
+
+    width: 100%;
+    height: 100%;
+
+    margin: 10x;
+
+    div {
+        width: 100%;
+    }
+}
