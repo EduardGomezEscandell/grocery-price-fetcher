@@ -162,7 +162,13 @@ function HelpDialog(props: { onClose: () => void }): JSX.Element {
             <h2 id="header">Els meus productes</h2>
             <div id="body">
                 <p>
-                    Aquesta pàgina pàgina et permet veure i editar els teus productes, i crear-ne de nous.
+                    Aquesta pàgina pàgina et permet veure, editar, o eliminar qualsevol del teus productes.
+                </p>
+                <p>
+                    Fés clic a un producte per veure'n els detalls i editar-los, o fes clic a "Afegir un nou producte" per crear-ne un de nou.
+                </p>
+                <p>
+                    El preu dels productes s'actualitza automàticament cada dia!.
                 </p>
             </div>
             <div id="footer">

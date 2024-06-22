@@ -70,13 +70,17 @@ function HelpDialog(props: { onClose: () => void }): JSX.Element {
                 <p>
                     <b>La compra de l'Edu</b> t'ajuda a planificar la teva compra setmanal.
                     Tingues en compte que està en fase experimental.
-                    Dins de cada pàgina, pots obtindre més ajuda clicant el títol de la pàgina.
                 </p>
-                <p>A <b>Els meus productes</b> pots afegir productes del supermercat que prefereixis.</p>
-                <p>A <b>Les meves receptes</b> pots afegir receptes utilitzant els teus productes com a ingredients.</p>
-                <p>A <b>La meva compra</b> pots crear un menú setmanal. A partir d'aquest menú, <i>La compra de l'Edu</i> calcularà
-                    quant en necessites de cada ingredient i et preguntarà quant en tens de cada al teu rebost. Tot seguit,
-                    et preparà la llista de la compra només amb allò que et faci falta.</p>
+                <p>
+                    Pots afegir productes del teu supermercat preferit, i crear receptes amb ells.
+                </p>
+                <p>
+                    A partir de les receptes, pots crear-te un menú setmanal, i a partir d'aquest menú,
+                    es calcularà la llista de la compra, tot tenint en compte el menjar que ja tens a casa.
+                </p>
+                <p>
+                    Per informació més detallada, totes les pàgines tenen un botó d'ajuda al menú d'opcions.
+                </p>
             </div>
             <div id='footer'><button onClick={props.onClose}>D'acord</button></div>
         </dialog>

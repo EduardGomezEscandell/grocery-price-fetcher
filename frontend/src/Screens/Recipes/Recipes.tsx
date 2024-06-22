@@ -139,7 +139,14 @@ function HelpDialog(props: { onClose: () => void }): JSX.Element {
             <h2 id="header">Les meves receptes</h2>
             <div id="body">
                 <p>
-                    Aquesta pàgina pàgina et permet veure les teves receptes, i crear-ne de noves.
+                    Aquesta pàgina pàgina et permet veure, editar, o eliminar qualsevol les teves receptes.
+                </p>
+                <p>
+                    Per afegir una nova recepta, clica "Afegir recepta..."
+                </p>
+                <p>
+                    Les receptes es creen a utilitzant els productes que tens a <i>Els meus productes</i> com
+                    a ingredients.
                 </p>
             </div>
             <div id="footer">
