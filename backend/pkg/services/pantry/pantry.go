@@ -62,7 +62,7 @@ func (s *Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Reque
 	}
 }
 
-func (s *Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Request) error {
+func (s *Service) handleGet(log logger.Logger, w http.ResponseWriter, r *http.Request) error {
 	if err := httputils.ValidateAccepts(r, httputils.MediaTypeJSON); err != nil {
 		return err
 	}
@@ -72,12 +72,34 @@ func (s *Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 		return httputils.Error(http.StatusBadRequest, "missing pantry")
 	}
 
-	pantries, ok := s.db.LookupPantry(p)
+	pantry, ok := s.db.LookupPantry(p)
 	if !ok {
 		return httputils.Error(http.StatusNotFound, "pantry not found")
 	}
 
-	if err := json.NewEncoder(w).Encode(pantries); err != nil {
+	type Item struct {
+		dbtypes.Ingredient
+		Name string `json:"name"`
+	}
+
+	items := make([]Item, 0, len(pantry.Contents))
+	for _, ing := range pantry.Contents {
+		p, err := s.db.LookupProduct(ing.ProductID)
+		if err != nil {
+			log.Warnf("Product %d not found: %v", ing.ProductID, err)
+			continue
+		}
+
+		items = append(items, Item{
+			Ingredient: ing,
+			Name:       p.Name,
+		})
+	}
+
+	if err := json.NewEncoder(w).Encode(map[string]any{
+		"name":     pantry.Name,
+		"contents": items,
+	}); err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "could not write menus to output: %w", err)
 	}
 

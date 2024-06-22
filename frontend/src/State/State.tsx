@@ -1,11 +1,13 @@
 export class Product {
     constructor(
+        id: number,
         name: string,
         price: number,
         batch_size: number,
         provider: string,
         provider_id: string,
     ) {
+        this.id = id
         this.name = name
         this.price = price
         this.batch_size = batch_size
@@ -15,6 +17,7 @@ export class Product {
 
     static fromJSON(json: any): Product {
         return new Product(
+            json.id,
             json.name,
             json.price,
             json.batch_size,
@@ -23,6 +26,7 @@ export class Product {
         )
     }
 
+    id: number;
     name: string;
     price: number; // Price per batch
     batch_size: number;

@@ -58,7 +58,7 @@ func (s Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Reques
 	}
 }
 
-func (s Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Request) error {
+func (s Service) handleGet(log logger.Logger, w http.ResponseWriter, r *http.Request) error {
 	if err := httputils.ValidateAccepts(r, httputils.MediaTypeJSON); err != nil {
 		return err
 	}
@@ -87,13 +87,15 @@ func (s Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Reque
 	}
 
 	for _, ing := range rec.Ingredients {
-		prod, ok := s.db.LookupProduct(ing.Name)
-		if !ok {
+		prod, err := s.db.LookupProduct(ing.ProductID)
+		if err != nil {
+			log.Warningf("Product %d not found: %v", ing.ProductID, err)
 			continue
 		}
 
 		body.Ingredients = append(body.Ingredients, ingredient{
-			Name:      ing.Name,
+			ID:        prod.ID,
+			Name:      prod.Name,
 			Amount:    ing.Amount,
 			UnitPrice: prod.Price / prod.BatchSize,
 		})
@@ -144,8 +146,8 @@ func (s Service) handlePost(log logger.Logger, w http.ResponseWriter, r *http.Re
 
 	for _, ing := range body.Ingredients {
 		dbRecipe.Ingredients = append(dbRecipe.Ingredients, dbtypes.Ingredient{
-			Name:   ing.Name,
-			Amount: ing.Amount,
+			ProductID: ing.ID,
+			Amount:    ing.Amount,
 		})
 	}
 
@@ -201,6 +203,7 @@ func (s Service) handleDelete(_ logger.Logger, w http.ResponseWriter, r *http.Re
 }
 
 type ingredient struct {
+	ID        uint32  `json:"id"`
 	Name      string  `json:"name"`
 	Amount    float32 `json:"amount"`
 	UnitPrice float32 `json:"unit_price"`

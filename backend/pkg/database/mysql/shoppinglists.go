@@ -1,6 +1,7 @@
 package mysql
 
 import (
+	"cmp"
 	"database/sql"
 	"fmt"
 	"slices"
@@ -36,8 +37,8 @@ func (s *SQL) createShoppingLists(tx *sql.Tx) error {
 			CREATE TABLE shopping_list_items (
 				menu_name VARCHAR(255) REFERENCES menus(name),
 				pantry_name VARCHAR(255) REFERENCES pantries(name),
-				product_name VARCHAR(255) REFERENCES products(name),
-				PRIMARY KEY (menu_name, pantry_name, product_name)
+				product_id VARCHAR(255) REFERENCES products(name),
+				PRIMARY KEY (menu_name, pantry_name, product_id)
 			)`,
 		},
 	}
@@ -64,13 +65,14 @@ func (s *SQL) ShoppingLists() ([]dbtypes.ShoppingList, error) {
 	}
 
 	type item struct {
-		Menu, Pantry, Product string
+		Menu, Pantry string
+		ProductID    uint32
 	}
 
 	items := make([]item, 0)
 	for r.Next() {
 		var i item
-		if err := r.Scan(&i.Menu, &i.Pantry, &i.Product); err != nil {
+		if err := r.Scan(&i.Menu, &i.Pantry, &i.ProductID); err != nil {
 			return nil, fmt.Errorf("could not scan shopping list: %v", err)
 		}
 
@@ -86,33 +88,33 @@ func (s *SQL) ShoppingLists() ([]dbtypes.ShoppingList, error) {
 	}
 
 	slices.SortFunc(items, func(i, j item) int {
-		if i.Menu != j.Menu {
-			return strings.Compare(i.Menu, j.Menu)
+		if r := strings.Compare(i.Menu, j.Menu); r != 0 {
+			return r
 		}
-		if i.Pantry != j.Pantry {
-			return strings.Compare(i.Pantry, j.Pantry)
+		if r := strings.Compare(i.Pantry, j.Pantry); r != 0 {
+			return r
 		}
-		return strings.Compare(i.Product, j.Product)
+		return cmp.Compare(i.ProductID, j.ProductID)
 	})
 
 	lists := []dbtypes.ShoppingList{
 		{
 			Menu:     items[0].Menu,
 			Pantry:   items[0].Pantry,
-			Contents: []string{items[0].Product},
+			Contents: []uint32{items[0].ProductID},
 		},
 	}
 
 	for i := 1; i < len(items); i++ {
 		if items[i].Menu == items[i-1].Menu && items[i].Pantry == items[i-1].Pantry {
-			lists[len(lists)-1].Contents = append(lists[len(lists)-1].Contents, items[i].Product)
+			lists[len(lists)-1].Contents = append(lists[len(lists)-1].Contents, items[i].ProductID)
 			continue
 		}
 
 		lists = append(lists, dbtypes.ShoppingList{
 			Menu:     items[i].Menu,
 			Pantry:   items[i].Pantry,
-			Contents: []string{items[i].Product},
+			Contents: []uint32{items[i].ProductID},
 		})
 	}
 
@@ -123,7 +125,7 @@ func (s *SQL) LookupShoppingList(menu, pantry string) (dbtypes.ShoppingList, boo
 	sl := dbtypes.ShoppingList{
 		Menu:     menu,
 		Pantry:   pantry,
-		Contents: []string{},
+		Contents: make([]uint32, 0),
 	}
 
 	tx, err := s.db.BeginTx(s.ctx, nil)
@@ -134,7 +136,7 @@ func (s *SQL) LookupShoppingList(menu, pantry string) (dbtypes.ShoppingList, boo
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
 	query := `
-	SELECT product_name
+	SELECT product_id
 	FROM shopping_list_items
 	WHERE menu_name = ? AND pantry_name = ?
 	`
@@ -147,13 +149,13 @@ func (s *SQL) LookupShoppingList(menu, pantry string) (dbtypes.ShoppingList, boo
 	}
 
 	for r.Next() {
-		var item string
-		if err := r.Scan(&item); err != nil {
+		var ID uint32
+		if err := r.Scan(&ID); err != nil {
 			s.log.Warningf("could not scan: %v", err)
 			return sl, false
 		}
 
-		sl.Contents = append(sl.Contents, item)
+		sl.Contents = append(sl.Contents, ID)
 	}
 
 	if err := r.Err(); err != nil {
@@ -190,8 +192,8 @@ func (s *SQL) SetShoppingList(list dbtypes.ShoppingList) error {
 		return fmt.Errorf("could not delete old shopping list items: %v", err)
 	}
 
-	err = bulkInsert(s, tx, "shopping_list_items(menu_name, pantry_name, product_name)", list.Contents, func(s string) []any {
-		return []any{list.Menu, list.Pantry, s}
+	err = bulkInsert(s, tx, "shopping_list_items(menu_name, pantry_name, product_id)", list.Contents, func(ID uint32) []any {
+		return []any{list.Menu, list.Pantry, ID}
 	})
 	if err != nil {
 		return fmt.Errorf("could not insert shopping list items: %v", err)

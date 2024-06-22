@@ -1,27 +1,15 @@
 package menuneeds
 
 import (
-	"slices"
-	"strings"
+	"cmp"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/utils"
 )
 
-type RecipeItem struct {
-	Product product.Product `json:"product"`
-	Amount  float32         `json:"amount"`
-}
-
-type Needs struct {
-	Menu   *dbtypes.Menu
-	Pantry *dbtypes.Pantry
-	Items  []RecipeItem
-}
-
-func ComputeNeeds(log logger.Logger, db database.DB, m *dbtypes.Menu) Needs {
+func ComputeNeeds(log logger.Logger, db database.DB, m dbtypes.Menu) []dbtypes.Ingredient {
 	type recipeAmount struct {
 		recipe dbtypes.Recipe
 		amount float32
@@ -48,61 +36,49 @@ func ComputeNeeds(log logger.Logger, db database.DB, m *dbtypes.Menu) Needs {
 	}
 
 	// Compute the amount of each product needed
-	need := make(map[string]float32)
+	need := make(map[uint32]float32)
 	for _, rec := range recipes {
 		for _, i := range rec.recipe.Ingredients {
-			_, ok := need[i.Name]
+			_, ok := need[i.ProductID]
 			if !ok {
-				need[i.Name] = 0
+				need[i.ProductID] = 0
 			}
-			need[i.Name] += rec.amount * i.Amount
+			need[i.ProductID] += rec.amount * i.Amount
 		}
 	}
 
-	result := Needs{
-		Menu:   m,
-		Pantry: &dbtypes.Pantry{},
-		Items:  make([]RecipeItem, 0, len(need)),
-	}
-
-	for name, amount := range need {
-		product, ok := db.LookupProduct(name)
-		if !ok {
-			log.Warningf("Product %q is not registered", name)
-			continue
-		}
-
-		result.Items = append(result.Items, RecipeItem{
-			Product: product,
-			Amount:  amount,
+	// Convert the map to a slice
+	out := make([]dbtypes.Ingredient, 0, len(need))
+	for k, v := range need {
+		out = append(out, dbtypes.Ingredient{
+			ProductID: k,
+			Amount:    v,
 		})
 	}
 
-	slices.SortFunc(result.Items, func(i, j RecipeItem) int {
-		return strings.Compare(i.Product.Name, j.Product.Name)
-	})
-
-	return result
+	return out
 }
 
-func (n *Needs) Subtract(p *dbtypes.Pantry) {
-	n.Pantry = p
+// Subtract computes the difference between the needed ingredients and the ones in the pantry.
+// It returns a list of ingredients that are needed but not in the pantry.
+//
+// The input slices need and have must be sorted by ProductID. The output slice is also sorted by ProductID.
+func Subtract(need []dbtypes.Ingredient, have []dbtypes.Ingredient) []dbtypes.Ingredient {
+	items := make([]dbtypes.Ingredient, 0, len(need))
 
-	var i int
-	var j int
-	for i < len(n.Items) && j < len(p.Contents) {
-		need := &n.Items[i]
-		stock := p.Contents[j]
+	utils.Zipper(need, have, func(n, h dbtypes.Ingredient) int { return cmp.Compare(n.ProductID, h.ProductID) },
+		func(n dbtypes.Ingredient) {
+			// This product is needed but not in the pantry
+			items = append(items, n)
+		},
+		func(n, h dbtypes.Ingredient) {
+			// This product is needed and in the pantry
+			n.Amount = max(n.Amount-h.Amount, 0)
+			items = append(items, n)
+		},
+		func(h dbtypes.Ingredient) {
+			// This product is in the pantry but not needed
+		})
 
-		switch strings.Compare(need.Product.Name, stock.Name) {
-		case -1:
-			i++
-		case 1:
-			j++
-		default:
-			need.Amount = max(need.Amount-stock.Amount, 0)
-			i++
-			j++
-		}
-	}
+	return items
 }

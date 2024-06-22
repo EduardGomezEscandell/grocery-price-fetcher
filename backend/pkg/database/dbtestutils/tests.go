@@ -1,6 +1,7 @@
 package dbtestutils
 
 import (
+	"io/fs"
 	"slices"
 	"testing"
 
@@ -17,8 +18,8 @@ func ProductsTest(t *testing.T, openDB func() database.DB) {
 	db := openDB()
 	defer db.Close()
 
-	_, ok := db.LookupProduct("AAAAAAAAAAAAAAAAAAAAA")
-	require.False(t, ok)
+	_, err := db.LookupProduct(1)
+	require.ErrorIs(t, err, fs.ErrNotExist)
 
 	product1 := product.Product{
 		Name:      "Product #1",
@@ -34,21 +35,33 @@ func ProductsTest(t *testing.T, openDB func() database.DB) {
 		Provider:  blank.Provider{},
 	}
 
-	require.NoError(t, db.SetProduct(product1), "Could not set Product")
-	p, ok := db.LookupProduct(product1.Name)
-	require.True(t, ok, "Could not find Product just created")
+	id, err := db.SetProduct(product1)
+	require.NoError(t, err, "Could not set Product")
+	require.NotZero(t, id, "ID should be non-zero")
+
+	product1.ID = id
+
+	p, err := db.LookupProduct(product1.ID)
+	require.NoError(t, err, "Could not find Product just created")
 	require.Equal(t, product1, p, "Product does not match the one just created")
 
 	product1.BatchSize = 20
 
-	require.NoError(t, db.SetProduct(product1), "Could not override Product")
-	p, ok = db.LookupProduct(product1.Name)
-	require.True(t, ok, "Could not find Product just overridden")
+	id, err = db.SetProduct(product1)
+	require.NoError(t, err, "Could not override Product")
+	require.Equal(t, product1.ID, id, "ID should be the same after overriding")
+
+	p, err = db.LookupProduct(id)
+	require.NoError(t, err, "Could not find Product just overridden")
 	require.Equal(t, product1, p, "Product does not match the one just overridden")
 
-	require.NoError(t, db.SetProduct(product2), "Could not set Product")
-	p, ok = db.LookupProduct(product2.Name)
-	require.True(t, ok, "Could not find empty Product just created")
+	id, err = db.SetProduct(product2)
+	require.NoError(t, err, "Could not set Product")
+	require.NotZero(t, p, "ID should be non-zero")
+	product2.ID = id
+
+	p, err = db.LookupProduct(product2.ID)
+	require.NoError(t, err, "Could not find empty Product just created")
 	require.Equal(t, product2, p, "Empty menu does not match the one just created")
 
 	t.Log("Closing DB and reopening")
@@ -57,28 +70,31 @@ func ProductsTest(t *testing.T, openDB func() database.DB) {
 	db = openDB()
 	defer db.Close()
 
-	menus, err := db.Products()
+	products, err := db.Products()
 	require.NoError(t, err)
-	require.ElementsMatch(t, []product.Product{product1, product2}, menus, "Products do not match the ones just created")
+	require.ElementsMatch(t, []product.Product{product1, product2}, products, "Products do not match the ones just created")
 
-	_, ok = db.LookupProduct("AAAAAAAAAAAAAAAAAAAAA")
-	require.False(t, ok)
+	// Neither of them can be zero, so this is be safe
+	newID := product1.ID + product2.ID + 1
 
-	p, ok = db.LookupProduct(product1.Name)
-	require.True(t, ok, "Could not find Product after reopening DB")
+	_, err = db.LookupProduct(newID)
+	require.ErrorIs(t, err, fs.ErrNotExist)
+
+	p, err = db.LookupProduct(product1.ID)
+	require.NoError(t, err, "Could not find Product after reopening DB")
 	require.Equal(t, product1, p, "Product does not match the one after reopening DB")
 
-	p, ok = db.LookupProduct(product2.Name)
-	require.True(t, ok, "Could not find empty Product after reopening DB")
+	p, err = db.LookupProduct(product2.ID)
+	require.NoError(t, err, "Could not find empty Product after reopening DB")
 	require.Equal(t, product2, p, "Empty menu does not match the one after reopening DB")
 
-	require.ElementsMatch(t, []product.Product{product1, product2}, menus, "Products do not match the ones after reopening DB")
+	require.ElementsMatch(t, []product.Product{product1, product2}, products, "Products do not match the ones after reopening DB")
 
-	err = db.DeleteProduct(product1.Name)
+	err = db.DeleteProduct(product1.ID)
 	require.NoError(t, err)
 
-	_, ok = db.LookupProduct(product1.Name)
-	require.False(t, ok)
+	_, err = db.LookupProduct(product1.ID)
+	require.ErrorIs(t, err, fs.ErrNotExist)
 
 	require.NoError(t, db.Close())
 }
@@ -89,14 +105,14 @@ func RecipesTest(t *testing.T, openDB func() database.DB) {
 	db := openDB()
 	defer db.Close()
 
-	_, ok := db.LookupProduct("AAAAAAAAAAAAAAAAAAAAA")
+	_, ok := db.LookupRecipe("AAAAAAAAAAAAAAAAAAAAA")
 	require.False(t, ok)
 
 	recipe1 := dbtypes.Recipe{
 		Name: "Recipe #1",
 		Ingredients: []dbtypes.Ingredient{
-			{Name: "Ingredient #1", Amount: 1.0},
-			{Name: "Ingredient #2", Amount: 2.0},
+			{ProductID: 53, Amount: 1.0},
+			{ProductID: 87, Amount: 2.0},
 		},
 	}
 
@@ -257,14 +273,14 @@ func PantriesTest(t *testing.T, openDB func() database.DB) {
 	db := openDB()
 	defer db.Close()
 
-	_, ok := db.LookupProduct("AAAAAAAAAAAAAAAAAAAAA")
+	_, ok := db.LookupPantry("AAAAAAAAAAAAAAAAAAAAA")
 	require.False(t, ok)
 
 	pantry1 := dbtypes.Pantry{
 		Name: "Pantry #1",
 		Contents: []dbtypes.Ingredient{
-			{Name: "Ingredient #1", Amount: 1.0},
-			{Name: "Ingredient #2", Amount: 2.0},
+			{ProductID: 33, Amount: 1.0},
+			{ProductID: 66, Amount: 2.0},
 		},
 	}
 
@@ -335,25 +351,19 @@ func ShoppingListsTest(t *testing.T, openDB func() database.DB) {
 	db := openDB()
 	defer db.Close()
 
-	_, ok := db.LookupProduct("AAAAAAAAAAAAAAAAAAAAA")
+	_, ok := db.LookupShoppingList("AAAAAAAAAAAAAAAAAAAAA", "AAAAAAAAAAAAaaaa")
 	require.False(t, ok)
 
 	list1 := dbtypes.ShoppingList{
-		Menu:   "Menu #1",
-		Pantry: "Pantry #1",
-		Contents: []string{
-			"Item #1",
-			"Item #2",
-		},
+		Menu:     "Menu #1",
+		Pantry:   "Pantry #1",
+		Contents: []uint32{13, 99},
 	}
 
 	list2 := dbtypes.ShoppingList{
-		Menu:   "Menu #99",
-		Pantry: "Pantry #1",
-		Contents: []string{
-			"Item #5",
-			"Item #6",
-		},
+		Menu:     "Menu #99",
+		Pantry:   "Pantry #1",
+		Contents: []uint32{500, 10000},
 	}
 
 	require.NoError(t, db.SetShoppingList(list1), "Could not set ShoppingList")
@@ -364,7 +374,7 @@ func ShoppingListsTest(t *testing.T, openDB func() database.DB) {
 	slices.Sort(p.Contents)
 	require.Equal(t, list1, p, "ShoppingList does not match the one just created")
 
-	list1.Contents[0] = "Item #97"
+	list1.Contents[0] = 111111
 
 	require.NoError(t, db.SetShoppingList(list1), "Could not override ShoppingList")
 	p, ok = db.LookupShoppingList(list1.Menu, list1.Pantry)

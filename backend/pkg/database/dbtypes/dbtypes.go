@@ -2,8 +2,8 @@ package dbtypes
 
 // Ingredient represents a single ingredient that is part of a recipe.
 type Ingredient struct {
-	Name   string  `json:"name"`
-	Amount float32 `json:"amount"`
+	ProductID uint32  `json:"product_id"`
+	Amount    float32 `json:"amount"`
 }
 
 // Recipe represents a recipe that can be used to prepare a dish.
@@ -44,5 +44,5 @@ type Pantry struct {
 type ShoppingList struct {
 	Menu     string   `json:"menu"`
 	Pantry   string   `json:"pantry"`
-	Contents []string `json:"contents"`
+	Contents []uint32 `json:"contents"`
 }

@@ -3,6 +3,7 @@ package mysql_test
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"os/exec"
@@ -139,21 +140,23 @@ func TestDBProducts(t *testing.T) {
 		ProductID: [3]string{"1"},
 	}
 
-	_, ok := db.LookupProduct(p.Name)
-	require.False(t, ok)
+	_, err = db.LookupProduct(9999)
+	require.ErrorIs(t, err, fs.ErrNotExist)
 
-	err = db.SetProduct(p)
+	id, err := db.SetProduct(p)
 	require.NoError(t, err)
+	require.NotZero(t, id)
+	p.ID = id
 
-	got, ok := db.LookupProduct(p.Name)
-	require.True(t, ok)
+	got, err := db.LookupProduct(p.ID)
+	require.NoError(t, err)
 	require.Equal(t, p, got)
 
 	products, err = db.Products()
 	require.NoError(t, err)
 	require.ElementsMatch(t, []product.Product{p}, products)
 
-	err = db.DeleteProduct(p.Name)
+	err = db.DeleteProduct(p.ID)
 	require.NoError(t, err)
 
 	products, err = db.Products()
@@ -161,7 +164,6 @@ func TestDBProducts(t *testing.T) {
 	require.Empty(t, products)
 }
 
-//nolint:dupl // This is a test file, duplication is expected
 func TestDBRecipes(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -192,17 +194,19 @@ func TestDBRecipes(t *testing.T) {
 		},
 	}
 
-	err = db.SetProduct(p[0])
+	id, err := db.SetProduct(p[0])
 	require.NoError(t, err)
+	p[0].ID = id
 
-	err = db.SetProduct(p[1])
+	id, err = db.SetProduct(p[1])
 	require.NoError(t, err)
+	p[1].ID = id
 
 	rec := dbtypes.Recipe{
 		Name: "Water",
 		Ingredients: []dbtypes.Ingredient{
-			{Name: "Hydrogen", Amount: 2},
-			{Name: "Oxygen", Amount: 1},
+			{ProductID: 1, Amount: 2},
+			{ProductID: 2, Amount: 1},
 		},
 	}
 
@@ -257,12 +261,14 @@ func TestDBMenus(t *testing.T) {
 
 	p := []product.Product{
 		{
+			ID:        13,
 			Name:      "Hydrogen",
 			BatchSize: 1,
 			Price:     1,
 			Provider:  blank.Provider{},
 		},
 		{
+			ID:        55,
 			Name:      "Oxygen",
 			BatchSize: 16,
 			Price:     14,
@@ -274,27 +280,27 @@ func TestDBMenus(t *testing.T) {
 		{
 			Name: "Water",
 			Ingredients: []dbtypes.Ingredient{
-				{Name: "Hydrogen", Amount: 2},
-				{Name: "Oxygen", Amount: 1},
+				{ProductID: 13, Amount: 2},
+				{ProductID: 55, Amount: 1},
 			},
 		},
 		{
 			Name: "Hydrogen Peroxide",
 			Ingredients: []dbtypes.Ingredient{
-				{Name: "Hydrogen", Amount: 2},
-				{Name: "Oxygen", Amount: 2},
+				{ProductID: 13, Amount: 2},
+				{ProductID: 55, Amount: 2},
 			},
 		},
 		{
 			Name: "Oxygen Gas",
 			Ingredients: []dbtypes.Ingredient{
-				{Name: "Oxygen", Amount: 2},
+				{ProductID: 55, Amount: 2},
 			},
 		},
 	}
 
 	for _, product := range p {
-		err := db.SetProduct(product)
+		_, err := db.SetProduct(product)
 		require.NoErrorf(t, err, "could not set product %s", product.Name)
 	}
 
@@ -363,7 +369,6 @@ func TestDBMenus(t *testing.T) {
 	require.Empty(t, menus)
 }
 
-//nolint:dupl // This is a test file, duplication is expected
 func TestDBPantries(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -381,12 +386,14 @@ func TestDBPantries(t *testing.T) {
 
 	p := []product.Product{
 		{
+			ID:        13,
 			Name:      "Hydrogen",
 			BatchSize: 1,
 			Price:     1,
 			Provider:  blank.Provider{},
 		},
 		{
+			ID:        55,
 			Name:      "Oxygen",
 			BatchSize: 16,
 			Price:     14,
@@ -394,17 +401,17 @@ func TestDBPantries(t *testing.T) {
 		},
 	}
 
-	err = db.SetProduct(p[0])
+	_, err = db.SetProduct(p[0])
 	require.NoError(t, err)
 
-	err = db.SetProduct(p[1])
+	_, err = db.SetProduct(p[1])
 	require.NoError(t, err)
 
 	pantry := dbtypes.Pantry{
 		Name: "Test Pantry",
 		Contents: []dbtypes.Ingredient{
-			{Name: "Hydrogen", Amount: 2165},
-			{Name: "Oxygen", Amount: 100},
+			{ProductID: 13, Amount: 2165},
+			{ProductID: 55, Amount: 100},
 		},
 	}
 
@@ -459,12 +466,14 @@ func TestDBShoopingLists(t *testing.T) {
 
 	p := []product.Product{
 		{
+			ID:        15,
 			Name:      "Hydrogen",
 			BatchSize: 1,
 			Price:     1,
 			Provider:  blank.Provider{},
 		},
 		{
+			ID:        99,
 			Name:      "Oxygen",
 			BatchSize: 16,
 			Price:     14,
@@ -472,18 +481,16 @@ func TestDBShoopingLists(t *testing.T) {
 		},
 	}
 
-	err = db.SetProduct(p[0])
+	_, err = db.SetProduct(p[0])
 	require.NoError(t, err)
 
-	err = db.SetProduct(p[1])
+	_, err = db.SetProduct(p[1])
 	require.NoError(t, err)
 
 	sl := dbtypes.ShoppingList{
-		Menu:   "My test menu",
-		Pantry: "My test pantry",
-		Contents: []string{
-			"Hydrogen",
-		},
+		Menu:     "My test menu",
+		Pantry:   "My test pantry",
+		Contents: []uint32{1},
 	}
 
 	pantries, err := db.ShoppingLists()
@@ -504,7 +511,7 @@ func TestDBShoopingLists(t *testing.T) {
 	require.NoError(t, err)
 	require.ElementsMatch(t, []dbtypes.ShoppingList{sl}, pantries)
 
-	sl.Contents = append(sl.Contents, "Oxygen")
+	sl.Contents = append(sl.Contents, 99)
 	err = db.SetShoppingList(sl)
 	require.NoError(t, err)
 

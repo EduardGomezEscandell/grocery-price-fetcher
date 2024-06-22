@@ -1,18 +1,20 @@
 package shoppinglist
 
 import (
+	"cmp"
 	"encoding/json"
 	"io"
 	"math"
 	"net/http"
 	"slices"
-	"strings"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/menuneeds"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/utils"
 )
 
 type Service struct {
@@ -81,7 +83,7 @@ func (s *Service) handleGet(log logger.Logger, w http.ResponseWriter, r *http.Re
 		return httputils.Errorf(http.StatusNotFound, "pantry not found")
 	}
 
-	var done []string
+	var done []uint32
 	if D, ok := s.db.LookupShoppingList(menu, pantry); ok {
 		done = D.Contents
 	}
@@ -160,6 +162,7 @@ func (s *Service) handleDelete(_ logger.Logger, w http.ResponseWriter, r *http.R
 }
 
 type shoppingListItem struct {
+	ID    uint32  `json:"id"`
 	Name  string  `json:"name"`
 	Done  bool    `json:"done"`
 	Units float32 `json:"units"`
@@ -167,48 +170,57 @@ type shoppingListItem struct {
 	Cost  float32 `json:"cost"`
 }
 
-func (s *Service) computeShoppingList(log logger.Logger, menu dbtypes.Menu, pantry dbtypes.Pantry, done []string) []shoppingListItem {
-	need := menuneeds.ComputeNeeds(log, s.db, &menu)
-	need.Subtract(&pantry)
-	slices.SortFunc(need.Items, func(a, b menuneeds.RecipeItem) int { return strings.Compare(a.Product.Name, b.Product.Name) })
-	slices.SortFunc(done, strings.Compare)
+func (s *Service) computeShoppingList(log logger.Logger, menu dbtypes.Menu, pantry dbtypes.Pantry, done []uint32) []shoppingListItem {
+	need := menuneeds.ComputeNeeds(log, s.db, menu)
 
-	list := make([]shoppingListItem, 0, len(need.Items))
-	var i, j int
-	for i < len(need.Items) && j < len(done) {
-		switch strings.Compare(need.Items[i].Product.Name, done[j]) {
-		case 0:
+	slices.SortFunc(need, func(i, j dbtypes.Ingredient) int { return cmp.Compare(i.ProductID, j.ProductID) })
+	slices.SortFunc(pantry.Contents, func(i, j dbtypes.Ingredient) int { return cmp.Compare(i.ProductID, j.ProductID) })
+	slices.Sort(done)
+
+	tmpList := menuneeds.Subtract(need, pantry.Contents)
+
+	list := make([]shoppingListItem, 0, len(tmpList))
+	utils.Zipper(tmpList, done,
+		func(a dbtypes.Ingredient, id uint32) int { return cmp.Compare(a.ProductID, id) },
+		func(a dbtypes.Ingredient) {
+			// This product is needed but not marked done
+			p, ok := getProduct(log, s.db, a.ProductID)
+			if ok {
+				list = append(list, newItem(p, a.Amount, false))
+			}
+		},
+		func(a dbtypes.Ingredient, id uint32) {
 			// This product is needed and marked done in the DB
-			list = append(list, newItem(need.Items[i], true))
-			i++
-			j++
-		case -1:
-			// This product is needed
-			list = append(list, newItem(need.Items[i], false))
-			i++
-		case 1:
+			p, ok := getProduct(log, s.db, a.ProductID)
+			if ok {
+				list = append(list, newItem(p, a.Amount, true))
+			}
+		},
+		func(id uint32) {
 			// This product is marked done but not needed
-			j++
-		}
-	}
-
-	for ; i < len(need.Items); i++ {
-		list = append(list, newItem(need.Items[i], false))
-	}
+		})
 
 	return list
 }
 
-func newItem(item menuneeds.RecipeItem, isDone bool) shoppingListItem {
-	prod := item.Product
-	units := item.Amount
+func newItem(prod product.Product, units float32, isDone bool) shoppingListItem {
 	packs := int(math.Ceil(float64(units / prod.BatchSize)))
 
 	return shoppingListItem{
+		ID:    prod.ID,
 		Name:  prod.Name,
 		Units: units,
 		Packs: packs,
 		Cost:  float32(packs) * prod.Price,
 		Done:  isDone,
 	}
+}
+
+func getProduct(log logger.Logger, db database.DB, ID uint32) (product.Product, bool) {
+	p, err := db.LookupProduct(ID)
+	if err != nil {
+		log.Warningf("Failed to lookup product %d: %v", ID, err)
+		return product.Product{}, false
+	}
+	return p, true
 }

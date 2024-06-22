@@ -10,14 +10,16 @@ export default class ProductsEndpoint {
         this.cache = cache || null;
     }
 
-    Path(name?: string): string {
-        return name === undefined
-            ? this.path + '*'
-            : this.path + name
+    PathAll(): string {
+        return this.path + '*'
+    }
+
+    Path(id: number): string {
+        return this.path + id.toString()
     }
 
     protected async get_uncached(): Promise<Product[]> {
-        return fetch(this.Path(), {
+        return fetch(this.PathAll(), {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -29,8 +31,8 @@ export default class ProductsEndpoint {
             .then((data: any[]) => data.map(Product.fromJSON))
     }
 
-    protected async get_one_uncached(name: string): Promise<Product> {
-        return fetch(this.Path(name), {
+    protected async get_one_uncached(id: number): Promise<Product> {
+        return fetch(this.Path(id), {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -42,8 +44,8 @@ export default class ProductsEndpoint {
             .then(Product.fromJSON)
     }
 
-    protected async post_uncached(oldName: string, p: Product): Promise<void> {
-        return fetch(this.Path(oldName), {
+    protected async post_uncached(p: Product): Promise<void> {
+        return fetch(this.Path(p.id), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -55,8 +57,8 @@ export default class ProductsEndpoint {
             .then(() => { })
     }
 
-    protected async delete_uncached(name: string): Promise<void> {
-        return fetch(this.Path(name), {
+    protected async delete_uncached(id: number): Promise<void> {
+        return fetch(this.Path(id), {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -68,40 +70,40 @@ export default class ProductsEndpoint {
     }
 
     async GET(): Promise<Product[]> {
-        const cached = this.cache?.get<Product[]>(this.Path())
+        const cached = this.cache?.get<Product[]>(this.PathAll())
         if (cached) return cached
 
         return this
             .get_uncached()
             .then((products) => {
-                this.cache?.set(this.Path(), products)
+                this.cache?.set(this.PathAll(), products)
                 return products
             })
     }
 
-    async GET_ONE(name: string): Promise<Product> {
-        const key = this.Path(name)
+    async GET_ONE(id: number): Promise<Product> {
+        const key = this.Path(id)
         const cached = this.cache?.get<Product>(key)
         if (cached) return cached
 
         return this
-            .get_one_uncached(name)
+            .get_one_uncached(id)
             .then((product) => {
                 this.cache?.set(key, product)
                 return product
             })
     }
 
-    async POST(oldName: string, product: Product): Promise<void> {
-        this.cache?.delete(this.Path(oldName))
+    async POST(product: Product): Promise<void> {
+        this.cache?.delete(this.Path(product.id))
         return this
-            .post_uncached(oldName, product)
+            .post_uncached(product)
             .then(() => { })
     }
 
-    async DELETE(name: string): Promise<void> {
-        this.cache?.delete(this.Path(name))
-        return this.delete_uncached(name)
+    async DELETE(id: number): Promise<void> {
+        this.cache?.delete(this.Path(id))
+        return this.delete_uncached(id)
     }
 }
 
@@ -111,42 +113,47 @@ export class MockProductsEndpoint extends ProductsEndpoint {
     }
 
     private static mockData = [
-        { name: "Macarrons", price: 1.33, batch_size: 1, provider: 'Bonpreu', product_id: ['123', 'blabla'] },
-        { name: "Ceba", price: 0.76, batch_size: 1, provider: 'Bonpreu', product_id: ['123', 'blabla'] },
-        { name: "All", price: 0.88, batch_size: 3, provider: 'Mercadona', product_id: ['123', 'blabla'] },
-        { name: "Tomàquet", price: 0.44, batch_size: 1, provider: 'Bonpreu', product_id: ['123', 'blabla'] },
-        { name: "Oli", price: 0.2, batch_size: 1, provider: 'Bonpreu', product_id: ['123', 'blabla'] },
-        { name: "Sal", price: 2.1, batch_size: 1, provider: 'Bonpreu', product_id: ['123', 'blabla'] },
-        { name: "Pebre", price: 1.57, batch_size: 1, provider: 'Carrefour', product_id: ['123', 'blabla'] },
+        { id: 1, name: "Macarrons", price: 1.33, batch_size: 1, provider: 'Bonpreu', product_id: ['123', 'blabla'] },
+        { id: 2, name: "Ceba", price: 0.76, batch_size: 1, provider: 'Bonpreu', product_id: ['123', 'blabla'] },
+        { id: 3, name: "All", price: 0.88, batch_size: 3, provider: 'Mercadona', product_id: ['123', 'blabla'] },
+        { id: 4, name: "Tomàquet", price: 0.44, batch_size: 1, provider: 'Bonpreu', product_id: ['123', 'blabla'] },
+        { id: 5, name: "Oli", price: 0.2, batch_size: 1, provider: 'Bonpreu', product_id: ['123', 'blabla'] },
+        { id: 404, name: "Sal", price: 2.1, batch_size: 1, provider: 'Bonpreu', product_id: ['123', 'blabla'] },
+        { id: 6, name: "Pebre", price: 1.57, batch_size: 1, provider: 'Carrefour', product_id: ['123', 'blabla'] },
     ]
 
     protected async get_uncached(): Promise<Product[]> {
-        console.log(`GET to ${this.Path()}`)
+        console.log(`GET to ${this.PathAll()}`)
         return new Promise(resolve => setTimeout(resolve, 1000))
             .then(() => MockProductsEndpoint.mockData)
             .then((data: any[]) => data.map(Product.fromJSON))
     }
 
-    protected async get_one_uncached(name: string): Promise<Product> {
-        console.log(`GET to ${this.Path(name)}`)
+    protected async get_one_uncached(id: number): Promise<Product> {
+        console.log(`GET to ${this.Path(id)}`)
         return new Promise(resolve => setTimeout(resolve, 1000))
             .then(() => MockProductsEndpoint.mockData)
             .then(Product.fromJSON)
     }
 
-    protected async post_uncached(oldName: string, product: Product): Promise<void> {
-        console.log(`POST to ${this.Path(oldName)}`)
-        return new Promise(resolve => setTimeout(resolve, 1000))
-            .then(() => { })
-    }
-
-    protected async delete_uncached(name: string): Promise<void> {
-        if (name === 'Sal') {
+    protected async post_uncached(product: Product): Promise<void> {
+        console.log(`POST to ${this.Path(product.id)}`)
+        if (product.id === 404) {
             return new Promise(resolve => setTimeout(resolve, 1000))
                 .then(() => Promise.reject(new Response('Bla bla bla terrible error', { status: 500 })))
         }
 
-        console.log(`DELETE to ${this.Path(name)}`)
+        return new Promise(resolve => setTimeout(resolve, 1000))
+            .then(() => { })
+    }
+
+    protected async delete_uncached(id: number): Promise<void> {
+        console.log(`DELETE to ${this.Path(id)}`)
+        if (id === 404) {
+            return new Promise(resolve => setTimeout(resolve, 1000))
+                .then(() => Promise.reject(new Response('Bla bla bla terrible error', { status: 500 })))
+        }
+
         return new Promise(resolve => setTimeout(resolve, 1000))
             .then(() => { })
     }

@@ -2,12 +2,17 @@ package mysql
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"io/fs"
+	"math/rand"
+	"strings"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers/blank"
+	"github.com/go-sql-driver/mysql"
 )
 
 func (s *SQL) clearProducts(tx *sql.Tx) error {
@@ -29,7 +34,8 @@ func (s *SQL) clearProducts(tx *sql.Tx) error {
 func (s *SQL) createProducts(tx *sql.Tx) error {
 	query := `
 	CREATE TABLE products (
-		name VARCHAR(255) PRIMARY KEY,
+		id INT UNSIGNED PRIMARY KEY,
+		name VARCHAR(255),
 		batch_size FLOAT NOT NULL,
 		price FLOAT NOT NULL,
 		provider VARCHAR(255) NOT NULL,
@@ -55,6 +61,7 @@ func (s *SQL) createProducts(tx *sql.Tx) error {
 func (s *SQL) Products() ([]product.Product, error) {
 	query := `
 	SELECT 
+		id,
 		name,
 		batch_size,
 		price,
@@ -89,9 +96,10 @@ func (s *SQL) Products() ([]product.Product, error) {
 	return products, nil
 }
 
-func (s *SQL) LookupProduct(name string) (product.Product, bool) {
+func (s *SQL) LookupProduct(ID uint32) (product.Product, error) {
 	query := `
 	SELECT
+		id,
 		name,
 		batch_size,
 		price,
@@ -100,54 +108,87 @@ func (s *SQL) LookupProduct(name string) (product.Product, bool) {
 		provider_id1,
 		provider_id2
 	FROM products
-	WHERE name = ?
+	WHERE id = ?
 	`
 	s.log.Trace(query)
 
-	r := s.db.QueryRowContext(s.ctx, query, name)
+	r := s.db.QueryRowContext(s.ctx, query, ID)
 	p, err := parseProduct(s.log, r)
 	if err != nil {
-		return product.Product{}, false
+		return product.Product{}, err
 	}
 
 	if err := r.Err(); err != nil {
-		s.log.Warningf("could not get product %s: %v", name, err)
-		return p, false
+		return p, fmt.Errorf("could not get product %d: %v", ID, err)
 	}
 
-	return p, true
+	return p, nil
 }
 
-func (s *SQL) SetProduct(p product.Product) error {
-	query := `
-	REPLACE INTO
-		products
-		(name, batch_size, price, provider, provider_id0, provider_id1, provider_id2)
-	VALUES 
-		(?, ?, ?, ?, ?, ?, ?)
-	`
-	s.log.Trace(query)
+func (s *SQL) SetProduct(p product.Product) (uint32, error) {
+	tx, err := s.db.BeginTx(s.ctx, nil)
+	if err != nil {
+		return 0, fmt.Errorf("could not start transaction: %v", err)
+	}
+	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
-	argv := []any{p.Name, p.BatchSize, p.Price, p.Provider.Name(), p.ProductID[0], p.ProductID[1], p.ProductID[2]}
-
-	if _, err := s.db.ExecContext(s.ctx, query, argv...); err != nil {
-		return fmt.Errorf("could not insert into table products: %v", err)
+	verb := "REPLACE"
+	if p.ID == 0 {
+		// Generate a new IDs until we find one that doesn't exist
+		// We never expect to have anywhere near 2^32 (4.3 billion) products
+		// Collisions are extremely unlikely, but taken care of with the loop
+		verb = "INSERT"
+		p.ID = rand.Uint32() //nolint:gosec // We don't need a secure random number here
 	}
 
-	return nil
+	for {
+		//nolint:gosec // This is safe because both halves of the query are hardcoded
+		query := verb + ` INTO
+			products
+			(id, name, batch_size, price, provider, provider_id0, provider_id1, provider_id2)
+		VALUES 
+			(?, ?, ?, ?, ?, ?, ?, ?)
+		`
+		s.log.Trace(query)
+
+		argv := []any{p.ID, p.Name, p.BatchSize, p.Price, p.Provider.Name(), p.ProductID[0], p.ProductID[1], p.ProductID[2]}
+
+		_, err := tx.ExecContext(s.ctx, query, argv...)
+		if err == nil {
+			// Success
+			break
+		}
+
+		target := (&mysql.MySQLError{})
+		if errors.As(err, &target) && target.Number == errKeyExists {
+			// Key conflict: generate a new ID
+			//nolint:gosec // We don't need a secure random number here
+			p.ID = rand.Uint32()
+			continue
+		}
+
+		// Some other error
+		return 0, fmt.Errorf("could not insert into table products: %v", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return 0, fmt.Errorf("could not commit transaction: %v", err)
+	}
+
+	return p.ID, nil
 }
 
-func (s *SQL) DeleteProduct(name string) error {
-	query := `DELETE FROM products WHERE name = ?`
+func (s *SQL) DeleteProduct(ID uint32) error {
+	query := `DELETE FROM products WHERE id = ?`
 	s.log.Trace(query)
 
 	stmt, err := s.db.PrepareContext(s.ctx, query)
 	if err != nil {
-		return fmt.Errorf("could not prepare removal of product %s: %v", name, err)
+		return fmt.Errorf("could not prepare removal of product %d: %v", ID, err)
 	}
 
-	if _, err = stmt.ExecContext(s.ctx, name); err != nil {
-		return fmt.Errorf("could not remove product %s: %v", name, err)
+	if _, err = stmt.ExecContext(s.ctx, ID); err != nil {
+		return fmt.Errorf("could not remove product %d: %v", ID, err)
 	}
 
 	return nil
@@ -157,8 +198,12 @@ func parseProduct(log logger.Logger, r interface{ Scan(...any) error }) (p produ
 	var provider string
 	var providerID [3]string
 
-	err = r.Scan(&p.Name, &p.BatchSize, &p.Price, &provider, &providerID[0], &providerID[1], &providerID[2])
-	if err != nil {
+	err = r.Scan(&p.ID, &p.Name, &p.BatchSize, &p.Price, &provider, &providerID[0], &providerID[1], &providerID[2])
+	if errorIs(err, errKeyNotFound) {
+		return p, fs.ErrNotExist
+	} else if err != nil && strings.Contains(err.Error(), "sql: no rows in result set") { // MySQL terrible error handling
+		return p, fs.ErrNotExist
+	} else if err != nil {
 		return p, fmt.Errorf("could not scan product: %v", err)
 	}
 
