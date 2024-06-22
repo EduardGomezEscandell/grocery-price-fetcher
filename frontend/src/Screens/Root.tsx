@@ -7,7 +7,7 @@ import ShoppingList from './ShoppingList/ShoppingList';
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import NotFound from './404/NotFound.tsx/NotFound';
 import Recipes from './Recipes/Recipes';
-import Products from './Ingredients/Products';
+import Products from './Products/Products';
 
 export default function Root(): JSX.Element {
     const backend = new Backend();
