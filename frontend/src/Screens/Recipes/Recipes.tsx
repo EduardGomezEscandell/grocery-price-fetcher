@@ -97,6 +97,11 @@ export default function Recipes(props: Props) {
                                     sessionName={props.sessionName}
                                     dish={r.displayName}
                                     setHidden={() => setHidden([...hidden, r.displayName])}
+                                    onRename={(newName: string) => {
+                                        const idx = recipes.findIndex(a => a.displayName === r.displayName)
+                                        recipes[idx] = new ComparableString(newName)
+                                        setRecipes(recipes)
+                                    }}
                                 />
                             ))
                         }
