@@ -7,17 +7,22 @@ import './RecipeEditor.css'
 import ProductsEndpoint from '../../Backend/endpoints/Products'
 import { Product } from '../../State/State'
 
-interface RecipeDialogProps {
+interface Props {
     backend: Backend
     sessionName: string
     dish: string
 
     setHidden: () => void
+    onRename: (r: string) => void
 }
 
-export default function RecipeEditor(props: RecipeDialogProps): JSX.Element {
+export default function RecipeEditor(props: Props): JSX.Element {
     const [folded, setFolded] = useState(true)
-    const [title, setTitle] = useState<string>(props.dish)
+    const [title, _setTitle] = useState<string>(props.dish)
+    const setTitle = (t: string) => {
+        props.onRename(t)
+        _setTitle(t)
+    }
 
     return (
         <div className='recipe-editor' key={'recipe-editor'}>
@@ -33,8 +38,8 @@ export default function RecipeEditor(props: RecipeDialogProps): JSX.Element {
                     recipeEP={props.backend.Recipe(props.sessionName, title)}
                     productsEP={props.backend.Products(props.sessionName)}
                     recipe={title}
-                    setRecipe={setTitle}
                     key={title}
+                    setTitle={setTitle}
                     setDeleted={props.setHidden}
                     setFolded={() => setFolded(true)}
                 />
@@ -48,8 +53,7 @@ interface RecipeCardProps {
     productsEP: ProductsEndpoint
 
     recipe: string
-    setRecipe: (r: string) => void
-
+    setTitle: (r: string) => void
     setFolded: () => void
     setDeleted: () => void
 }
@@ -114,6 +118,7 @@ function RecipeCard(props: RecipeCardProps): JSX.Element {
                 if (editing) {
                     return
                 }
+                props.setTitle(title)
                 props.setFolded()
             }}>
                 {

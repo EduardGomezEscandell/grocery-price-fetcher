@@ -134,10 +134,6 @@ func (s Service) handlePost(log logger.Logger, w http.ResponseWriter, r *http.Re
 		Ingredients: make([]dbtypes.Ingredient, 0, len(body.Ingredients)),
 	}
 
-	if len(body.Ingredients) == 0 {
-		return httputils.Error(http.StatusBadRequest, "recipe must have at least one ingredient")
-	}
-
 	if len(body.Ingredients) > 1000 {
 		return httputils.Error(http.StatusBadRequest, "recipe cannot have more than 1000 ingredients")
 	}
