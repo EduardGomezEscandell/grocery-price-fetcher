@@ -39,7 +39,6 @@ export default function RenderMenu(props: Props) {
             >Opcions </button>
             }
             logoOnClick={() => saveMenu(props.backend, state.menu).then(() => navigate('/'))}
-            titleOnClick={() => setState(state.WithHelp())}
             titleText='El&nbsp;meu menú'
             right={<SaveButton
                 key='save'
