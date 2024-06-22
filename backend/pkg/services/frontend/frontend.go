@@ -46,16 +46,16 @@ func (s Service) HandleHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := httputils.ValidateAccepts(r, httputils.MediaTypeHTML); err != nil {
-		msg := err.(httputils.RequestError).Err.Error() //nolint:forcetypeassert,errorlint // we know it's a RequestError
-		http.Error(w, msg, http.StatusNotAcceptable)
-		return
-	}
-
 	if p, ok := s.resolvePath(w, r.URL.Path); !ok {
 		return
 	} else {
 		r.URL.Path = p
+	}
+
+	if err := httputils.ValidateAccepts(r, httputils.MediaTypeHTML); err != nil {
+		msg := err.(httputils.RequestError).Err.Error() //nolint:forcetypeassert,errorlint // we know it's a RequestError
+		http.Error(w, msg, http.StatusNotAcceptable)
+		return
 	}
 
 	http.FileServer(s.fs).ServeHTTP(w, r)
