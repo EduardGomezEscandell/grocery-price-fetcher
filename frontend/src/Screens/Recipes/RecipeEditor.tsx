@@ -144,10 +144,13 @@ function RecipeCard(props: RecipeCardProps): JSX.Element {
                 }
             </div>
             <div className='body' key='body' >
-                <div onClick={editing && undefined || (() => {
+                <div onClick={() => {
+                    if (editing) {
+                        return
+                    }
                     props.setTitle(title)
                     props.setFolded()
-                })}>
+                }}>
                     {
                         ingredients.map((ing, idx) => (
                             <IngredientRow
