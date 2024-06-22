@@ -51,6 +51,8 @@ func (s Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Reques
 		return s.handleGet(log, w, r)
 	case http.MethodPost:
 		return s.handlePost(log, w, r)
+	case http.MethodDelete:
+		return s.handleDelete(log, w, r)
 	default:
 		return httputils.Errorf(http.StatusMethodNotAllowed, "method %s not allowed", r.Method)
 	}
@@ -145,5 +147,27 @@ func (s Service) handlePost(log logger.Logger, w http.ResponseWriter, r *http.Re
 
 	w.Header().Set("Location", path.Join("/api/products/%s/%s", ns, body.Name))
 	w.WriteHeader(http.StatusCreated)
+	return nil
+}
+
+func (s Service) handleDelete(_ logger.Logger, w http.ResponseWriter, r *http.Request) error {
+	ns := r.PathValue("namespace")
+	if ns == "" {
+		return httputils.Error(http.StatusBadRequest, "missing namespace")
+	} else if ns != "default" {
+		// Only the default namespace is supported for now
+		return httputils.Errorf(http.StatusNotFound, "namespace %s not found", ns)
+	}
+
+	name := r.PathValue("name")
+	if name == "" {
+		return httputils.Error(http.StatusBadRequest, "missing product name")
+	}
+
+	if err := s.db.DeleteProduct(name); err != nil {
+		return httputils.Errorf(http.StatusInternalServerError, "failed to delete product: %v", err)
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 	return nil
 }
