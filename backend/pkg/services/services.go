@@ -19,6 +19,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/pantry"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/pricing"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/products"
+	providersservice "github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/providers"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/recipe"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/recipes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/shoppinglist"
@@ -46,6 +47,7 @@ type Settings struct {
 	Pantry        pantry.Settings
 	Pricing       pricing.Settings
 	Products      products.Settings
+	Providers     providersservice.Settings
 	Recipe        recipe.Settings
 	Recipes       recipes.Settings
 	ShoppingList  shoppinglist.Settings
@@ -63,6 +65,7 @@ func (Settings) Defaults() Settings {
 		Pantry:        pantry.Settings{}.Defaults(),
 		Pricing:       pricing.Settings{}.Defaults(),
 		Products:      products.Settings{}.Defaults(),
+		Providers:     providersservice.Settings{}.Defaults(),
 		Recipe:        recipe.Settings{}.Defaults(),
 		Recipes:       recipes.Settings{}.Defaults(),
 		ShoppingList:  shoppinglist.Settings{}.Defaults(),
@@ -109,6 +112,7 @@ func New(ctx context.Context, logger logger.Logger, settings Settings) (*Manager
 		menu.New(settings.Menu, db),
 		pantry.New(settings.Pantry, db),
 		products.New(settings.Products, db),
+		providersservice.New(settings.Providers),
 		recipe.New(settings.Recipe, db),
 		recipes.New(settings.Recipes, db),
 		shoppinglist.New(settings.ShoppingList, db),
