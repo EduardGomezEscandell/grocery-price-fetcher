@@ -3,31 +3,31 @@
         "Name": "Amanida de cigrons",
         "Ingredients": [
             {
-                "name": "Canonges",
+                "product_id": 3,
                 "amount": 0.25
             },
             {
-                "name": "Cigrons",
+                "product_id": 12,
                 "amount": 0.5
             },
             {
-                "name": "Olives",
+                "product_id": 33,
                 "amount": 0.25
             },
             {
-                "name": "Barretes de cranc",
+                "product_id": 46,
                 "amount": 1
             },
             {
-                "name": "Formatge",
+                "product_id": 47,
                 "amount": 0.5
             },
             {
-                "name": "Avellanes",
+                "product_id": 49,
                 "amount": 0.15
             },
             {
-                "name": "Nous",
+                "product_id": 50,
                 "amount": 0.15
             }
         ]
@@ -36,31 +36,31 @@
         "Name": "Amanida de llenties",
         "Ingredients": [
             {
-                "name": "Canonges",
+                "product_id": 3,
                 "amount": 0.25
             },
             {
-                "name": "Llenties",
+                "product_id": 11,
                 "amount": 0.5
             },
             {
-                "name": "Olives",
+                "product_id": 33,
                 "amount": 0.25
             },
             {
-                "name": "Barretes de cranc",
+                "product_id": 46,
                 "amount": 1
             },
             {
-                "name": "Formatge",
+                "product_id": 47,
                 "amount": 0.5
             },
             {
-                "name": "Avellanes",
+                "product_id": 49,
                 "amount": 0.15
             },
             {
-                "name": "Nous",
+                "product_id": 50,
                 "amount": 0.15
             }
         ]
@@ -69,11 +69,11 @@
         "Name": "Cigrons amb xoriço",
         "Ingredients": [
             {
-                "name": "Cigrons",
+                "product_id": 12,
                 "amount": 1
             },
             {
-                "name": "Xoriço",
+                "product_id": 37,
                 "amount": 0.2
             }
         ]
@@ -82,11 +82,11 @@
         "Name": "Llenties amb xoriço",
         "Ingredients": [
             {
-                "name": "Llenties",
+                "product_id": 11,
                 "amount": 1
             },
             {
-                "name": "Xoriço",
+                "product_id": 37,
                 "amount": 0.2
             }
         ]
@@ -95,15 +95,15 @@
         "Name": "Arròs amb ou",
         "Ingredients": [
             {
-                "name": "Arròs",
+                "product_id": 15,
                 "amount": 0.2
             },
             {
-                "name": "Salsa de tomàquet",
+                "product_id": 29,
                 "amount": 0.25
             },
             {
-                "name": "Ous",
+                "product_id": 35,
                 "amount": 1
             }
         ]
@@ -112,35 +112,35 @@
         "Name": "Arròs amb sofregit",
         "Ingredients": [
             {
-                "name": "Arròs",
+                "product_id": 15,
                 "amount": 0.2
             },
             {
-                "name": "Pebrot vermell",
+                "product_id": 6,
                 "amount": 0.25
             },
             {
-                "name": "Pastanaga",
+                "product_id": 4,
                 "amount": 0.5
             },
             {
-                "name": "Ceba",
+                "product_id": 8,
                 "amount": 0.5
             },
             {
-                "name": "All",
+                "product_id": 9,
                 "amount": 0.2
             },
             {
-                "name": "Tomàquet triturat",
+                "product_id": 30,
                 "amount": 0.5
             },
             {
-                "name": "Carn picada",
+                "product_id": 44,
                 "amount": 0.5
             },
             {
-                "name": "Ous",
+                "product_id": 35,
                 "amount": 1
             }
         ]
@@ -149,11 +149,11 @@
         "Name": "Cereals amb llet",
         "Ingredients": [
             {
-                "name": "Cereals",
+                "product_id": 17,
                 "amount": 0.2
             },
             {
-                "name": "Llet d'avena",
+                "product_id": 26,
                 "amount": 0.2
             }
         ]
@@ -162,15 +162,15 @@
         "Name": "Flocs de civada",
         "Ingredients": [
             {
-                "name": "Civada",
+                "product_id": 16,
                 "amount": 0.05
             },
             {
-                "name": "Llet d'avena",
+                "product_id": 26,
                 "amount": 0.1
             },
             {
-                "name": "Atmetlles",
+                "product_id": 51,
                 "amount": 0.15
             }
         ]
@@ -179,11 +179,11 @@
         "Name": "Flocs de civada",
         "Ingredients": [
             {
-                "name": "Civada",
+                "product_id": 16,
                 "amount": 0.05
             },
             {
-                "name": "Llet d'avena",
+                "product_id": 26,
                 "amount": 0.1
             }
         ]
@@ -192,15 +192,15 @@
         "Name": "Torrada i suc de taronja",
         "Ingredients": [
             {
-                "name": "Pa de motlle",
+                "product_id": 18,
                 "amount": 0.05
             },
             {
-                "name": "Embotit",
+                "product_id": 36,
                 "amount": 0.1
             },
             {
-                "name": "Suc de taronja",
+                "product_id": 32,
                 "amount": 0.2
             }
         ]
@@ -209,7 +209,7 @@
         "Name": "Cafè",
         "Ingredients": [
             {
-                "name": "Cafè",
+                "product_id": 48,
                 "amount": 1
             }
         ]
@@ -218,27 +218,27 @@
         "Name": "Fajita",
         "Ingredients": [
             {
-                "name": "Canonges",
+                "product_id": 3,
                 "amount": 0.2
             },
             {
-                "name": "Ceba",
+                "product_id": 8,
                 "amount": 0.5
             },
             {
-                "name": "Pebrot verd",
+                "product_id": 5,
                 "amount": 0.25
             },
             {
-                "name": "Cigrons",
+                "product_id": 12,
                 "amount": 0.25
             },
             {
-                "name": "Fajita",
+                "product_id": 31,
                 "amount": 1
             },
             {
-                "name": "Arròs",
+                "product_id": 15,
                 "amount": 0.1
             }
         ]
@@ -247,7 +247,7 @@
         "Name": "Fruita",
         "Ingredients": [
             {
-                "name": "Fruita",
+                "product_id": 1,
                 "amount": 1
             }
         ]
@@ -256,15 +256,15 @@
         "Name": "Hamburguesa",
         "Ingredients": [
             {
-                "name": "Hamburguesa",
+                "product_id": 41,
                 "amount": 1
             },
             {
-                "name": "Espàrrecs",
+                "product_id": 7,
                 "amount": 0.2
             },
             {
-                "name": "Bolets",
+                "product_id": 10,
                 "amount": 0.2
             }
         ]
@@ -273,15 +273,15 @@
         "Name": "Proteïna amb acompanyament",
         "Ingredients": [
             {
-                "name": "Proteïna vegana",
+                "product_id": 39,
                 "amount": 1
             },
             {
-                "name": "Espàrrecs",
+                "product_id": 7,
                 "amount": 0.2
             },
             {
-                "name": "Bolets",
+                "product_id": 10,
                 "amount": 0.2
             }
         ]
@@ -290,27 +290,27 @@
         "Name": "Vurguer",
         "Ingredients": [
             {
-                "name": "Hamburguesa vegana",
+                "product_id": 40,
                 "amount": 1
             },
             {
-                "name": "Pa d'hamburguesa",
+                "product_id": 19,
                 "amount": 1
             },
             {
-                "name": "Bolets",
+                "product_id": 10,
                 "amount": 0.2
             },
             {
-                "name": "Ceba",
+                "product_id": 8,
                 "amount": 0.5
             },
             {
-                "name": "Pipes",
+                "product_id": 52,
                 "amount": 0.05
             },
             {
-                "name": "Hummus",
+                "product_id": 13,
                 "amount": 0.1
             }
         ]
@@ -319,7 +319,7 @@
         "Name": "Iogurt",
         "Ingredients": [
             {
-                "name": "Iogurt",
+                "product_id": 27,
                 "amount": 1
             }
         ]
@@ -328,7 +328,7 @@
         "Name": "Iogurt vegà",
         "Ingredients": [
             {
-                "name": "Iogurt vegà",
+                "product_id": 28,
                 "amount": 1
             }
         ]
@@ -337,31 +337,31 @@
         "Name": "Macarrons amb sofregit",
         "Ingredients": [
             {
-                "name": "Macarrons",
+                "product_id": 21,
                 "amount": 0.2
             },
             {
-                "name": "Pebrot vermell",
+                "product_id": 6,
                 "amount": 0.125
             },
             {
-                "name": "Pastanaga",
+                "product_id": 4,
                 "amount": 0.5
             },
             {
-                "name": "Ceba",
+                "product_id": 8,
                 "amount": 0.5
             },
             {
-                "name": "All",
+                "product_id": 9,
                 "amount": 0.1
             },
             {
-                "name": "Tomàquet triturat",
+                "product_id": 30,
                 "amount": 0.5
             },
             {
-                "name": "Carn picada",
+                "product_id": 44,
                 "amount": 0.5
             }
         ]
@@ -370,31 +370,31 @@
         "Name": "Macarrons amb sofregit vegà",
         "Ingredients": [
             {
-                "name": "Macarrons",
+                "product_id": 21,
                 "amount": 0.2
             },
             {
-                "name": "Pebrot vermell",
+                "product_id": 6,
                 "amount": 0.125
             },
             {
-                "name": "Pastanaga",
+                "product_id": 4,
                 "amount": 0.5
             },
             {
-                "name": "Ceba",
+                "product_id": 8,
                 "amount": 0.5
             },
             {
-                "name": "All",
+                "product_id": 9,
                 "amount": 0.1
             },
             {
-                "name": "Tomàquet triturat",
+                "product_id": 30,
                 "amount": 0.5
             },
             {
-                "name": "Tofu",
+                "product_id": 38,
                 "amount": 0.25
             }
         ]
@@ -403,11 +403,11 @@
         "Name": "Bastonets i hummus",
         "Ingredients": [
             {
-                "name": "Bastonets de pa",
+                "product_id": 20,
                 "amount": 0.25
             },
             {
-                "name": "Hummus",
+                "product_id": 13,
                 "amount": 0.25
             }
         ]
@@ -416,11 +416,11 @@
         "Name": "Pica-pica",
         "Ingredients": [
             {
-                "name": "Olives",
+                "product_id": 33,
                 "amount": 0.25
             },
             {
-                "name": "Patates fregides",
+                "product_id": 34,
                 "amount": 0.25
             }
         ]
@@ -429,11 +429,11 @@
         "Name": "Puré de patata",
         "Ingredients": [
             {
-                "name": "Patata",
+                "product_id": 14,
                 "amount": 1
             },
             {
-                "name": "Llet d'avena",
+                "product_id": 26,
                 "amount": 0.1
             }
         ]
@@ -442,11 +442,11 @@
         "Name": "Sopa de galets",
         "Ingredients": [
             {
-                "name": "Caldo",
+                "product_id": 25,
                 "amount": 0.5
             },
             {
-                "name": "Galets",
+                "product_id": 22,
                 "amount": 0.1
             }
         ]
@@ -455,19 +455,19 @@
         "Name": "Torrada d'alvocat",
         "Ingredients": [
             {
-                "name": "Pa de motlle",
+                "product_id": 18,
                 "amount": 0.1
             },
             {
-                "name": "Alvocat",
+                "product_id": 2,
                 "amount": 0.5
             },
             {
-                "name": "Canonges",
+                "product_id": 3,
                 "amount": 0.1
             },
             {
-                "name": "Llenties",
+                "product_id": 11,
                 "amount": 0.25
             }
         ]
@@ -476,39 +476,39 @@
         "Name": "Ramen",
         "Ingredients": [
             {
-                "name": "Pastanaga",
+                "product_id": 4,
                 "amount": 1
             },
             {
-                "name": "Pebrot verd",
+                "product_id": 5,
                 "amount": 0.25
             },
             {
-                "name": "Pebrot vermell",
+                "product_id": 6,
                 "amount": 0.1
             },
             {
-                "name": "Ceba",
+                "product_id": 8,
                 "amount": 0.5
             },
             {
-                "name": "All",
+                "product_id": 9,
                 "amount": 0.2
             },
             {
-                "name": "Bolets",
+                "product_id": 10,
                 "amount": 0.25
             },
             {
-                "name": "Fideus",
+                "product_id": 23,
                 "amount": 0.25
             },
             {
-                "name": "Caldo",
+                "product_id": 25,
                 "amount": 0.5
             },
             {
-                "name": "Tofu",
+                "product_id": 38,
                 "amount": 0.25
             }
         ]
@@ -517,7 +517,7 @@
         "Name": "Truita francesa",
         "Ingredients": [
             {
-                "name": "Ous",
+                "product_id": 35,
                 "amount": 2
             }
         ]
@@ -526,15 +526,15 @@
         "Name": "Llom amb acompanyament",
         "Ingredients": [
             {
-                "name": "Llom",
+                "product_id": 42,
                 "amount": 1
             },
             {
-                "name": "Espàrrecs",
+                "product_id": 7,
                 "amount": 0.2
             },
             {
-                "name": "Bolets",
+                "product_id": 10,
                 "amount": 0.2
             }
         ]
@@ -543,15 +543,15 @@
         "Name": "Pollastre amb acompanyament",
         "Ingredients": [
             {
-                "name": "Pollastre",
+                "product_id": 43,
                 "amount": 1
             },
             {
-                "name": "Espàrrecs",
+                "product_id": 7,
                 "amount": 0.2
             },
             {
-                "name": "Bolets",
+                "product_id": 10,
                 "amount": 0.2
             }
         ]
@@ -560,15 +560,15 @@
         "Name": "Peix amb acompanyament",
         "Ingredients": [
             {
-                "name": "Peix",
+                "product_id": 45,
                 "amount": 1
             },
             {
-                "name": "Espàrrecs",
+                "product_id": 7,
                 "amount": 0.2
             },
             {
-                "name": "Bolets",
+                "product_id": 10,
                 "amount": 0.2
             }
         ]
@@ -577,7 +577,7 @@
         "Name": "Ravioli",
         "Ingredients": [
             {
-                "name": "Ravioli",
+                "product_id": 24,
                 "amount": 0.5
             }
         ]
