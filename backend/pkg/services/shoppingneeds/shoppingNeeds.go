@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/menuneeds"
@@ -70,20 +69,33 @@ func (s *Service) handleGet(log logger.Logger, w http.ResponseWriter, r *http.Re
 	}
 
 	// Compute needs for the menu
-	need := menuneeds.ComputeNeeds(log, s.db, &m)
-	log.Debugf("Responding menu-needs with %d items", len(need.Items))
+	need := menuneeds.ComputeNeeds(log, s.db, m)
+	log.Debugf("Responding menu-needs with %d items", len(need))
 
 	// Build response
-	var items []dbtypes.Ingredient
-	for _, i := range need.Items {
-		items = append(items, dbtypes.Ingredient{
-			Name:   i.Product.Name,
-			Amount: i.Amount,
+	type Item struct {
+		ProductID uint32  `json:"product_id"`
+		Name      string  `json:"name"`
+		Amount    float32 `json:"amount"`
+	}
+
+	var items []Item
+	for _, i := range need {
+		p, err := s.db.LookupProduct(i.ProductID)
+		if err != nil {
+			log.Warningf("Product %d not found: %v", i.ProductID, err)
+			continue
+		}
+
+		items = append(items, Item{
+			ProductID: i.ProductID,
+			Name:      p.Name,
+			Amount:    i.Amount,
 		})
 	}
 
 	if err := json.NewEncoder(w).Encode(map[string]any{
-		"menu":  need.Menu.Name,
+		"menu":  m.Name,
 		"items": items,
 	}); err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "could not encode response: %v", err)

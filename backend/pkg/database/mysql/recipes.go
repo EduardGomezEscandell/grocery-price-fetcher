@@ -38,9 +38,9 @@ func (s *SQL) createRecipes(tx *sql.Tx) error {
 			"recipe_ingredients",
 			`CREATE TABLE recipe_ingredients (
 				recipe_name VARCHAR(255) REFERENCES recipes(name),
-				ingredient_name VARCHAR(255) REFERENCES ingredients(name),
+				ingredient_id INT UNSIGNED REFERENCES ingredients(id),
 				amount FLOAT NOT NULL,
-				PRIMARY KEY (recipe_name, ingredient_name)
+				PRIMARY KEY (recipe_name, ingredient_id)
 			)`,
 		},
 	}
@@ -150,7 +150,7 @@ func (s *SQL) queryIngredients(tx *sql.Tx, recipe string) (dbtypes.Recipe, error
 
 	query := `
 	SELECT
-		recipe_name, ingredient_name, amount
+		recipe_name, ingredient_id, amount
 	FROM
 		recipe_ingredients
 	WHERE
@@ -167,7 +167,7 @@ func (s *SQL) queryIngredients(tx *sql.Tx, recipe string) (dbtypes.Recipe, error
 	for ingr.Next() {
 		var i dbtypes.Ingredient
 		var dummy string
-		if err := ingr.Scan(&dummy, &i.Name, &i.Amount); err != nil {
+		if err := ingr.Scan(&dummy, &i.ProductID, &i.Amount); err != nil {
 			return rec, fmt.Errorf("could not scan ingredients: %v", err)
 		}
 		rec.Ingredients = append(rec.Ingredients, i)
@@ -203,9 +203,9 @@ func (s *SQL) SetRecipe(r dbtypes.Recipe) error {
 	}
 
 	err = bulkInsert(s, tx,
-		"recipe_ingredients(recipe_name, ingredient_name, amount)",
+		"recipe_ingredients(recipe_name, ingredient_id, amount)",
 		r.Ingredients, func(i dbtypes.Ingredient) []interface{} {
-			return []interface{}{r.Name, i.Name, i.Amount}
+			return []interface{}{r.Name, i.ProductID, i.Amount}
 		})
 	if err != nil {
 		return fmt.Errorf("could not insert ingredients: %v", err)

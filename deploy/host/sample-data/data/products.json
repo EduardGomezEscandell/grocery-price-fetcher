@@ -1,5 +1,6 @@
 [
     {
+        "id": 1,
         "name": "Fruita",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -8,6 +9,7 @@
         ]
     },
     {
+        "id": 2,
         "name": "Alvocat",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -16,6 +18,7 @@
         ]
     },
     {
+        "id": 3,
         "name": "Canonges",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -24,6 +27,7 @@
         ]
     },
     {
+        "id": 4,
         "name": "Pastanaga",
         "batch_size": 10,
         "provider": "Bonpreu",
@@ -32,6 +36,7 @@
         ]
     },
     {
+        "id": 5,
         "name": "Pebrot verd",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -40,6 +45,7 @@
         ]
     },
     {
+        "id": 6,
         "name": "Pebrot vermell",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -48,6 +54,7 @@
         ]
     },
     {
+        "id": 7,
         "name": "Espàrrecs",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -56,6 +63,7 @@
         ]
     },
     {
+        "id": 8,
         "name": "Ceba",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -64,6 +72,7 @@
         ]
     },
     {
+        "id": 9,
         "name": "All",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -72,6 +81,7 @@
         ]
     },
     {
+        "id": 10,
         "name": "Bolets",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -80,6 +90,7 @@
         ]
     },
     {
+        "id": 11,
         "name": "Llenties",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -88,6 +99,7 @@
         ]
     },
     {
+        "id": 12,
         "name": "Cigrons",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -96,6 +108,7 @@
         ]
     },
     {
+        "id": 13,
         "name": "Hummus",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -104,6 +117,7 @@
         ]
     },
     {
+        "id": 14,
         "name": "Patata",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -112,6 +126,7 @@
         ]
     },
     {
+        "id": 15,
         "name": "Arròs",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -120,6 +135,7 @@
         ]
     },
     {
+        "id": 16,
         "name": "Civada",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -128,6 +144,7 @@
         ]
     },
     {
+        "id": 17,
         "name": "Cereals",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -136,6 +153,7 @@
         ]
     },
     {
+        "id": 18,
         "name": "Pa de motlle",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -144,6 +162,7 @@
         ]
     },
     {
+        "id": 19,
         "name": "Pa d'hamburguesa",
         "batch_size": 4,
         "provider": "Bonpreu",
@@ -152,6 +171,7 @@
         ]
     },
     {
+        "id": 20,
         "name": "Bastonets de pa",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -160,6 +180,7 @@
         ]
     },
     {
+        "id": 21,
         "name": "Macarrons",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -168,6 +189,7 @@
         ]
     },
     {
+        "id": 22,
         "name": "Galets",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -176,6 +198,7 @@
         ]
     },
     {
+        "id": 23,
         "name": "Fideus",
         "batch_size": 1,
         "provider": "Mercadona",
@@ -185,6 +208,7 @@
         ]
     },
     {
+        "id": 24,
         "name": "Ravioli",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -193,6 +217,7 @@
         ]
     },
     {
+        "id": 25,
         "name": "Caldo",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -201,6 +226,7 @@
         ]
     },
     {
+        "id": 26,
         "name": "Llet d'avena",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -209,6 +235,7 @@
         ]
     },
     {
+        "id": 27,
         "name": "Iogurt",
         "batch_size": 4,
         "provider": "Bonpreu",
@@ -217,6 +244,7 @@
         ]
     },
     {
+        "id": 28,
         "name": "Iogurt vegà",
         "batch_size": 4,
         "provider": "Bonpreu",
@@ -225,6 +253,7 @@
         ]
     },
     {
+        "id": 29,
         "name": "Salsa de tomàquet",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -233,6 +262,7 @@
         ]
     },
     {
+        "id": 30,
         "name": "Tomàquet triturat",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -241,6 +271,7 @@
         ]
     },
     {
+        "id": 31,
         "name": "Fajita",
         "batch_size": 1,
         "provider": "Mercadona",
@@ -250,6 +281,7 @@
         ]
     },
     {
+        "id": 32,
         "name": "Suc de taronja",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -258,6 +290,7 @@
         ]
     },
     {
+        "id": 33,
         "name": "Olives",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -266,6 +299,7 @@
         ]
     },
     {
+        "id": 34,
         "name": "Patates fregides",
         "batch_size": 2,
         "provider": "Bonpreu",
@@ -274,6 +308,7 @@
         ]
     },
     {
+        "id": 35,
         "name": "Ous",
         "batch_size": 6,
         "provider": "Bonpreu",
@@ -282,6 +317,7 @@
         ]
     },
     {
+        "id": 36,
         "name": "Embotit",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -290,6 +326,7 @@
         ]
     },
     {
+        "id": 37,
         "name": "Xoriço",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -298,6 +335,7 @@
         ]
     },
     {
+        "id": 38,
         "name": "Tofu",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -306,6 +344,7 @@
         ]
     },
     {
+        "id": 39,
         "name": "Proteïna vegana",
         "batch_size": 2,
         "provider": "Bonpreu",
@@ -314,6 +353,7 @@
         ]
     },
     {
+        "id": 40,
         "name": "Hamburguesa vegana",
         "batch_size": 2,
         "provider": "Bonpreu",
@@ -322,6 +362,7 @@
         ]
     },
     {
+        "id": 41,
         "name": "Hamburguesa",
         "batch_size": 4,
         "provider": "Bonpreu",
@@ -330,6 +371,7 @@
         ]
     },
     {
+        "id": 42,
         "name": "Llom",
         "batch_size": 4,
         "provider": "Bonpreu",
@@ -338,6 +380,7 @@
         ]
     },
     {
+        "id": 43,
         "name": "Pollastre",
         "batch_size": 3,
         "provider": "Bonpreu",
@@ -346,6 +389,7 @@
         ]
     },
     {
+        "id": 44,
         "name": "Carn picada",
         "batch_size": 5,
         "provider": "Bonpreu",
@@ -354,6 +398,7 @@
         ]
     },
     {
+        "id": 45,
         "name": "Peix",
         "batch_size": 5,
         "provider": "Bonpreu",
@@ -362,6 +407,7 @@
         ]
     },
     {
+        "id": 46,
         "name": "Barretes de cranc",
         "batch_size": 5,
         "provider": "Bonpreu",
@@ -370,6 +416,7 @@
         ]
     },
     {
+        "id": 47,
         "name": "Formatge",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -378,6 +425,7 @@
         ]
     },
     {
+        "id": 48,
         "name": "Cafè",
         "batch_size": 30,
         "provider": "Bonpreu",
@@ -386,6 +434,7 @@
         ]
     },
     {
+        "id": 49,
         "name": "Avellanes",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -394,6 +443,7 @@
         ]
     },
     {
+        "id": 50,
         "name": "Nous",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -402,6 +452,7 @@
         ]
     },
     {
+        "id": 51,
         "name": "Atmetlles",
         "batch_size": 1,
         "provider": "Bonpreu",
@@ -410,6 +461,7 @@
         ]
     },
     {
+        "id": 52,
         "name": "Pipes",
         "batch_size": 1,
         "provider": "Bonpreu",

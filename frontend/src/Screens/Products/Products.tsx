@@ -32,7 +32,7 @@ export default function Products(props: Props) {
     if (!loaded) {
         props.backend.Products(props.sessionName)
             .GET()
-            .then((d) => d.map(r => new product(r.name, r.price, r.batch_size, r.provider, r.product_id)))
+            .then((d) => d.map(r => new product(r)))
             .then(p => p.sort((a, b) => a.comp.localeCompare(b.comp)))
             .then(setProducts)
             .then(() => setLoaded(true))
@@ -70,7 +70,7 @@ export default function Products(props: Props) {
                         {
                             loaded &&
                             <NewProductRow onClick={() => {
-                                setCurrProduct(new product(query.displayName, 0, 0, '', ''))
+                                setCurrProduct(product.New(query.displayName))
                                 setFocus(Dialog.Editor)
                             }} />
                         }
@@ -98,12 +98,12 @@ export default function Products(props: Props) {
                     product={currProduct!}
                     onHide={() => { setHidden([...hidden, currProduct!.name]); setFocus(Dialog.None) }}
                     onChange={(p: Product) => {
-                        props.backend.Products(props.sessionName).POST(currProduct!.name, p)
-                        const idx = products.findIndex(r => r.name === currProduct!.name)
+                        props.backend.Products(props.sessionName).POST(p)
+                        const idx = products.findIndex(r => r.id === currProduct!.id)
                         if (idx !== -1) {
-                            products[idx] = new product(p.name, p.price, p.batch_size, p.provider, p.product_id)
+                            products[idx] = new product(p)
                         } else {
-                            products.push(new product(p.name, p.price, p.batch_size, p.provider, p.product_id))
+                            products.push(new product(p))
                         }
                         setProducts(products.sort((a, b) => a.comp.localeCompare(b.comp)))
                     }}
@@ -182,8 +182,12 @@ function HelpDialog(props: { onClose: () => void }): JSX.Element {
 class product extends Product {
     comp: ComparableString;
 
-    constructor(name: string, price: number, batch_size: number, provider: string, provider_id: string) {
-        super(name, price, batch_size, provider, provider_id)
-        this.comp = new ComparableString(name)
+    constructor(base: Product) {
+        super(base.id, base.name, base.price, base.batch_size, base.provider, base.product_id)
+        this.comp = new ComparableString(base.name)
+    }
+
+    static New(name: string): product {
+        return new product(new Product(0, name, 0, 0, '', ''))
     }
 }

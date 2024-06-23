@@ -113,7 +113,7 @@ func (s *SQL) queryPantryContents(tx *sql.Tx, name string) ([]dbtypes.Ingredient
 	items := make([]dbtypes.Ingredient, 0)
 	for r.Next() {
 		var item dbtypes.Ingredient
-		if err := r.Scan(&item.Name, &item.Amount); err != nil {
+		if err := r.Scan(&item.ProductID, &item.Amount); err != nil {
 			return nil, fmt.Errorf("could not scan pantry item: %v", err)
 		}
 		items = append(items, item)
@@ -176,7 +176,7 @@ func (s *SQL) SetPantry(p dbtypes.Pantry) error {
 		"pantry_items (pantry_name, product_name, amount)",
 		p.Contents,
 		func(i dbtypes.Ingredient) []any {
-			return []any{p.Name, i.Name, i.Amount}
+			return []any{p.Name, i.ProductID, i.Amount}
 		})
 	if err != nil {
 		return fmt.Errorf("could not insert new pantry items: %v", err)

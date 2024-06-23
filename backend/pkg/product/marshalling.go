@@ -56,6 +56,7 @@ func (p *Product) UnmarshalTSV(args []string) (err error) {
 }
 
 type jsonHelper struct {
+	ID        uint32    `json:"id"`
 	Name      string    `json:"name"`
 	BatchSize float32   `json:"batch_size"`
 	Price     float32   `json:"price"`
@@ -70,6 +71,7 @@ func (p *Product) UnmarshalJSON(b []byte) (err error) {
 	}
 
 	defer decorate.OnError(&err, "could not unmarshal product %+v", p)
+	p.ID = helper.ID
 	p.Name = helper.Name
 	p.BatchSize = helper.BatchSize
 	p.Price = helper.Price
@@ -96,6 +98,7 @@ func (p *Product) MarshalJSON() (b []byte, err error) {
 	}
 
 	helper := jsonHelper{
+		ID:        p.ID,
 		Name:      p.Name,
 		BatchSize: p.BatchSize,
 		Price:     p.Price,

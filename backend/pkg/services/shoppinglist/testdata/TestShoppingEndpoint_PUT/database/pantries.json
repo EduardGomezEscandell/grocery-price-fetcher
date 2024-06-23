@@ -7,7 +7,7 @@
                 "amount": 5
             },
             {
-                "name": "Apple",
+                "product_id": 1,
                 "amount": 3
             }
         ]

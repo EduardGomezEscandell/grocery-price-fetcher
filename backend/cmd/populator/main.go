@@ -123,7 +123,7 @@ func copyProducts(log logger.Logger, input, output database.DB) error {
 	for _, p := range products {
 		log.Tracef("Copying %T %s", p, p.Name)
 
-		if err := output.SetProduct(p); err != nil {
+		if _, err := output.SetProduct(p); err != nil {
 			return fmt.Errorf("could not set product: %w", err)
 		}
 	}

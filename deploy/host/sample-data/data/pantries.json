@@ -3,151 +3,147 @@
         "name": "default",
         "contents": [
             {
-                "name": "All",
+                "product_id": 9,
                 "amount": 2.3
             },
             {
-                "name": "Arròs",
+                "product_id": 15,
                 "amount": 1.1
             },
             {
-                "name": "Barretes de cranc",
+                "product_id": 46,
                 "amount": 3
             },
             {
-                "name": "Bolets",
+                "product_id": 10,
                 "amount": 1.2
             },
             {
-                "name": "Cafè",
+                "product_id": 48,
                 "amount": 8
             },
             {
-                "name": "Caldo",
+                "product_id": 25,
                 "amount": 2
             },
             {
-                "name": "Canonges",
+                "product_id": 3,
                 "amount": 0.25
             },
             {
-                "name": "Carn picada",
+                "product_id": 44,
                 "amount": 3
             },
             {
-                "name": "Ceba",
+                "product_id": 8,
                 "amount": 2
             },
             {
-                "name": "Cereals",
+                "product_id": 17,
                 "amount": 0.2
             },
             {
-                "name": "Cigrons",
+                "product_id": 12,
                 "amount": 1
             },
             {
-                "name": "Civada",
+                "product_id": 16,
                 "amount": 1.2
             },
             {
-                "name": "Embotit",
+                "product_id": 36,
                 "amount": 0.8
             },
             {
-                "name": "Espàrrecs",
+                "product_id": 7,
                 "amount": 1.1
             },
             {
-                "name": "Fideus",
+                "product_id": 23,
                 "amount": 3
             },
             {
-                "name": "Fruita",
+                "product_id": 1,
                 "amount": 2
             },
             {
-                "name": "Galets",
+                "product_id": 22,
                 "amount": 0.8
             },
             {
-                "name": "Iogurt",
+                "product_id": 27,
                 "amount": 3
             },
             {
-                "name": "Iogurt vegà",
+                "product_id": 28,
                 "amount": 3
             },
             {
-                "name": "Llenties",
+                "product_id": 11,
                 "amount": 1
             },
             {
-                "name": "Llet d'avena",
-                "amount": 1.1
-            },
-            {
-                "name": "Llom",
+                "product_id": 42,
                 "amount": 4
             },
             {
-                "name": "Macarrons",
+                "product_id": 21,
                 "amount": 1.2
             },
             {
-                "name": "Olives",
+                "product_id": 33,
                 "amount": 1
             },
             {
-                "name": "Ous",
+                "product_id": 35,
                 "amount": 4
             },
             {
-                "name": "Pa de motlle",
+                "product_id": 18,
                 "amount": 0.3
             },
             {
-                "name": "Pastanaga",
+                "product_id": 4,
                 "amount": 5
             },
             {
-                "name": "Patata",
+                "product_id": 14,
                 "amount": 3
             },
             {
-                "name": "Patates fregides",
+                "product_id": 34,
                 "amount": 1
             },
             {
-                "name": "Pebrot verd",
+                "product_id": 5,
                 "amount": 1
             },
             {
-                "name": "Pebrot vermell",
+                "product_id": 6,
                 "amount": 0.8
             },
             {
-                "name": "Pollastre",
+                "product_id": 43,
                 "amount": 3
             },
             {
-                "name": "Proteïna vegana",
+                "product_id": 39,
                 "amount": 2
             },
             {
-                "name": "Ravioli",
+                "product_id": 24,
                 "amount": 0.5
             },
             {
-                "name": "Suc de taronja",
+                "product_id": 32,
                 "amount": 1
             },
             {
-                "name": "Tofu",
+                "product_id": 38,
                 "amount": 0.4
             },
             {
-                "name": "Tomàquet triturat",
+                "product_id": 30,
                 "amount": 1
             }
         ]

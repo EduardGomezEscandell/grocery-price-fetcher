@@ -110,7 +110,7 @@ func (s *Service) update() {
 				return
 			}
 
-			if err := s.db.SetProduct(prod); err != nil {
+			if _, err := s.db.SetProduct(prod); err != nil {
 				s.log.Warningf("Database price update: %v", err)
 			}
 		}()

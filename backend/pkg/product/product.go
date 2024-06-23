@@ -8,6 +8,7 @@ import (
 )
 
 type Product struct {
+	ID        uint32
 	Name      string
 	BatchSize float32
 	Price     float32

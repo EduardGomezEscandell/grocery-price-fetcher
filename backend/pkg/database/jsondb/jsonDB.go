@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"slices"
@@ -96,27 +98,32 @@ func (db *JSON) Products() ([]product.Product, error) {
 	return out, nil
 }
 
-func (db *JSON) LookupProduct(name string) (product.Product, bool) {
+func (db *JSON) LookupProduct(ID uint32) (product.Product, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
 	i := slices.IndexFunc(db.products, func(p product.Product) bool {
-		return p.Name == name
+		return p.ID == ID
 	})
 
 	if i == -1 {
-		return product.Product{}, false
+		return product.Product{}, fs.ErrNotExist
 	}
 
-	return db.products[i], true
+	return db.products[i], nil
 }
 
-func (db *JSON) SetProduct(p product.Product) error {
+func (db *JSON) SetProduct(p product.Product) (uint32, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
+	if p.ID == 0 {
+		//nolint:gosec // This is not for security purposes
+		p.ID = rand.Uint32()
+	}
+
 	i := slices.IndexFunc(db.products, func(entry product.Product) bool {
-		return entry.Name == p.Name
+		return entry.ID == p.ID
 	})
 
 	if i == -1 {
@@ -126,22 +133,22 @@ func (db *JSON) SetProduct(p product.Product) error {
 	}
 
 	if err := db.save(); err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
+	return p.ID, nil
 }
 
-func (db *JSON) DeleteProduct(name string) error {
+func (db *JSON) DeleteProduct(ID uint32) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
 	i := slices.IndexFunc(db.products, func(p product.Product) bool {
-		return p.Name == name
+		return p.ID == ID
 	})
 
 	if i == -1 {
-		return fmt.Errorf("product %q not found", name)
+		return fmt.Errorf("product with ID %d not found", ID)
 	}
 
 	db.products = append(db.products[:i], db.products[i+1:]...)

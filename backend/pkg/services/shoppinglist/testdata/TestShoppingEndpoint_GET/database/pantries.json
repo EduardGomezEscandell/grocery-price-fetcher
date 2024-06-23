@@ -3,11 +3,11 @@
         "name": "testpantry1",
         "contents": [
             {
-                "name": "Water",
+                "product_id": 3,
                 "amount": 5
             },
             {
-                "name": "Apple",
+                "product_id": 2,
                 "amount": 3
             }
         ]

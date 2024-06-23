@@ -69,7 +69,7 @@ export default function ProductEditor(props: Props) {
                 <div id='footer'>
                     <button id='dialog-left' onClick={() => { setConfirmDelete(false) }}>Cancel·lar</button>
                     <button id='dialog-right' onClick={() => {
-                        props.backend.Products(props.sessionName).DELETE(p.name).then(
+                        props.backend.Products(props.sessionName).DELETE(p.id).then(
                             () => {
                                 props.onHide()
                                 props.onClose()

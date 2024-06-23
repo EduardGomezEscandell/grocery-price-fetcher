@@ -14,9 +14,9 @@ import (
 
 type DB interface {
 	Products() ([]product.Product, error)
-	LookupProduct(name string) (product.Product, bool)
-	SetProduct(p product.Product) error
-	DeleteProduct(name string) error
+	LookupProduct(ID uint32) (product.Product, error)
+	SetProduct(p product.Product) (uint32, error)
+	DeleteProduct(ID uint32) error
 
 	Recipes() ([]dbtypes.Recipe, error)
 	LookupRecipe(name string) (dbtypes.Recipe, bool)

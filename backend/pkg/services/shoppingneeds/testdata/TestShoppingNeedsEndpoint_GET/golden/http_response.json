@@ -1,1 +1,1 @@
-{"items":[{"name":"Apple","amount":4},{"name":"Banana","amount":2}],"menu":"testmenu1"}
+{"items":[{"product_id":1,"name":"Apple","amount":4},{"product_id":2,"name":"Banana","amount":2}],"menu":"testmenu1"}

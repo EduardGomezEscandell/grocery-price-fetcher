@@ -3,11 +3,11 @@
         "Name": "Fruit salad",
         "Ingredients": [
             {
-                "name": "Apple",
+                "product_id": 1,
                 "amount": 2
             },
             {
-                "name": "Banana",
+                "product_id": 2,
                 "amount": 1
             }
         ]

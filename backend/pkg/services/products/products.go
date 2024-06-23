@@ -2,8 +2,12 @@ package products
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
+	"io/fs"
 	"net/http"
 	"path"
+	"strconv"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
@@ -38,7 +42,7 @@ func (s Service) Name() string {
 }
 
 func (s Service) Path() string {
-	return "/api/products/{namespace}/{name}"
+	return "/api/products/{namespace}/{id}"
 }
 
 func (s Service) Enabled() bool {
@@ -71,7 +75,7 @@ func (s Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Reque
 		return httputils.Errorf(http.StatusNotFound, "namespace %s not found", ns)
 	}
 
-	nm := r.PathValue("name")
+	nm := r.PathValue("id")
 	if nm == "*" {
 		// Return all products
 		rec, err := s.db.Products()
@@ -86,10 +90,17 @@ func (s Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Reque
 		return nil
 	}
 
+	id, err := strconv.ParseUint(nm, 10, 32)
+	if err != nil {
+		return httputils.Error(http.StatusBadRequest, "could not parse product ID")
+	}
+
 	// Return a single product
-	p, ok := s.db.LookupProduct(nm)
-	if !ok {
+	p, err := s.db.LookupProduct(uint32(id))
+	if errors.Is(err, fs.ErrNotExist) {
 		return httputils.Errorf(http.StatusNotFound, "product %s not found", nm)
+	} else if err != nil {
+		return httputils.Errorf(http.StatusInternalServerError, "failed to fetch product: %v", err)
 	}
 
 	if err := json.NewEncoder(w).Encode(p); err != nil {
@@ -99,7 +110,7 @@ func (s Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Reque
 	return nil
 }
 
-func (s Service) handlePost(log logger.Logger, w http.ResponseWriter, r *http.Request) error {
+func (s Service) handlePost(_ logger.Logger, w http.ResponseWriter, r *http.Request) error {
 	if err := httputils.ValidateContentType(r, httputils.MediaTypeJSON); err != nil {
 		return err
 	}
@@ -112,9 +123,14 @@ func (s Service) handlePost(log logger.Logger, w http.ResponseWriter, r *http.Re
 		return httputils.Errorf(http.StatusNotFound, "namespace %s not found", ns)
 	}
 
-	name := r.PathValue("name")
+	name := r.PathValue("id")
 	if name == "" {
-		return httputils.Error(http.StatusBadRequest, "missing product name")
+		return httputils.Error(http.StatusBadRequest, "missing product name, or 0 for new product")
+	}
+
+	urlID, err := strconv.ParseUint(name, 10, 32)
+	if err != nil {
+		return httputils.Errorf(http.StatusBadRequest, "invalid product ID %q: %v", name, err)
 	}
 
 	var body product.Product
@@ -122,31 +138,27 @@ func (s Service) handlePost(log logger.Logger, w http.ResponseWriter, r *http.Re
 		return httputils.Errorf(http.StatusBadRequest, "failed to decode request: %v", err)
 	}
 
-	// Easy case: just update the product
-	if body.Name == name {
-		if err := s.db.SetProduct(body); err != nil {
-			return httputils.Errorf(http.StatusInternalServerError, "failed to update product: %v", err)
-		}
+	if body.ID != uint32(urlID) {
+		return httputils.Errorf(http.StatusBadRequest, "product ID in URL does not match product ID in body")
+	}
 
+	p, err := s.db.SetProduct(body)
+	if err != nil {
+		return httputils.Errorf(http.StatusInternalServerError, "failed to set product: %v", err)
+	}
+
+	if body.ID == 0 {
+		w.Header().Set("Location", path.Join("/api/products/", ns, fmt.Sprint(p)))
+		w.WriteHeader(http.StatusCreated)
 		return nil
+	} else {
+		w.WriteHeader(http.StatusAccepted)
 	}
 
-	// Hard case: update the product name
-	if _, ok := s.db.LookupProduct(body.Name); ok {
-		return httputils.Errorf(http.StatusConflict, "product %s already exists", body.Name)
+	if err := json.NewEncoder(w).Encode(map[string]uint32{"id": p}); err != nil {
+		return httputils.Errorf(http.StatusInternalServerError, "failed to write response: %v", err)
 	}
 
-	if err := s.db.SetProduct(body); err != nil {
-		return httputils.Errorf(http.StatusInternalServerError, "failed to update product: %v", err)
-	}
-	w.WriteHeader(http.StatusCreated)
-
-	if err := s.db.DeleteProduct(name); err != nil {
-		log.Errorf("failed to delete old product during re-naming from %s to %s: %v", name, body.Name, err)
-	}
-
-	w.Header().Set("Location", path.Join("/api/products/%s/%s", ns, body.Name))
-	w.WriteHeader(http.StatusCreated)
 	return nil
 }
 
@@ -159,12 +171,17 @@ func (s Service) handleDelete(_ logger.Logger, w http.ResponseWriter, r *http.Re
 		return httputils.Errorf(http.StatusNotFound, "namespace %s not found", ns)
 	}
 
-	name := r.PathValue("name")
-	if name == "" {
+	idStr := r.PathValue("id")
+	if idStr == "" {
 		return httputils.Error(http.StatusBadRequest, "missing product name")
 	}
 
-	if err := s.db.DeleteProduct(name); err != nil {
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		return httputils.Errorf(http.StatusBadRequest, "invalid product ID %q: %v", idStr, err)
+	}
+
+	if err := s.db.DeleteProduct(uint32(id)); err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "failed to delete product: %v", err)
 	}
 

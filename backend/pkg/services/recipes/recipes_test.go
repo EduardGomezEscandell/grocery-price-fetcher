@@ -42,13 +42,13 @@ func TestRecipes(t *testing.T) {
 			db := testutils.Database(t, "")
 			if !tc.emptyDB {
 				err := db.SetRecipe(dbtypes.Recipe{Name: "Water", Ingredients: []dbtypes.Ingredient{
-					{Name: "Hydrogen", Amount: 2},
-					{Name: "Oxygen", Amount: 1},
+					{ProductID: 1, Amount: 2},
+					{ProductID: 2, Amount: 1},
 				}})
 				require.NoError(t, err)
 
 				err = db.SetRecipe(dbtypes.Recipe{Name: "Juice", Ingredients: []dbtypes.Ingredient{
-					{Name: "Orange", Amount: 2.12},
+					{ProductID: 3, Amount: 2.12},
 				}})
 				require.NoError(t, err)
 			}
