@@ -143,11 +143,13 @@ export class Menu {
 }
 
 export class PantryItem {
-    constructor(name: string, amount: number) {
+    constructor(id: number, name: string, amount: number) {
+        this.id = id
         this.name = name
         this.amount = amount
     }
 
+    id: number
     name: string
     amount: number
 }
@@ -166,6 +168,7 @@ export class Pantry {
             either(json, 'name', 'Default'),
             either(json, 'contents', []).map((content: any): PantryItem => {
                 return {
+                    id: either(content, 'product_id', 0),
                     name: either(content, 'name', 'Unnamed ingredient'),
                     amount: either(content, 'amount', 0),
                 }
@@ -177,17 +180,20 @@ export class Pantry {
 export class ShoppingNeedsItem {
     static fromJSON(json: any): ShoppingNeedsItem {
         const n = new ShoppingNeedsItem(
+            either(json, 'product_id', 0),
             either(json, 'name', 'Unnamed ingredient'),
             either(json, 'amount', 0),
         )
         return n
     }
 
-    constructor(name: string, amount: number) {
+    constructor(id: number, name: string, amount: number) {
+        this.id = id
         this.name = name
         this.amount = amount
     }
 
+    id: number
     name: string
     amount: number
 }
@@ -204,6 +210,7 @@ export class ShoppingNeeds {
 }
 
 export interface ShoppingListItem {
+    id: number
     name: string
     done: boolean
     units: number
@@ -222,6 +229,7 @@ export class ShoppingList {
         shoppingList.pantry = either(json, 'pantry', 'default')
         shoppingList.items = either(json, 'items', []).map((name: string) => {
             return {
+                id: either(name, 'id', 0),
                 name: either(name, 'name', 'Unnamed ingredient'),
                 done: either(name, 'done', false),
                 units: either(name, 'units', 0),

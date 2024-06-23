@@ -139,11 +139,13 @@ export class Recipe {
 }
 
 export class Ingredient {
+    id: number
     name: string
     unit_price: number
     amount: number
 
-    constructor(name: string, unit_price: number, amount: number) {
+    constructor(id: number, name: string, unit_price: number, amount: number) {
+        this.id = id
         this.name = name
         this.unit_price = unit_price
         this.amount = amount
@@ -151,6 +153,7 @@ export class Ingredient {
 
     static fromJSON(obj: any): Ingredient {
         return new Ingredient(
+            obj.id && Number(obj.id) || 0,
             obj.name && String(obj.name) || "Unknown",
             obj.unit_price && Number(obj.unit_price) || 0,
             obj.amount && Number(obj.amount) || 0
