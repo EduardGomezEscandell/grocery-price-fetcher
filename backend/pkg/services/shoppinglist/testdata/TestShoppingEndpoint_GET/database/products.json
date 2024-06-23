@@ -1,5 +1,6 @@
 [
     {
+        "id": 1,
         "name": "Apple",
         "batch_size": 1,
         "provider": "NoProvider",
@@ -8,6 +9,7 @@
         ]
     },
     {
+        "id": 2,
         "name": "Banana",
         "batch_size": 7,
         "provider": "NoProvider",

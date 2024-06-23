@@ -2,11 +2,11 @@
     "name": "pantry1",
     "contents": [
         {
-            "name": "Apple",
+            "product_id": 1,
             "amount": 5
         },
         {
-            "name": "Banana",
+            "product_id": 2,
             "amount": 3
         }
     ]
@@ -14,11 +14,11 @@
     "name": "pantry2",
     "contents": [
         {
-            "name": "Apple",
+            "product_id": 1,
             "amount": 100000000000
         },
         {
-            "name": "Banana",
+            "product_id": 2,
             "amount": 89321
         }
     ]

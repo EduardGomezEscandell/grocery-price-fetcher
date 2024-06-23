@@ -3,11 +3,11 @@
         "Name": "Cereal",
         "Ingredients": [
             {
-                "name": "Cereal",
+                "product_id": 1,
                 "amount": 0.1
             },
             {
-                "name": "Milk",
+                "product_id": 2,
                 "amount": 0.5
             }
         ]
@@ -16,7 +16,7 @@
         "Name": "OJ",
         "Ingredients": [
             {
-                "name": "Orange Juice",
+                "product_id": 3,
                 "amount": 330
             }
         ]

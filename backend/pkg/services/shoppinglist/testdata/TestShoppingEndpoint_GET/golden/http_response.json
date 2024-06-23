@@ -1,1 +1,1 @@
-{"items":[{"name":"Apple","done":false,"units":4,"packs":4,"cost":3.96},{"name":"Banana","done":true,"units":2,"packs":1,"cost":2.99}],"menu":"testmenu1","pantry":"testpantry1"}
+{"items":[{"id":1,"name":"Apple","done":false,"units":4,"packs":4,"cost":3.96},{"id":2,"name":"Banana","done":true,"units":0,"packs":0,"cost":0}],"menu":"testmenu1","pantry":"testpantry1"}

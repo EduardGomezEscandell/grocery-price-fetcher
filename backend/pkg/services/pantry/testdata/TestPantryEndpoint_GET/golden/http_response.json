@@ -1,1 +1,1 @@
-{"name":"pantry1","contents":[{"name":"Apple","amount":5},{"name":"Banana","amount":3}]}
+{"contents":[{"product_id":1,"amount":5,"name":"Apple"},{"product_id":2,"amount":3,"name":"Banana"}],"name":"pantry1"}
