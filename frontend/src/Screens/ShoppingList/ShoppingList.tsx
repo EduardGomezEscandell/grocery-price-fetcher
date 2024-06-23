@@ -205,6 +205,6 @@ function HelpDialog(props: {
 async function saveShoppingList(backend: Backend, shoppingList: ShoppingList): Promise<void> {
     backend
         .ShoppingList(shoppingList.menu, shoppingList.pantry)
-        .PUT(shoppingList.items.filter(i => i.done).map(i => i.name))
+        .PUT(shoppingList.items.filter(i => i.done).map(i => i.id))
         .then(() => { })
 }

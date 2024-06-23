@@ -154,7 +154,7 @@ function RecipeCard(props: RecipeCardProps): JSX.Element {
                     {
                         ingredients.map((ing, idx) => (
                             <IngredientRow
-                                key={ing + idx.toString() + editing}
+                                key={ing.id.toString() + idx.toString() + editing}
                                 ingredient={ing}
                                 editing={editing}
                                 onChange={(newData: Ingredient) => {
@@ -174,6 +174,7 @@ function RecipeCard(props: RecipeCardProps): JSX.Element {
                     <span id='total'>
                         {loaded &&
                             <IngredientRow key={'total-' + total.toFixed()} ingredient={{
+                                id: -1,
                                 name: 'Total',
                                 unit_price: total,
                                 amount: NaN
@@ -440,7 +441,7 @@ function NewIngredientRow(props: NewIngredientProps): JSX.Element {
                     if (!selected || atof(amount) === 0) {
                         return
                     }
-                    props.onChange(new Ingredient(selected.name, selected.price / selected.batch_size, atof(amount)))
+                    props.onChange(new Ingredient(selected.id, selected.name, selected.price / selected.batch_size, atof(amount)))
                     setSelected(null)
                 }}
                 style={{ width: '40px', fontSize: 'inherit' }}

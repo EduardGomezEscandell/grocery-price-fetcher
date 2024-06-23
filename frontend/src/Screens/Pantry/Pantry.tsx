@@ -30,7 +30,7 @@ enum Dialog {
 
 export default function RenderPantry(pp: Props) {
     const [pantry, setPantry] = useState<Pantry>(new Pantry(pp.sessionName))
-    const [focussed, setFocussed] = useState<Focus>({ item: new PantryItem("", 0), usage: [] })
+    const [focussed, setFocussed] = useState<Focus>({ item: new PantryItem(0, "", 0), usage: [] })
     const navigate = useNavigate()
 
     const [dialog, setDialog] = useState(Dialog.OFF)
@@ -185,6 +185,14 @@ function renderDialog(d: Stateful<Dialog>, focus: Focus, pantryEP: PantryEndpoin
     }
 }
 
+function compare(x:number, y:number): number {
+    return x < y
+        ? -1
+        : x > y
+            ? 1
+            : 0
+}
+
 // This function is used to filter the pantry contents against the shopping needs
 // - Items inherit their amounts from the pantry.
 // - If an item is in the pantry but not in the needs, it is removed.
@@ -192,20 +200,21 @@ function renderDialog(d: Stateful<Dialog>, focus: Focus, pantryEP: PantryEndpoin
 // - Items are sorted alphabetically.
 function filterPantry(pantry: Pantry, needs: ShoppingNeeds): Pantry {
     const filtered = new Pantry(pantry.name)
-    pantry.contents.sort((a, b) => a.name.localeCompare(b.name))
-    needs.items.sort((a, b) => a.name.localeCompare(b.name))
+    pantry.contents.sort((a, b) => compare(a.id, b.id))
+    needs.items.sort((a, b) => compare(a.id, b.id))
 
     let i = 0;
     let j = 0;
 
     while (i < pantry.contents.length && j < needs.items.length) {
-        const comp = pantry.contents[i].name.localeCompare(needs.items[j].name)
+        const comp = compare(pantry.contents[i].id, needs.items[j].id)
         if (comp < 0) {
             // Ingredient in pantry but not in needs
             i++
         } else if (comp > 0) {
             // Ingredient in needs but not in pantry
             filtered.contents.push({
+                id: needs.items[j].id,
                 name: needs.items[j].name,
                 amount: 0,
             })
@@ -220,6 +229,7 @@ function filterPantry(pantry: Pantry, needs: ShoppingNeeds): Pantry {
 
     while (j < needs.items.length) {
         filtered.contents.push({
+            id: needs.items[j].id,
             name: needs.items[j].name,
             amount: 0,
         })
