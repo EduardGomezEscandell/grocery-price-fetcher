@@ -4,7 +4,7 @@
         "name": "Apple",
         "batch_size": 1,
         "provider": "NoProvider",
-        "product_id": [
+        "product_code": [
             "0.99"
         ]
     },
@@ -13,7 +13,7 @@
         "name": "Banana",
         "batch_size": 7,
         "provider": "NoProvider",
-        "product_id": [
+        "product_code": [
             "2.99"
         ]
     }
