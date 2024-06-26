@@ -95,8 +95,8 @@ func (s *Service) compute(menuName string, ingredientID product.ID) ([]respBodyI
 	for _, day := range menu.Days {
 		for _, meal := range day.Meals {
 			for _, dish := range meal.Dishes {
-				recipe, ok := cached.Lookup(dish.Name)
-				if !ok {
+				recipe, err := cached.Lookup(dish.ID)
+				if err != nil {
 					continue
 				}
 
@@ -105,7 +105,7 @@ func (s *Service) compute(menuName string, ingredientID product.ID) ([]respBodyI
 						resp = append(resp, respBodyItem{
 							Day:    day.Name,
 							Meal:   meal.Name,
-							Dish:   dish.Name,
+							Dish:   recipe.Name,
 							Amount: ingredient.Amount * dish.Amount,
 						})
 					}

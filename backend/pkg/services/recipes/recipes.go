@@ -7,6 +7,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/recipe"
 )
 
 type Service struct {
@@ -61,16 +62,24 @@ func (s *Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Reque
 		return httputils.Errorf(http.StatusInternalServerError, "failed to get recipes: %v", err)
 	}
 
-	names := make([]string, 0)
-	for _, r := range recs {
-		names = append(names, r.Name)
+	type item struct {
+		ID   recipe.ID `json:"id"`
+		Name string    `json:"name"`
 	}
 
-	if err := json.NewEncoder(w).Encode(names); err != nil {
+	items := make([]item, 0)
+	for _, r := range recs {
+		items = append(items, item{
+			ID:   r.ID,
+			Name: r.Name,
+		})
+	}
+
+	if err := json.NewEncoder(w).Encode(items); err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "failed to encode recipes: %v", err)
 	}
 
-	log.Debugf("Responded with %d items", len(names))
+	log.Debugf("Responded with %d items", len(items))
 
 	return nil
 }

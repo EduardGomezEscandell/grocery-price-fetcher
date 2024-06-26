@@ -115,22 +115,9 @@ func (s Service) handlePost(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 		return err
 	}
 
-	ns := r.PathValue("namespace")
-	if ns == "" {
-		return httputils.Error(http.StatusBadRequest, "missing namespace")
-	} else if ns != "default" {
-		// Only the default namespace is supported for now
-		return httputils.Errorf(http.StatusNotFound, "namespace %s not found", ns)
-	}
-
-	name := r.PathValue("id")
-	if name == "" {
-		return httputils.Error(http.StatusBadRequest, "missing product name, or 0 for new product")
-	}
-
-	urlID, err := strconv.ParseUint(name, 10, product.IDSize)
+	namespace, urlID, err := parseEndpoint(r)
 	if err != nil {
-		return httputils.Errorf(http.StatusBadRequest, "invalid product ID %q: %v", name, err)
+		return err
 	}
 
 	var body product.Product
@@ -138,24 +125,23 @@ func (s Service) handlePost(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 		return httputils.Errorf(http.StatusBadRequest, "failed to decode request: %v", err)
 	}
 
-	if body.ID != product.ID(urlID) {
+	if body.ID != urlID {
 		return httputils.Errorf(http.StatusBadRequest, "product ID in URL does not match product ID in body")
 	}
 
-	p, err := s.db.SetProduct(body)
+	newID, err := s.db.SetProduct(body)
 	if err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "failed to set product: %v", err)
 	}
 
-	if body.ID == 0 {
-		w.Header().Set("Location", path.Join("/api/products/", ns, fmt.Sprint(p)))
-		w.WriteHeader(http.StatusCreated)
-		return nil
-	} else {
+	if urlID != 0 {
 		w.WriteHeader(http.StatusAccepted)
+	} else {
+		w.WriteHeader(http.StatusCreated)
+		w.Header().Set("Location", path.Join("/api/recipe/", namespace, fmt.Sprint(newID)))
 	}
 
-	if err := json.NewEncoder(w).Encode(map[string]any{"id": p}); err != nil {
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{"id": newID}); err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "failed to write response: %v", err)
 	}
 
@@ -163,28 +149,37 @@ func (s Service) handlePost(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 }
 
 func (s Service) handleDelete(_ logger.Logger, w http.ResponseWriter, r *http.Request) error {
-	ns := r.PathValue("namespace")
-	if ns == "" {
-		return httputils.Error(http.StatusBadRequest, "missing namespace")
-	} else if ns != "default" {
-		// Only the default namespace is supported for now
-		return httputils.Errorf(http.StatusNotFound, "namespace %s not found", ns)
-	}
-
-	idStr := r.PathValue("id")
-	if idStr == "" {
-		return httputils.Error(http.StatusBadRequest, "missing product name")
-	}
-
-	id, err := strconv.ParseUint(idStr, 10, product.IDSize)
+	_, id, err := parseEndpoint(r)
 	if err != nil {
-		return httputils.Errorf(http.StatusBadRequest, "invalid product ID %q: %v", idStr, err)
+		return err
 	}
 
-	if err := s.db.DeleteProduct(product.ID(id)); err != nil {
+	if err := s.db.DeleteProduct(id); err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "failed to delete product: %v", err)
 	}
 
 	w.WriteHeader(http.StatusNoContent)
 	return nil
+}
+
+func parseEndpoint(r *http.Request) (namespace string, id product.ID, err error) {
+	n := r.PathValue("namespace")
+	if n == "" {
+		return "", 0, httputils.Error(http.StatusBadRequest, "missing namespace")
+	} else if n != "default" {
+		// Only the default namespace is supported for now
+		return "", 0, httputils.Errorf(http.StatusNotFound, "namespace %s not found", n)
+	}
+
+	sid := r.PathValue("id")
+	if sid == "" {
+		return "", 0, httputils.Error(http.StatusBadRequest, "missing id")
+	}
+
+	idURL, err := strconv.ParseUint(sid, 10, product.IDSize)
+	if err != nil {
+		return "", 0, httputils.Errorf(http.StatusBadRequest, "invalid id: %v", err)
+	}
+
+	return n, product.ID(idURL), nil
 }

@@ -2,6 +2,8 @@ package menuneeds
 
 import (
 	"cmp"
+	"errors"
+	"io/fs"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
@@ -18,20 +20,20 @@ func ComputeNeeds(log logger.Logger, db database.DB, m dbtypes.Menu) []recipe.In
 	}
 
 	// Compute the amount of each recipe needed
-	recipes := make(map[string]recipeAmount)
+	recipes := make(map[recipe.ID]recipeAmount)
 
 	cached := database.NewCachedLookup(db.LookupRecipe)
 	for _, day := range m.Days {
 		for _, meal := range day.Meals {
 			for _, dish := range meal.Dishes {
-				rpe, ok := cached.Lookup(dish.Name)
-				if !ok {
-					log.Warningf("%s: %s: Recipe %q is not registered", day.Name, meal.Name, dish.Name)
+				rpe, err := cached.Lookup(dish.ID)
+				if errors.Is(err, fs.ErrNotExist) {
+					log.Warningf("%s: %s: Recipe %d is not registered", day.Name, meal.Name, dish.ID)
 					continue
 				}
-				recipes[rpe.Name] = recipeAmount{
+				recipes[rpe.ID] = recipeAmount{
 					recipe: rpe,
-					amount: recipes[rpe.Name].amount + dish.Amount,
+					amount: recipes[rpe.ID].amount + dish.Amount,
 				}
 			}
 		}

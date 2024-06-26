@@ -195,15 +195,16 @@ func TestDBRecipes(t *testing.T) {
 		},
 	}
 
-	id, err := db.SetProduct(p[0])
+	pID, err := db.SetProduct(p[0])
 	require.NoError(t, err)
-	p[0].ID = id
+	p[0].ID = pID
 
-	id, err = db.SetProduct(p[1])
+	pID, err = db.SetProduct(p[1])
 	require.NoError(t, err)
-	p[1].ID = id
+	p[1].ID = pID
 
 	rec := recipe.Recipe{
+		ID:   1,
 		Name: "Water",
 		Ingredients: []recipe.Ingredient{
 			{ProductID: 1, Amount: 2},
@@ -215,14 +216,15 @@ func TestDBRecipes(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, recs)
 
-	_, ok := db.LookupRecipe(rec.Name)
-	require.False(t, ok)
+	_, err = db.LookupRecipe(rec.ID)
+	require.ErrorIs(t, err, fs.ErrNotExist)
 
-	err = db.SetRecipe(rec)
+	rID, err := db.SetRecipe(rec)
 	require.NoError(t, err)
+	require.NotZero(t, rID, "expected non-zero ID")
 
-	got, ok := db.LookupRecipe(rec.Name)
-	require.True(t, ok)
+	got, err := db.LookupRecipe(rec.ID)
+	require.NoError(t, err)
 	require.Equal(t, rec, got)
 
 	recs, err = db.Recipes()
@@ -230,14 +232,14 @@ func TestDBRecipes(t *testing.T) {
 	require.ElementsMatch(t, []recipe.Recipe{rec}, recs)
 
 	rec.Ingredients[0].Amount = 3
-	err = db.SetRecipe(rec)
+	_, err = db.SetRecipe(rec)
 	require.NoError(t, err)
 
 	recs, err = db.Recipes()
 	require.NoError(t, err)
 	require.ElementsMatch(t, []recipe.Recipe{rec}, recs)
 
-	err = db.DeleteRecipe(rec.Name)
+	err = db.DeleteRecipe(rec.ID)
 	require.NoError(t, err)
 
 	recs, err = db.Recipes()
@@ -279,6 +281,7 @@ func TestDBMenus(t *testing.T) {
 
 	r := []recipe.Recipe{
 		{
+			ID:   1,
 			Name: "Water",
 			Ingredients: []recipe.Ingredient{
 				{ProductID: 13, Amount: 2},
@@ -286,6 +289,7 @@ func TestDBMenus(t *testing.T) {
 			},
 		},
 		{
+			ID:   2,
 			Name: "Hydrogen Peroxide",
 			Ingredients: []recipe.Ingredient{
 				{ProductID: 13, Amount: 2},
@@ -293,6 +297,7 @@ func TestDBMenus(t *testing.T) {
 			},
 		},
 		{
+			ID:   3,
 			Name: "Oxygen Gas",
 			Ingredients: []recipe.Ingredient{
 				{ProductID: 55, Amount: 2},
@@ -306,8 +311,9 @@ func TestDBMenus(t *testing.T) {
 	}
 
 	for _, recipe := range r {
-		err := db.SetRecipe(recipe)
+		rID, err := db.SetRecipe(recipe)
 		require.NoErrorf(t, err, "could not set recipe %s", recipe.Name)
+		require.NotZero(t, rID, "expected non-zero ID")
 	}
 
 	menus, err := db.Menus()
@@ -321,20 +327,20 @@ func TestDBMenus(t *testing.T) {
 				Name: "Monday",
 				Meals: []dbtypes.Meal{
 					{Name: "Lunch", Dishes: []dbtypes.Dish{
-						{Name: "Water", Amount: 1.12},
+						{ID: 1, Amount: 1.12},
 					}},
 					{Name: "Dinner", Dishes: []dbtypes.Dish{
-						{Name: "Hydrogen Peroxide", Amount: 3},
-						{Name: "Oxygen Gas", Amount: 4}}},
+						{ID: 2, Amount: 3},
+						{ID: 3, Amount: 4}}},
 				},
 			},
 			{
 				Name: "Saturday",
 				Meals: []dbtypes.Meal{
 					{Name: "Lunch", Dishes: []dbtypes.Dish{
-						{Name: "Water", Amount: 1}}},
+						{ID: 1, Amount: 1}}},
 					{Name: "Dinner", Dishes: []dbtypes.Dish{
-						{Name: "Hydrogen Peroxide", Amount: 3}}},
+						{ID: 2, Amount: 3}}},
 				},
 			},
 		},

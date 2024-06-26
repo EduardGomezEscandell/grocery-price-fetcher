@@ -27,7 +27,7 @@ func TestRecipes(t *testing.T) {
 		wantCode int
 		wantBody string
 	}{
-		"GET":               {method: "GET", wantCode: http.StatusOK, wantBody: "[\"Water\",\"Juice\"]\n"},
+		"GET":               {method: "GET", wantCode: http.StatusOK, wantBody: "!golden"},
 		"GET with empty DB": {method: "GET", emptyDB: true, wantCode: http.StatusOK, wantBody: "[]\n"},
 		"POST":              {method: "POST", wantCode: http.StatusMethodNotAllowed},
 		"PATCH":             {method: "PATCH", wantCode: http.StatusMethodNotAllowed},
@@ -41,15 +41,21 @@ func TestRecipes(t *testing.T) {
 
 			db := testutils.Database(t, "")
 			if !tc.emptyDB {
-				err := db.SetRecipe(recipe.Recipe{Name: "Water", Ingredients: []recipe.Ingredient{
-					{ProductID: 1, Amount: 2},
-					{ProductID: 2, Amount: 1},
-				}})
+				_, err := db.SetRecipe(recipe.Recipe{
+					ID:   1,
+					Name: "Water",
+					Ingredients: []recipe.Ingredient{
+						{ProductID: 1, Amount: 2},
+						{ProductID: 2, Amount: 1},
+					}})
 				require.NoError(t, err)
 
-				err = db.SetRecipe(recipe.Recipe{Name: "Juice", Ingredients: []recipe.Ingredient{
-					{ProductID: 3, Amount: 2.12},
-				}})
+				_, err = db.SetRecipe(recipe.Recipe{
+					ID:   2,
+					Name: "Juice",
+					Ingredients: []recipe.Ingredient{
+						{ProductID: 3, Amount: 2.12},
+					}})
 				require.NoError(t, err)
 			}
 

@@ -6,6 +6,7 @@ import (
 	"slices"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/recipe"
 )
 
 func (s *SQL) clearMenus(tx *sql.Tx) error {
@@ -61,7 +62,7 @@ func (s *SQL) createMenus(tx *sql.Tx) error {
 				day_pos INT REFERENCES menu_days(pos),
 				meal_pos INT REFERENCES menu_day_meals(pos),
 				pos INT,
-				recipe_name VARCHAR(255) REFERENCES recipes(name),
+				recipe_id VARCHAR(255) REFERENCES recipes(name),
 				amount FLOAT NOT NULL,
 				PRIMARY KEY (menu_name, day_pos, meal_pos, pos)
 			)`,
@@ -219,14 +220,14 @@ type mealItemRow struct {
 	DayPos  int
 	MealPos int
 	Pos     int
-	Recipe  string
+	Dish    recipe.ID
 	Amount  float32
 }
 
 func (s *SQL) queryMealItems(tx *sql.Tx) ([]mealItemRow, error) {
 	query := `
 	SELECT
-		menu_name, day_pos, meal_pos, pos, recipe_name, amount 
+		menu_name, day_pos, meal_pos, pos, recipe_id, amount 
 	FROM 
 		menu_day_meal_recipes`
 
@@ -239,7 +240,7 @@ func (s *SQL) queryMealItems(tx *sql.Tx) ([]mealItemRow, error) {
 	var items []mealItemRow
 	for r.Next() {
 		var i mealItemRow
-		if err := r.Scan(&i.Menu, &i.DayPos, &i.MealPos, &i.Pos, &i.Recipe, &i.Amount); err != nil {
+		if err := r.Scan(&i.Menu, &i.DayPos, &i.MealPos, &i.Pos, &i.Dish, &i.Amount); err != nil {
 			return nil, fmt.Errorf("could not scan meal item: %v", err)
 		}
 		items = append(items, i)
@@ -308,7 +309,7 @@ func (p *menuBuilder) setItems(i []mealItemRow) {
 		}
 
 		*at(&menu.Days[row.DayPos].Meals[row.MealPos].Dishes, row.Pos) = dbtypes.Dish{
-			Name:   row.Recipe,
+			ID:     row.Dish,
 			Amount: row.Amount,
 		}
 	}
@@ -398,7 +399,7 @@ func (s *SQL) SetMenu(m dbtypes.Menu) error {
 					DayPos:  i,
 					MealPos: j,
 					Pos:     k,
-					Recipe:  dish.Name,
+					Dish:    dish.ID,
 					Amount:  dish.Amount,
 				})
 			}
@@ -502,8 +503,8 @@ func (s *SQL) setMeals(tx *sql.Tx, rows []mealMenuRow) error {
 
 func (s *SQL) setItems(tx *sql.Tx, rows []mealItemRow) error {
 	return bulkInsert(s, tx,
-		"menu_day_meal_recipes (menu_name, day_pos, meal_pos, pos, recipe_name, amount)", rows,
+		"menu_day_meal_recipes (menu_name, day_pos, meal_pos, pos, recipe_id, amount)", rows,
 		func(row mealItemRow) []any {
-			return []any{row.Menu, row.DayPos, row.MealPos, row.Pos, row.Recipe, row.Amount}
+			return []any{row.Menu, row.DayPos, row.MealPos, row.Pos, row.Dish, row.Amount}
 		})
 }

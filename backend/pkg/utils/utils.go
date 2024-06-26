@@ -32,3 +32,26 @@ func Zipper[U, V any](u []U, v []V, cmp func(U, V) int, left func(u U), center f
 
 	return out
 }
+
+// Partition rearranges a slice such that the elements that satisfy the predicate
+// come before the elements that do not. It returns the index of the first element
+// that does not satisfy the predicate.
+//
+// The operation is stable, in place, and linear in time.
+func Partition[T any](slice []T, predicate func(t T) bool) (p int) {
+	if len(slice) == 0 {
+		return 0
+	}
+	for i := range slice {
+		if !predicate(slice[i]) {
+			continue
+		}
+		if i == p {
+			p++
+			continue
+		}
+		slice[i], slice[p] = slice[p], slice[i]
+		p++
+	}
+	return p
+}

@@ -20,9 +20,9 @@ type DB interface {
 	DeleteProduct(ID product.ID) error
 
 	Recipes() ([]recipe.Recipe, error)
-	LookupRecipe(name string) (recipe.Recipe, bool)
-	SetRecipe(r recipe.Recipe) error
-	DeleteRecipe(name string) error
+	LookupRecipe(name recipe.ID) (recipe.Recipe, error)
+	SetRecipe(r recipe.Recipe) (recipe.ID, error)
+	DeleteRecipe(name recipe.ID) error
 
 	Menus() ([]dbtypes.Menu, error)
 	LookupMenu(name string) (dbtypes.Menu, bool)

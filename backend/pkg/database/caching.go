@@ -1,28 +1,28 @@
 package database
 
-type CachedLookup[T any] struct {
-	cache  map[string]T
-	lookup func(string) (T, bool)
+type CachedLookup[K comparable, V any] struct {
+	cache  map[K]V
+	lookup func(K) (V, error)
 }
 
-func NewCachedLookup[T any](lookup func(string) (T, bool)) CachedLookup[T] {
-	return CachedLookup[T]{
-		cache:  make(map[string]T),
+func NewCachedLookup[K comparable, T any](lookup func(K) (T, error)) CachedLookup[K, T] {
+	return CachedLookup[K, T]{
+		cache:  make(map[K]T),
 		lookup: lookup,
 	}
 }
 
-func (c *CachedLookup[T]) Lookup(name string) (T, bool) {
-	if v, ok := c.cache[name]; ok {
-		return v, true
+func (c *CachedLookup[K, V]) Lookup(k K) (V, error) {
+	if v, ok := c.cache[k]; ok {
+		return v, nil
 	}
 
-	v, ok := c.lookup(name)
-	if !ok {
-		var t T
-		return t, false
+	v, err := c.lookup(k)
+	if err != nil {
+		var v V
+		return v, err
 	}
 
-	c.cache[name] = v
-	return v, true
+	c.cache[k] = v
+	return v, nil
 }

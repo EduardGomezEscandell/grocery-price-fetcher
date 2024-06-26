@@ -106,8 +106,8 @@ func RecipesTest(t *testing.T, openDB func() database.DB) {
 	db := openDB()
 	defer db.Close()
 
-	_, ok := db.LookupRecipe("AAAAAAAAAAAAAAAAAAAAA")
-	require.False(t, ok)
+	_, err := db.LookupRecipe(1)
+	require.ErrorIs(t, err, fs.ErrNotExist)
 
 	recipe1 := recipe.Recipe{
 		Name: "Recipe #1",
@@ -119,32 +119,45 @@ func RecipesTest(t *testing.T, openDB func() database.DB) {
 
 	recipe2 := recipe.Recipe{
 		Name:        "Recipe #2",
-		Ingredients: nil,
+		Ingredients: make([]recipe.Ingredient, 0),
 	}
 
-	require.NoError(t, db.SetRecipe(recipe1), "Could not set Recipe")
-	p, ok := db.LookupRecipe(recipe1.Name)
-	require.True(t, ok, "Could not find Recipe just created")
-	require.Equal(t, recipe1, p, "Recipe does not match the one just created")
+	rID, err := db.SetRecipe(recipe1)
+	require.NoError(t, err, "Could not set Recipe")
+	require.NotZero(t, rID, "ID should be non-zero")
+	recipe1.ID = rID
+
+	r, err := db.LookupRecipe(rID)
+	require.NoError(t, err, "Could not find Recipe just created")
+	require.Equal(t, recipe1, r, "Recipe does not match the one just created")
 
 	recipe1.Ingredients[0].Amount = 5.0
 
-	require.NoError(t, db.SetRecipe(recipe1), "Could not override Recipe")
-	p, ok = db.LookupRecipe(recipe1.Name)
-	require.True(t, ok, "Could not find Recipe just overridden")
-	require.Equal(t, recipe1, p, "Recipe does not match the one just overridden")
+	rID, err = db.SetRecipe(recipe1)
+	require.NoError(t, err, "Could not override Recipe")
+	require.Equal(t, recipe1.ID, rID, "ID should be the same after overriding")
+
+	r, err = db.LookupRecipe(recipe1.ID)
+	require.NoError(t, err, "Could not find Recipe just overridden")
+	require.Equal(t, recipe1, r, "Recipe does not match the one just overridden")
 
 	// Test implicit deletion of ingredients
 	recipe1.Ingredients = recipe1.Ingredients[:1]
-	require.NoError(t, db.SetRecipe(recipe1), "Could not override Recipe")
-	p, ok = db.LookupRecipe(recipe1.Name)
-	require.True(t, ok, "Could not find Recipe just overridden")
-	require.Equal(t, recipe1, p, "Recipe does not match the one just overridden")
 
-	require.NoError(t, db.SetRecipe(recipe2), "Could not set Recipe")
-	p, ok = db.LookupRecipe(recipe2.Name)
-	require.True(t, ok, "Could not find empty Recipe just created")
-	require.Equal(t, recipe2, p, "Empty menu does not match the one just created")
+	_, err = db.SetRecipe(recipe1)
+	require.NoError(t, err, "Could not override Recipe")
+	r, err = db.LookupRecipe(recipe1.ID)
+	require.NoError(t, err, "Could not find Recipe just overridden")
+	require.Equal(t, recipe1, r, "Recipe does not match the one just overridden")
+
+	rID, err = db.SetRecipe(recipe2)
+	require.NoError(t, err, "Could not set Recipe")
+	require.NotZero(t, rID, "ID should be non-zero")
+	recipe2.ID = rID
+
+	r, err = db.LookupRecipe(recipe2.ID)
+	require.NoError(t, err, "Could not find empty Recipe just created")
+	require.Equal(t, recipe2, r, "Empty menu does not match the one just created")
 
 	t.Log("Closing DB and reopening")
 	require.NoError(t, db.Close())
@@ -156,24 +169,24 @@ func RecipesTest(t *testing.T, openDB func() database.DB) {
 	require.NoError(t, err)
 	require.ElementsMatch(t, []recipe.Recipe{recipe1, recipe2}, menus, "Recipes do not match the ones just created")
 
-	_, ok = db.LookupRecipe("AAAAAAAAAAAAAAAAAAAAA")
-	require.False(t, ok)
+	_, err = db.LookupRecipe(999999)
+	require.ErrorIs(t, err, fs.ErrNotExist)
 
-	p, ok = db.LookupRecipe(recipe1.Name)
-	require.True(t, ok, "Could not find Recipe after reopening DB")
-	require.Equal(t, recipe1, p, "Recipe does not match the one after reopening DB")
+	r, err = db.LookupRecipe(recipe1.ID)
+	require.NoError(t, err, "Could not find Recipe after reopening DB")
+	require.Equal(t, recipe1, r, "Recipe does not match the one after reopening DB")
 
-	p, ok = db.LookupRecipe(recipe2.Name)
-	require.True(t, ok, "Could not find empty Recipe after reopening DB")
-	require.Equal(t, recipe2, p, "Empty menu does not match the one after reopening DB")
+	r, err = db.LookupRecipe(recipe2.ID)
+	require.NoError(t, err, "Could not find empty Recipe after reopening DB")
+	require.Equal(t, recipe2, r, "Empty menu does not match the one after reopening DB")
 
 	require.ElementsMatch(t, []recipe.Recipe{recipe1, recipe2}, menus, "Recipes do not match the ones after reopening DB")
 
-	err = db.DeleteRecipe(recipe1.Name)
+	err = db.DeleteRecipe(recipe1.ID)
 	require.NoError(t, err)
 
-	_, ok = db.LookupRecipe(recipe1.Name)
-	require.False(t, ok)
+	_, err = db.LookupRecipe(recipe1.ID)
+	require.ErrorIs(t, err, fs.ErrNotExist)
 
 	require.NoError(t, db.Close())
 }
@@ -191,13 +204,13 @@ func MenuTest(t *testing.T, openDB func() database.DB) {
 		Name: "myMenu",
 		Days: []dbtypes.Day{
 			{
-				Name: "Segiunda-Feira",
+				Name: "Segunda-Feira",
 				Meals: []dbtypes.Meal{
 					{
 						Name: "Café da Manhã",
 						Dishes: []dbtypes.Dish{
 							{
-								Name:   "Torrada i suc de taronja",
+								ID:     68,
 								Amount: 16,
 							},
 						},

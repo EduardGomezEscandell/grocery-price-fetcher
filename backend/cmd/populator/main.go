@@ -140,7 +140,7 @@ func copyRecipes(log logger.Logger, input, output database.DB) error {
 	for _, r := range recipes {
 		log.Tracef("Copying %T %s", r, r.Name)
 
-		if err := output.SetRecipe(r); err != nil {
+		if _, err := output.SetRecipe(r); err != nil {
 			return fmt.Errorf("could not set recipe: %w", err)
 		}
 	}

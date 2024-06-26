@@ -163,12 +163,12 @@ func (s *Service) handleDelete(_ logger.Logger, w http.ResponseWriter, r *http.R
 }
 
 type shoppingListItem struct {
-	ID    product.ID `json:"id"`
-	Name  string     `json:"name"`
-	Done  bool       `json:"done"`
-	Units float32    `json:"units"`
-	Packs int        `json:"packs"`
-	Cost  float32    `json:"cost"`
+	ProductID product.ID `json:"product_id"`
+	Name      string     `json:"name"`
+	Done      bool       `json:"done"`
+	Units     float32    `json:"units"`
+	Packs     int        `json:"packs"`
+	Cost      float32    `json:"cost"`
 }
 
 func (s *Service) computeShoppingList(log logger.Logger, menu dbtypes.Menu, pantry dbtypes.Pantry, done []product.ID) []shoppingListItem {
@@ -208,12 +208,12 @@ func newItem(prod product.Product, units float32, isDone bool) shoppingListItem 
 	packs := int(math.Ceil(float64(units / prod.BatchSize)))
 
 	return shoppingListItem{
-		ID:    prod.ID,
-		Name:  prod.Name,
-		Units: units,
-		Packs: packs,
-		Cost:  float32(packs) * prod.Price,
-		Done:  isDone,
+		ProductID: prod.ID,
+		Name:      prod.Name,
+		Units:     units,
+		Packs:     packs,
+		Cost:      float32(packs) * prod.Price,
+		Done:      isDone,
 	}
 }
 

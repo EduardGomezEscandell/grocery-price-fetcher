@@ -7,8 +7,8 @@ import (
 
 // Dish represents a single dish that is part of a meal.
 type Dish struct {
-	Name   string  `json:"name"`
-	Amount float32 `json:"amount"`
+	ID     recipe.ID `json:"recipe_id"`
+	Amount float32   `json:"amount"`
 }
 
 // Meal represents a meal that is part of a day.

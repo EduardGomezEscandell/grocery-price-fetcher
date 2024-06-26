@@ -197,10 +197,10 @@ func FixturePath(t *testing.T, relative ...string) string {
 	return filepath.Join(path...)
 }
 
-func CompareToGolden(t *testing.T, got string, name string) {
+func CompareToGolden(t *testing.T, got string, fileName string) {
 	t.Helper()
 
-	goldenPath := FixturePath(t, "golden", name)
+	goldenPath := FixturePath(t, "golden", fileName)
 
 	out, err := os.ReadFile(goldenPath)
 	require.NoError(t, err, "Could not read golden")
@@ -210,5 +210,9 @@ func CompareToGolden(t *testing.T, got string, name string) {
 	}
 
 	want := string(out)
-	require.Equal(t, want, got, "Generated file does not match golden")
+	if path.Ext(fileName) == ".json" {
+		require.JSONEq(t, want, got, "Generated file does not match golden")
+	} else {
+		require.Equal(t, want, got, "Generated file does not match golden")
+	}
 }

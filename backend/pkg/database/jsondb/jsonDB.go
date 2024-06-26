@@ -168,29 +168,34 @@ func (db *JSON) Recipes() ([]recipe.Recipe, error) {
 	return out, nil
 }
 
-func (db *JSON) LookupRecipe(name string) (recipe.Recipe, bool) {
+func (db *JSON) LookupRecipe(id recipe.ID) (recipe.Recipe, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
 	i := slices.IndexFunc(db.recipes, func(p recipe.Recipe) bool {
-		return p.Name == name
+		return p.ID == id
 	})
 
 	if i == -1 {
-		return recipe.Recipe{}, false
+		return recipe.Recipe{}, fs.ErrNotExist
 	}
 
-	return db.recipes[i], true
+	return db.recipes[i], nil
 }
 
-func (db *JSON) SetRecipe(r recipe.Recipe) error {
+func (db *JSON) SetRecipe(r recipe.Recipe) (recipe.ID, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	i := slices.IndexFunc(db.recipes, func(entry recipe.Recipe) bool {
-		return entry.Name == r.Name
-	})
+	for r.ID == 0 {
+		newID := recipe.NewRandomID()
+		idx := slices.IndexFunc(db.recipes, func(entry recipe.Recipe) bool { return entry.ID == newID })
+		if idx == -1 {
+			r.ID = newID
+		}
+	}
 
+	i := slices.IndexFunc(db.recipes, func(entry recipe.Recipe) bool { return entry.ID == r.ID })
 	if i == -1 {
 		db.recipes = append(db.recipes, r)
 	} else {
@@ -198,21 +203,22 @@ func (db *JSON) SetRecipe(r recipe.Recipe) error {
 	}
 
 	if err := db.save(); err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+
+	return r.ID, nil
 }
 
-func (db *JSON) DeleteRecipe(name string) error {
+func (db *JSON) DeleteRecipe(id recipe.ID) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
 	i := slices.IndexFunc(db.recipes, func(p recipe.Recipe) bool {
-		return p.Name == name
+		return p.ID == id
 	})
 
 	if i == -1 {
-		return fmt.Errorf("recipe %q not found", name)
+		return fmt.Errorf("recipe %d not found", id)
 	}
 
 	db.recipes = append(db.recipes[:i], db.recipes[i+1:]...)
