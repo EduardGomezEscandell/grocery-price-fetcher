@@ -2,6 +2,7 @@ package product
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -71,10 +72,15 @@ func (p *Product) UnmarshalJSON(b []byte) (err error) {
 	}
 
 	defer decorate.OnError(&err, "could not unmarshal product %+v", p)
+
 	p.ID = helper.ID
 	p.Name = helper.Name
 	p.BatchSize = helper.BatchSize
 	p.Price = helper.Price
+
+	if p.ID == 0 {
+		return errors.New("product ID must be a number greater than 0")
+	}
 
 	if prov, ok := providers.Lookup(helper.Provider); ok {
 		p.Provider = prov

@@ -3,6 +3,7 @@ package product
 import (
 	"context"
 	"fmt"
+	"math/rand"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers"
 )
@@ -10,6 +11,11 @@ import (
 type ID uint32
 
 const IDSize = 32
+
+func NewRandomID() ID {
+	//nolint:gosec // This is not for security purposes
+	return ID(rand.Uint32())
+}
 
 type Product struct {
 	ID        ID

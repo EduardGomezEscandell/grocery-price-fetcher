@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"math/rand"
 	"strings"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
@@ -138,7 +137,7 @@ func (s *SQL) SetProduct(p product.Product) (product.ID, error) {
 		// We never expect to have anywhere near 2^32 (4.3 billion) products
 		// Collisions are extremely unlikely, but taken care of with the loop
 		verb = "INSERT"
-		p.ID = product.ID(rand.Uint32()) //nolint:gosec // We don't need a secure random number here
+		p.ID = product.NewRandomID()
 	}
 
 	for {
@@ -162,8 +161,7 @@ func (s *SQL) SetProduct(p product.Product) (product.ID, error) {
 		target := (&mysql.MySQLError{})
 		if errors.As(err, &target) && target.Number == errKeyExists {
 			// Key conflict: generate a new ID
-			//nolint:gosec // We don't need a secure random number here
-			p.ID = product.ID(rand.Uint32())
+			p.ID = product.NewRandomID()
 			continue
 		}
 

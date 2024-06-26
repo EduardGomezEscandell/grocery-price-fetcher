@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"math/rand"
 	"os"
 	"path/filepath"
 	"slices"
@@ -118,8 +117,7 @@ func (db *JSON) SetProduct(p product.Product) (product.ID, error) {
 	defer db.mu.Unlock()
 
 	if p.ID == 0 {
-		//nolint:gosec // This is not for security purposes
-		p.ID = product.ID(rand.Uint32())
+		p.ID = product.NewRandomID()
 	}
 
 	i := slices.IndexFunc(db.products, func(entry product.Product) bool {
