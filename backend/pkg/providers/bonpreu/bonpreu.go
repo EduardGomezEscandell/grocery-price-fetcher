@@ -17,7 +17,7 @@ type Provider struct {
 	log logger.Logger
 }
 
-func New(log logger.Logger) providers.Provider {
+func New(log logger.Logger) Provider {
 	return Provider{log: log}
 }
 
@@ -29,7 +29,7 @@ func (p Provider) Name() string {
 	return "Bonpreu"
 }
 
-func (p Provider) FetchPrice(ctx context.Context, pid providers.ProductID) (float32, error) {
+func (p Provider) FetchPrice(ctx context.Context, pid providers.ProductCode) (float32, error) {
 	url := fmt.Sprintf(
 		"https://www.compraonline.bonpreuesclat.cat/api/v5/products/search?&term=%s",
 		pid[pidProductCode],
@@ -87,17 +87,17 @@ func (p Provider) FetchPrice(ctx context.Context, pid providers.ProductID) (floa
 	return ret, nil
 }
 
-func (p Provider) ValidateID(pid providers.ProductID) error {
-	if pid[pidProductCode] == "" {
+func (p Provider) ValidateCode(code providers.ProductCode) error {
+	if code[pidProductCode] == "" {
 		return fmt.Errorf("product code (index 0) is empty")
 	}
 
-	if pid[1] != "" {
-		return fmt.Errorf("unexpected field at index 1: %q", pid[2])
+	if code[1] != "" {
+		return fmt.Errorf("unexpected field at index 1: %q", code[2])
 	}
 
-	if pid[2] != "" {
-		return fmt.Errorf("unexpected field at index 2: %q", pid[2])
+	if code[2] != "" {
+		return fmt.Errorf("unexpected field at index 2: %q", code[2])
 	}
 
 	return nil

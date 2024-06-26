@@ -133,11 +133,11 @@ func TestDBProducts(t *testing.T) {
 	require.Empty(t, products)
 
 	p := product.Product{
-		Name:      "test",
-		BatchSize: 1.163,
-		Price:     111.84,
-		Provider:  blank.Provider{},
-		ProductID: [3]string{"1"},
+		Name:        "test",
+		BatchSize:   1.163,
+		Price:       111.84,
+		Provider:    blank.Provider{},
+		ProductCode: [3]string{"1"},
 	}
 
 	_, err = db.LookupProduct(9999)
@@ -490,7 +490,7 @@ func TestDBShoopingLists(t *testing.T) {
 	sl := dbtypes.ShoppingList{
 		Menu:     "My test menu",
 		Pantry:   "My test pantry",
-		Contents: []uint32{1},
+		Contents: []product.ID{1},
 	}
 
 	pantries, err := db.ShoppingLists()

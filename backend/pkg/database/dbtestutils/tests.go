@@ -357,13 +357,13 @@ func ShoppingListsTest(t *testing.T, openDB func() database.DB) {
 	list1 := dbtypes.ShoppingList{
 		Menu:     "Menu #1",
 		Pantry:   "Pantry #1",
-		Contents: []uint32{13, 99},
+		Contents: []product.ID{13, 99},
 	}
 
 	list2 := dbtypes.ShoppingList{
 		Menu:     "Menu #99",
 		Pantry:   "Pantry #1",
-		Contents: []uint32{500, 10000},
+		Contents: []product.ID{500, 10000},
 	}
 
 	require.NoError(t, db.SetShoppingList(list1), "Could not set ShoppingList")

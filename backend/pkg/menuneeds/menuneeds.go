@@ -6,6 +6,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/utils"
 )
 
@@ -36,7 +37,7 @@ func ComputeNeeds(log logger.Logger, db database.DB, m dbtypes.Menu) []dbtypes.I
 	}
 
 	// Compute the amount of each product needed
-	need := make(map[uint32]float32)
+	need := make(map[product.ID]float32)
 	for _, rec := range recipes {
 		for _, i := range rec.recipe.Ingredients {
 			_, ok := need[i.ProductID]

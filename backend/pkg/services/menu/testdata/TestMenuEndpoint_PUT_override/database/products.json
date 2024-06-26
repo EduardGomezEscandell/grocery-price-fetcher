@@ -1,17 +1,28 @@
 [
     {
+        "id": 1,
         "name": "Cereal",
         "batch_size": 1,
         "provider": "NoProvider",
-        "product_id": [
+        "product_code": [
             "1.54"
         ]
     },
     {
+        "id": 2,
+        "name": "Milk",
+        "batch_size": 1,
+        "provider": "NoProvider",
+        "product_code": [
+            "0.99"
+        ]
+    },
+    {
+        "id": 3,
         "name": "Orange Juice",
         "batch_size": 1000,
         "provider": "NoProvider",
-        "product_id": [
+        "product_code": [
             "2.99"
         ]
     }

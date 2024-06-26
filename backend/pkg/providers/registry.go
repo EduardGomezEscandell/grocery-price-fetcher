@@ -7,10 +7,10 @@ import (
 // Provider is an interface that represents a grocery store provider for a single product.
 type Provider interface {
 	Name() string
-	FetchPrice(ctx context.Context, pid ProductID) (float32, error)
-	ValidateID(pid ProductID) error
+	FetchPrice(ctx context.Context, pid ProductCode) (float32, error)
+	ValidateCode(code ProductCode) error
 }
-type ProductID [3]string
+type ProductCode [3]string
 
 var Default = &Registry{}
 

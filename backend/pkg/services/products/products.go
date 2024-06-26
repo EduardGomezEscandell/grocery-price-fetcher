@@ -90,13 +90,13 @@ func (s Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Reque
 		return nil
 	}
 
-	id, err := strconv.ParseUint(nm, 10, 32)
+	id, err := strconv.ParseUint(nm, 10, product.IDSize)
 	if err != nil {
 		return httputils.Error(http.StatusBadRequest, "could not parse product ID")
 	}
 
 	// Return a single product
-	p, err := s.db.LookupProduct(uint32(id))
+	p, err := s.db.LookupProduct(product.ID(id))
 	if errors.Is(err, fs.ErrNotExist) {
 		return httputils.Errorf(http.StatusNotFound, "product %s not found", nm)
 	} else if err != nil {
@@ -128,7 +128,7 @@ func (s Service) handlePost(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 		return httputils.Error(http.StatusBadRequest, "missing product name, or 0 for new product")
 	}
 
-	urlID, err := strconv.ParseUint(name, 10, 32)
+	urlID, err := strconv.ParseUint(name, 10, product.IDSize)
 	if err != nil {
 		return httputils.Errorf(http.StatusBadRequest, "invalid product ID %q: %v", name, err)
 	}
@@ -138,7 +138,7 @@ func (s Service) handlePost(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 		return httputils.Errorf(http.StatusBadRequest, "failed to decode request: %v", err)
 	}
 
-	if body.ID != uint32(urlID) {
+	if body.ID != product.ID(urlID) {
 		return httputils.Errorf(http.StatusBadRequest, "product ID in URL does not match product ID in body")
 	}
 
@@ -155,7 +155,7 @@ func (s Service) handlePost(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 		w.WriteHeader(http.StatusAccepted)
 	}
 
-	if err := json.NewEncoder(w).Encode(map[string]uint32{"id": p}); err != nil {
+	if err := json.NewEncoder(w).Encode(map[string]any{"id": p}); err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "failed to write response: %v", err)
 	}
 
@@ -176,12 +176,12 @@ func (s Service) handleDelete(_ logger.Logger, w http.ResponseWriter, r *http.Re
 		return httputils.Error(http.StatusBadRequest, "missing product name")
 	}
 
-	id, err := strconv.ParseUint(idStr, 10, 32)
+	id, err := strconv.ParseUint(idStr, 10, product.IDSize)
 	if err != nil {
 		return httputils.Errorf(http.StatusBadRequest, "invalid product ID %q: %v", idStr, err)
 	}
 
-	if err := s.db.DeleteProduct(uint32(id)); err != nil {
+	if err := s.db.DeleteProduct(product.ID(id)); err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "failed to delete product: %v", err)
 	}
 

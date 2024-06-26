@@ -2,6 +2,7 @@ package product
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -43,25 +44,25 @@ func (p *Product) UnmarshalTSV(args []string) (err error) {
 		p.BatchSize = float32(s)
 	}
 
-	var pid providers.ProductID
-	copy(pid[:], args[fieldArgv:])
+	var code providers.ProductCode
+	copy(code[:], args[fieldArgv:])
 
-	if p.Provider.ValidateID(pid) != nil {
-		return fmt.Errorf("invalid product ID %q", pid)
+	if p.Provider.ValidateCode(code) != nil {
+		return fmt.Errorf("invalid product ID %q", code)
 	} else {
-		p.ProductID = pid
+		p.ProductCode = code
 	}
 
 	return nil
 }
 
 type jsonHelper struct {
-	ID        uint32    `json:"id"`
-	Name      string    `json:"name"`
-	BatchSize float32   `json:"batch_size"`
-	Price     float32   `json:"price"`
-	Provider  string    `json:"provider"`
-	ProductID [3]string `json:"product_id"`
+	ID          ID        `json:"id"`
+	Name        string    `json:"name"`
+	BatchSize   float32   `json:"batch_size"`
+	Price       float32   `json:"price"`
+	Provider    string    `json:"provider"`
+	ProductCode [3]string `json:"product_code"`
 }
 
 func (p *Product) UnmarshalJSON(b []byte) (err error) {
@@ -71,10 +72,15 @@ func (p *Product) UnmarshalJSON(b []byte) (err error) {
 	}
 
 	defer decorate.OnError(&err, "could not unmarshal product %+v", p)
+
 	p.ID = helper.ID
 	p.Name = helper.Name
 	p.BatchSize = helper.BatchSize
 	p.Price = helper.Price
+
+	if p.ID == 0 {
+		return errors.New("product ID must be a number greater than 0")
+	}
 
 	if prov, ok := providers.Lookup(helper.Provider); ok {
 		p.Provider = prov
@@ -82,10 +88,10 @@ func (p *Product) UnmarshalJSON(b []byte) (err error) {
 		return fmt.Errorf("could not find provider %q", helper.Provider)
 	}
 
-	if p.Provider.ValidateID(helper.ProductID) != nil {
-		return fmt.Errorf("invalid product ID %q", helper.ProductID)
+	if p.Provider.ValidateCode(helper.ProductCode) != nil {
+		return fmt.Errorf("invalid product code %q", helper.ProductCode)
 	} else {
-		p.ProductID = helper.ProductID
+		p.ProductCode = helper.ProductCode
 	}
 
 	return nil
@@ -98,12 +104,12 @@ func (p *Product) MarshalJSON() (b []byte, err error) {
 	}
 
 	helper := jsonHelper{
-		ID:        p.ID,
-		Name:      p.Name,
-		BatchSize: p.BatchSize,
-		Price:     p.Price,
-		Provider:  providerName,
-		ProductID: p.ProductID,
+		ID:          p.ID,
+		Name:        p.Name,
+		BatchSize:   p.BatchSize,
+		Price:       p.Price,
+		Provider:    providerName,
+		ProductCode: p.ProductCode,
 	}
 
 	return json.Marshal(helper)

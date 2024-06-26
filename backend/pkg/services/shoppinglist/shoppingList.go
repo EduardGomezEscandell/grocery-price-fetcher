@@ -83,7 +83,7 @@ func (s *Service) handleGet(log logger.Logger, w http.ResponseWriter, r *http.Re
 		return httputils.Errorf(http.StatusNotFound, "pantry not found")
 	}
 
-	var done []uint32
+	var done []product.ID
 	if D, ok := s.db.LookupShoppingList(menu, pantry); ok {
 		done = D.Contents
 	}
@@ -162,15 +162,15 @@ func (s *Service) handleDelete(_ logger.Logger, w http.ResponseWriter, r *http.R
 }
 
 type shoppingListItem struct {
-	ID    uint32  `json:"id"`
-	Name  string  `json:"name"`
-	Done  bool    `json:"done"`
-	Units float32 `json:"units"`
-	Packs int     `json:"packs"`
-	Cost  float32 `json:"cost"`
+	ID    product.ID `json:"id"`
+	Name  string     `json:"name"`
+	Done  bool       `json:"done"`
+	Units float32    `json:"units"`
+	Packs int        `json:"packs"`
+	Cost  float32    `json:"cost"`
 }
 
-func (s *Service) computeShoppingList(log logger.Logger, menu dbtypes.Menu, pantry dbtypes.Pantry, done []uint32) []shoppingListItem {
+func (s *Service) computeShoppingList(log logger.Logger, menu dbtypes.Menu, pantry dbtypes.Pantry, done []product.ID) []shoppingListItem {
 	need := menuneeds.ComputeNeeds(log, s.db, menu)
 
 	slices.SortFunc(need, func(i, j dbtypes.Ingredient) int { return cmp.Compare(i.ProductID, j.ProductID) })
@@ -181,7 +181,7 @@ func (s *Service) computeShoppingList(log logger.Logger, menu dbtypes.Menu, pant
 
 	list := make([]shoppingListItem, 0, len(tmpList))
 	utils.Zipper(tmpList, done,
-		func(a dbtypes.Ingredient, id uint32) int { return cmp.Compare(a.ProductID, id) },
+		func(a dbtypes.Ingredient, id product.ID) int { return cmp.Compare(a.ProductID, id) },
 		func(a dbtypes.Ingredient) {
 			// This product is needed but not marked done
 			p, ok := getProduct(log, s.db, a.ProductID)
@@ -189,14 +189,14 @@ func (s *Service) computeShoppingList(log logger.Logger, menu dbtypes.Menu, pant
 				list = append(list, newItem(p, a.Amount, false))
 			}
 		},
-		func(a dbtypes.Ingredient, id uint32) {
+		func(a dbtypes.Ingredient, id product.ID) {
 			// This product is needed and marked done in the DB
 			p, ok := getProduct(log, s.db, a.ProductID)
 			if ok {
 				list = append(list, newItem(p, a.Amount, true))
 			}
 		},
-		func(id uint32) {
+		func(id product.ID) {
 			// This product is marked done but not needed
 		})
 
@@ -216,7 +216,7 @@ func newItem(prod product.Product, units float32, isDone bool) shoppingListItem 
 	}
 }
 
-func getProduct(log logger.Logger, db database.DB, ID uint32) (product.Product, bool) {
+func getProduct(log logger.Logger, db database.DB, ID product.ID) (product.Product, bool) {
 	p, err := db.LookupProduct(ID)
 	if err != nil {
 		log.Warningf("Failed to lookup product %d: %v", ID, err)
