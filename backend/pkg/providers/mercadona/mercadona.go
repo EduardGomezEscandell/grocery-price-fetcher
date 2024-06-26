@@ -23,7 +23,7 @@ const (
 	pidNFields
 )
 
-func New(log logger.Logger) providers.Provider {
+func New(log logger.Logger) Provider {
 	return Provider{log: log}
 }
 
@@ -31,7 +31,7 @@ func (p Provider) Name() string {
 	return "Mercadona"
 }
 
-func (p Provider) FetchPrice(ctx context.Context, pid providers.ProductID) (float32, error) {
+func (p Provider) FetchPrice(ctx context.Context, pid providers.ProductCode) (float32, error) {
 	url := fmt.Sprintf(
 		"https://tienda.mercadona.es/api/products/%s/?lang=es&wh=%s",
 		pid[pidProductCode],
@@ -80,17 +80,17 @@ func (p Provider) FetchPrice(ctx context.Context, pid providers.ProductID) (floa
 	return float32(batchPrice), nil
 }
 
-func (p Provider) ValidateID(pid providers.ProductID) error {
-	if pid[pidProductCode] == "" {
+func (p Provider) ValidateCode(code providers.ProductCode) error {
+	if code[pidProductCode] == "" {
 		return errors.New("product code (ID 0) should not be empty")
 	}
 
-	if pid[pidZoneCode] == "" {
+	if code[pidZoneCode] == "" {
 		return errors.New("zone code (ID 1) should not be empty")
 	}
 
-	if pid[2] != "" {
-		return fmt.Errorf("unexpected field at index 2: %q", pid[2])
+	if code[2] != "" {
+		return fmt.Errorf("unexpected field at index 2: %q", code[2])
 	}
 
 	return nil

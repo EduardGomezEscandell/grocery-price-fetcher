@@ -151,7 +151,7 @@ func (s *SQL) SetProduct(p product.Product) (uint32, error) {
 		`
 		s.log.Trace(query)
 
-		argv := []any{p.ID, p.Name, p.BatchSize, p.Price, p.Provider.Name(), p.ProductID[0], p.ProductID[1], p.ProductID[2]}
+		argv := []any{p.ID, p.Name, p.BatchSize, p.Price, p.Provider.Name(), p.ProductCode[0], p.ProductCode[1], p.ProductCode[2]}
 
 		_, err := tx.ExecContext(s.ctx, query, argv...)
 		if err == nil {
@@ -196,9 +196,9 @@ func (s *SQL) DeleteProduct(ID uint32) error {
 
 func parseProduct(log logger.Logger, r interface{ Scan(...any) error }) (p product.Product, err error) {
 	var provider string
-	var providerID [3]string
+	var productCode [3]string
 
-	err = r.Scan(&p.ID, &p.Name, &p.BatchSize, &p.Price, &provider, &providerID[0], &providerID[1], &providerID[2])
+	err = r.Scan(&p.ID, &p.Name, &p.BatchSize, &p.Price, &provider, &productCode[0], &productCode[1], &productCode[2])
 	if errorIs(err, errKeyNotFound) {
 		return p, fs.ErrNotExist
 	} else if err != nil && strings.Contains(err.Error(), "sql: no rows in result set") { // MySQL terrible error handling
@@ -214,11 +214,11 @@ func parseProduct(log logger.Logger, r interface{ Scan(...any) error }) (p produ
 		p.Provider = prov
 	}
 
-	if err = p.Provider.ValidateID(providerID); err != nil {
+	if err = p.Provider.ValidateCode(productCode); err != nil {
 		log.Warningf("Provider %s: could not validate product ID: %v", p.Provider.Name(), err)
 		p.Provider = blank.Provider{}
 	} else {
-		p.ProductID = providerID
+		p.ProductCode = productCode
 	}
 
 	return p, nil

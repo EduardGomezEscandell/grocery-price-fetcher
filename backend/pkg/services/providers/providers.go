@@ -93,17 +93,17 @@ func (s Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Reque
 	return nil
 }
 
-func parseProductID(provider providers.Provider, code string) (providers.ProductID, error) {
-	pid := providers.ProductID{code}
+func parseProductID(provider providers.Provider, rawCode string) (providers.ProductCode, error) {
+	code := providers.ProductCode{rawCode}
 
 	if provider.Name() == "Mercadona" {
 		// Small cheat to avoid asking users for their postal code
-		pid[1] = "bcn1"
+		code[1] = "bcn1"
 	}
 
-	if err := provider.ValidateID(pid); err != nil {
-		return pid, httputils.Errorf(http.StatusBadRequest, "invalid code %q: %v", code, err)
+	if err := provider.ValidateCode(code); err != nil {
+		return code, httputils.Errorf(http.StatusBadRequest, "invalid code %q: %v", rawCode, err)
 	}
 
-	return pid, nil
+	return code, nil
 }

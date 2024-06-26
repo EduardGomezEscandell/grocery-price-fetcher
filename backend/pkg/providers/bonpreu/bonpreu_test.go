@@ -17,7 +17,7 @@ func TestBonpreuBadID(t *testing.T) {
 
 	p := bonpreu.New(testLogger())
 
-	_, err := p.FetchPrice(ctx, providers.ProductID{"0", "", ""})
+	_, err := p.FetchPrice(ctx, providers.ProductCode{"0", "", ""})
 	require.Error(t, err, "Product with ID 0 should not be found")
 }
 
@@ -27,7 +27,7 @@ func TestBonpreuGoodID(t *testing.T) {
 
 	p := bonpreu.New(testLogger())
 
-	price, err := p.FetchPrice(ctx, providers.ProductID{"90041", "", ""})
+	price, err := p.FetchPrice(ctx, providers.ProductCode{"90041", "", ""})
 	require.NoError(t, err, "Product with ID 90041 should be found")
 	require.Greater(t, price, float32(0), "expected price to be greater than 0")
 }

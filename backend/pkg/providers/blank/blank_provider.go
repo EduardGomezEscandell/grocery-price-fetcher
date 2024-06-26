@@ -14,7 +14,7 @@ func (Provider) Name() string {
 	return "NoProvider"
 }
 
-func (Provider) FetchPrice(ctx context.Context, pid providers.ProductID) (float32, error) {
+func (Provider) FetchPrice(ctx context.Context, pid providers.ProductCode) (float32, error) {
 	if pid[0] == "" {
 		return 0, nil
 	}
@@ -27,13 +27,13 @@ func (Provider) FetchPrice(ctx context.Context, pid providers.ProductID) (float3
 	return float32(price), nil
 }
 
-func (Provider) ValidateID(pid providers.ProductID) error {
-	if pid[1] != "" {
-		return fmt.Errorf("unexpected field at index 1: %q", pid[2])
+func (Provider) ValidateCode(code providers.ProductCode) error {
+	if code[1] != "" {
+		return fmt.Errorf("unexpected field at index 1: %q", code[2])
 	}
 
-	if pid[2] != "" {
-		return fmt.Errorf("unexpected field at index 2: %q", pid[2])
+	if code[2] != "" {
+		return fmt.Errorf("unexpected field at index 2: %q", code[2])
 	}
 
 	return nil
