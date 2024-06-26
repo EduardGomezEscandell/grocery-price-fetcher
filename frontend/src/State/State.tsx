@@ -5,14 +5,14 @@ export class Product {
         price: number,
         batch_size: number,
         provider: string,
-        provider_id: string,
+        provider_code: string,
     ) {
         this.id = id
         this.name = name
         this.price = price
         this.batch_size = batch_size
         this.provider = provider
-        this.product_id = provider_id
+        this.product_code = provider_code
     }
 
     static fromJSON(json: any): Product {
@@ -22,7 +22,7 @@ export class Product {
             json.price,
             json.batch_size,
             json.provider,
-            json.product_id[0],
+            json.product_code[0],
         )
     }
 
@@ -31,7 +31,7 @@ export class Product {
     price: number; // Price per batch
     batch_size: number;
     provider: string;
-    product_id: string;
+    product_code: string;
 }
 
 export class Dish {

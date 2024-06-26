@@ -58,7 +58,7 @@ export default function ProductEditor(props: Props) {
                         </div>
                         <div>
                             <span>Codi</span>
-                            <p>{p.product_id}</p>
+                            <p>{p.product_code}</p>
                         </div>
                         <div>
                             <span>Unitats a cada paquet</span>
@@ -111,15 +111,15 @@ export default function ProductEditor(props: Props) {
                         phase >= Stage.ID &&
                         <div>
                             <span>Codi</span>
-                            <input value={p.product_id} onChange={e => setProduct({ ...p, product_id: e.target.value })} />
+                            <input value={p.product_code} onChange={e => setProduct({ ...p, product_code: e.target.value })} />
                             {<ProviderLink
                                 provider={p.provider}
-                                providerId={p.product_id}
-                                key={`url+${p.provider}+${p.product_id}`}
+                                providerId={p.product_code}
+                                key={`url+${p.provider}+${p.product_code}`}
                             />}
                             <ProviderIDHelper provider={p.provider} />
                             <SearchProduct
-                                key={`search+${p.provider}+${p.product_id}`}
+                                key={`search+${p.provider}+${p.product_code}`}
                                 product={p}
                                 onSearch={(price: number, found: boolean) => {
                                     if (found) {
@@ -279,7 +279,7 @@ function SearchProduct(props: SearchProductProps): JSX.Element {
         return <>
             {button}
             <p id='error'>
-                No s'ha trobat cap producte a {props.product.provider} amb el codi <b>{props.product.product_id}</b>. Assegura't que el codi sigui correcte.
+                No s'ha trobat cap producte a {props.product.provider} amb el codi <b>{props.product.product_code}</b>. Assegura't que el codi sigui correcte.
             </p>
         </>
     }

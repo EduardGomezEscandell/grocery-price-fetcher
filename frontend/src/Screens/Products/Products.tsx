@@ -129,7 +129,7 @@ function NewProductRow(props: { onClick: () => void }): JSX.Element {
 }
 
 function ProductRow(props: { product: product, onClick: () => void }): JSX.Element {
-    const { name, batch_size, price, provider, product_id: provider_id } = props.product
+    const { name, batch_size, price, provider, product_code: provider_id } = props.product
 
     const text = round2(batch_size)
         + ' '
@@ -183,7 +183,7 @@ class product extends Product {
     comp: ComparableString;
 
     constructor(base: Product) {
-        super(base.id, base.name, base.price, base.batch_size, base.provider, base.product_id)
+        super(base.id, base.name, base.price, base.batch_size, base.provider, base.product_code)
         this.comp = new ComparableString(base.name)
     }
 

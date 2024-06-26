@@ -10,7 +10,7 @@ export default class ProviderEndpoint {
     }
 
     static Path(q: Query): string {
-        return ProviderEndpoint.path + encodeURI(`?provider=${q.provider}&id=${q.product_id}`)
+        return ProviderEndpoint.path + encodeURI(`?provider=${q.provider}&id=${q.product_code}`)
     }
 
     protected async get_uncached(q: Query): Promise<number> {
@@ -42,7 +42,7 @@ export default class ProviderEndpoint {
 
 interface Query {
     provider: string;
-    product_id: string;
+    product_code: string;
 }
 
 export class MockProvidersEndpoint extends ProviderEndpoint {
@@ -54,7 +54,7 @@ export class MockProvidersEndpoint extends ProviderEndpoint {
         const path = ProviderEndpoint.Path(q)
         console.log(`GET to ${path}`)
 
-        if (q.product_id === '404') {
+        if (q.product_code === '404') {
             // Mock a 404
             return new Promise(resolve => setTimeout(resolve, 1000))
                 .then(() => Promise.reject(new Response('Not Found', { status: 404 })))

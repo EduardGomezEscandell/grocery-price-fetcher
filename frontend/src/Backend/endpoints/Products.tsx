@@ -51,7 +51,7 @@ export default class ProductsEndpoint {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
-            body: JSON.stringify({...p, product_id: [p.product_id, "", ""]}),
+            body: JSON.stringify({...p, product_code: [p.product_code, "", ""]}),
         })
             .then(r => r.ok ? r : Promise.reject(r))
             .then(() => { })
@@ -113,13 +113,13 @@ export class MockProductsEndpoint extends ProductsEndpoint {
     }
 
     private static mockData = [
-        { id: 1, name: "Macarrons", price: 1.33, batch_size: 1, provider: 'Bonpreu', product_id: ['123', 'blabla'] },
-        { id: 2, name: "Ceba", price: 0.76, batch_size: 1, provider: 'Bonpreu', product_id: ['123', 'blabla'] },
-        { id: 3, name: "All", price: 0.88, batch_size: 3, provider: 'Mercadona', product_id: ['123', 'blabla'] },
-        { id: 4, name: "Tomàquet", price: 0.44, batch_size: 1, provider: 'Bonpreu', product_id: ['123', 'blabla'] },
-        { id: 5, name: "Oli", price: 0.2, batch_size: 1, provider: 'Bonpreu', product_id: ['123', 'blabla'] },
-        { id: 404, name: "Sal", price: 2.1, batch_size: 1, provider: 'Bonpreu', product_id: ['123', 'blabla'] },
-        { id: 6, name: "Pebre", price: 1.57, batch_size: 1, provider: 'Carrefour', product_id: ['123', 'blabla'] },
+        { id: 1, name: "Macarrons", price: 1.33, batch_size: 1, provider: 'Bonpreu', product_code: ['123', 'blabla'] },
+        { id: 2, name: "Ceba", price: 0.76, batch_size: 1, provider: 'Bonpreu', product_code: ['123', 'blabla'] },
+        { id: 3, name: "All", price: 0.88, batch_size: 3, provider: 'Mercadona', product_code: ['123', 'blabla'] },
+        { id: 4, name: "Tomàquet", price: 0.44, batch_size: 1, provider: 'Bonpreu', product_code: ['123', 'blabla'] },
+        { id: 5, name: "Oli", price: 0.2, batch_size: 1, provider: 'Bonpreu', product_code: ['123', 'blabla'] },
+        { id: 404, name: "Sal", price: 2.1, batch_size: 1, provider: 'Bonpreu', product_code: ['123', 'blabla'] },
+        { id: 6, name: "Pebre", price: 1.57, batch_size: 1, provider: 'Carrefour', product_code: ['123', 'blabla'] },
     ]
 
     protected async get_uncached(): Promise<Product[]> {
