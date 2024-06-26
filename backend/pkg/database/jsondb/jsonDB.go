@@ -14,11 +14,12 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/recipe"
 )
 
 type JSON struct {
 	products      []product.Product
-	recipes       []dbtypes.Recipe
+	recipes       []recipe.Recipe
 	menus         []dbtypes.Menu
 	pantries      []dbtypes.Pantry
 	shoppingLists []dbtypes.ShoppingList
@@ -158,35 +159,35 @@ func (db *JSON) DeleteProduct(ID product.ID) error {
 	return nil
 }
 
-func (db *JSON) Recipes() ([]dbtypes.Recipe, error) {
+func (db *JSON) Recipes() ([]recipe.Recipe, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	out := make([]dbtypes.Recipe, len(db.recipes))
+	out := make([]recipe.Recipe, len(db.recipes))
 	copy(out, db.recipes)
 	return out, nil
 }
 
-func (db *JSON) LookupRecipe(name string) (dbtypes.Recipe, bool) {
+func (db *JSON) LookupRecipe(name string) (recipe.Recipe, bool) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	i := slices.IndexFunc(db.recipes, func(p dbtypes.Recipe) bool {
+	i := slices.IndexFunc(db.recipes, func(p recipe.Recipe) bool {
 		return p.Name == name
 	})
 
 	if i == -1 {
-		return dbtypes.Recipe{}, false
+		return recipe.Recipe{}, false
 	}
 
 	return db.recipes[i], true
 }
 
-func (db *JSON) SetRecipe(r dbtypes.Recipe) error {
+func (db *JSON) SetRecipe(r recipe.Recipe) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	i := slices.IndexFunc(db.recipes, func(entry dbtypes.Recipe) bool {
+	i := slices.IndexFunc(db.recipes, func(entry recipe.Recipe) bool {
 		return entry.Name == r.Name
 	})
 
@@ -206,7 +207,7 @@ func (db *JSON) DeleteRecipe(name string) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	i := slices.IndexFunc(db.recipes, func(p dbtypes.Recipe) bool {
+	i := slices.IndexFunc(db.recipes, func(p recipe.Recipe) bool {
 		return p.Name == name
 	})
 

@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers/blank"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/recipe"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/recipes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/testutils"
 	"github.com/stretchr/testify/require"
@@ -41,13 +41,13 @@ func TestRecipes(t *testing.T) {
 
 			db := testutils.Database(t, "")
 			if !tc.emptyDB {
-				err := db.SetRecipe(dbtypes.Recipe{Name: "Water", Ingredients: []dbtypes.Ingredient{
+				err := db.SetRecipe(recipe.Recipe{Name: "Water", Ingredients: []recipe.Ingredient{
 					{ProductID: 1, Amount: 2},
 					{ProductID: 2, Amount: 1},
 				}})
 				require.NoError(t, err)
 
-				err = db.SetRecipe(dbtypes.Recipe{Name: "Juice", Ingredients: []dbtypes.Ingredient{
+				err = db.SetRecipe(recipe.Recipe{Name: "Juice", Ingredients: []recipe.Ingredient{
 					{ProductID: 3, Amount: 2.12},
 				}})
 				require.NoError(t, err)

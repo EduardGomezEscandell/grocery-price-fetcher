@@ -6,10 +6,10 @@ import (
 	"path"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/recipe"
 )
 
 type Service struct {
@@ -82,7 +82,7 @@ func (s Service) handleGet(log logger.Logger, w http.ResponseWriter, r *http.Req
 		return httputils.Errorf(http.StatusNotFound, "recipe %s not found", name)
 	}
 
-	body := recipe{
+	body := recipeMsg{
 		Name:        rec.Name,
 		Ingredients: make([]ingredient, 0, len(rec.Ingredients)),
 	}
@@ -127,14 +127,14 @@ func (s Service) handlePost(log logger.Logger, w http.ResponseWriter, r *http.Re
 		return httputils.Error(http.StatusBadRequest, "missing name")
 	}
 
-	var body recipe
+	var body recipeMsg
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		return httputils.Errorf(http.StatusBadRequest, "failed to read request: %v", err)
 	}
 
-	dbRecipe := dbtypes.Recipe{
+	dbRecipe := recipe.Recipe{
 		Name:        body.Name,
-		Ingredients: make([]dbtypes.Ingredient, 0, len(body.Ingredients)),
+		Ingredients: make([]recipe.Ingredient, 0, len(body.Ingredients)),
 	}
 
 	if len(body.Ingredients) > 1000 {
@@ -146,7 +146,7 @@ func (s Service) handlePost(log logger.Logger, w http.ResponseWriter, r *http.Re
 	}
 
 	for _, ing := range body.Ingredients {
-		dbRecipe.Ingredients = append(dbRecipe.Ingredients, dbtypes.Ingredient{
+		dbRecipe.Ingredients = append(dbRecipe.Ingredients, recipe.Ingredient{
 			ProductID: ing.ID,
 			Amount:    ing.Amount,
 		})
@@ -210,7 +210,7 @@ type ingredient struct {
 	UnitPrice float32    `json:"unit_price"`
 }
 
-type recipe struct {
+type recipeMsg struct {
 	Name        string       `json:"name"`
 	Ingredients []ingredient `json:"ingredients"`
 }

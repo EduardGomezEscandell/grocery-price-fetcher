@@ -17,6 +17,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers/blank"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/recipe"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/testutils"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/sirupsen/logrus"
@@ -202,9 +203,9 @@ func TestDBRecipes(t *testing.T) {
 	require.NoError(t, err)
 	p[1].ID = id
 
-	rec := dbtypes.Recipe{
+	rec := recipe.Recipe{
 		Name: "Water",
-		Ingredients: []dbtypes.Ingredient{
+		Ingredients: []recipe.Ingredient{
 			{ProductID: 1, Amount: 2},
 			{ProductID: 2, Amount: 1},
 		},
@@ -226,7 +227,7 @@ func TestDBRecipes(t *testing.T) {
 
 	recs, err = db.Recipes()
 	require.NoError(t, err)
-	require.ElementsMatch(t, []dbtypes.Recipe{rec}, recs)
+	require.ElementsMatch(t, []recipe.Recipe{rec}, recs)
 
 	rec.Ingredients[0].Amount = 3
 	err = db.SetRecipe(rec)
@@ -234,7 +235,7 @@ func TestDBRecipes(t *testing.T) {
 
 	recs, err = db.Recipes()
 	require.NoError(t, err)
-	require.ElementsMatch(t, []dbtypes.Recipe{rec}, recs)
+	require.ElementsMatch(t, []recipe.Recipe{rec}, recs)
 
 	err = db.DeleteRecipe(rec.Name)
 	require.NoError(t, err)
@@ -276,24 +277,24 @@ func TestDBMenus(t *testing.T) {
 		},
 	}
 
-	r := []dbtypes.Recipe{
+	r := []recipe.Recipe{
 		{
 			Name: "Water",
-			Ingredients: []dbtypes.Ingredient{
+			Ingredients: []recipe.Ingredient{
 				{ProductID: 13, Amount: 2},
 				{ProductID: 55, Amount: 1},
 			},
 		},
 		{
 			Name: "Hydrogen Peroxide",
-			Ingredients: []dbtypes.Ingredient{
+			Ingredients: []recipe.Ingredient{
 				{ProductID: 13, Amount: 2},
 				{ProductID: 55, Amount: 2},
 			},
 		},
 		{
 			Name: "Oxygen Gas",
-			Ingredients: []dbtypes.Ingredient{
+			Ingredients: []recipe.Ingredient{
 				{ProductID: 55, Amount: 2},
 			},
 		},
@@ -409,7 +410,7 @@ func TestDBPantries(t *testing.T) {
 
 	pantry := dbtypes.Pantry{
 		Name: "Test Pantry",
-		Contents: []dbtypes.Ingredient{
+		Contents: []recipe.Ingredient{
 			{ProductID: 13, Amount: 2165},
 			{ProductID: 55, Amount: 100},
 		},

@@ -1,18 +1,9 @@
 package dbtypes
 
-import "github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
-
-// Ingredient represents a single ingredient that is part of a recipe.
-type Ingredient struct {
-	ProductID product.ID `json:"product_id"`
-	Amount    float32    `json:"amount"`
-}
-
-// Recipe represents a recipe that can be used to prepare a dish.
-type Recipe struct {
-	Name        string
-	Ingredients []Ingredient
-}
+import (
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/recipe"
+)
 
 // Dish represents a single dish that is part of a meal.
 type Dish struct {
@@ -39,8 +30,8 @@ type Menu struct {
 }
 
 type Pantry struct {
-	Name     string       `json:"name"`
-	Contents []Ingredient `json:"contents"`
+	Name     string              `json:"name"`
+	Contents []recipe.Ingredient `json:"contents"`
 }
 
 type ShoppingList struct {

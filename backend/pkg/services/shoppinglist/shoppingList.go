@@ -14,6 +14,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/menuneeds"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/recipe"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/utils"
 )
 
@@ -173,23 +174,23 @@ type shoppingListItem struct {
 func (s *Service) computeShoppingList(log logger.Logger, menu dbtypes.Menu, pantry dbtypes.Pantry, done []product.ID) []shoppingListItem {
 	need := menuneeds.ComputeNeeds(log, s.db, menu)
 
-	slices.SortFunc(need, func(i, j dbtypes.Ingredient) int { return cmp.Compare(i.ProductID, j.ProductID) })
-	slices.SortFunc(pantry.Contents, func(i, j dbtypes.Ingredient) int { return cmp.Compare(i.ProductID, j.ProductID) })
+	slices.SortFunc(need, func(i, j recipe.Ingredient) int { return cmp.Compare(i.ProductID, j.ProductID) })
+	slices.SortFunc(pantry.Contents, func(i, j recipe.Ingredient) int { return cmp.Compare(i.ProductID, j.ProductID) })
 	slices.Sort(done)
 
 	tmpList := menuneeds.Subtract(need, pantry.Contents)
 
 	list := make([]shoppingListItem, 0, len(tmpList))
 	utils.Zipper(tmpList, done,
-		func(a dbtypes.Ingredient, id product.ID) int { return cmp.Compare(a.ProductID, id) },
-		func(a dbtypes.Ingredient) {
+		func(a recipe.Ingredient, id product.ID) int { return cmp.Compare(a.ProductID, id) },
+		func(a recipe.Ingredient) {
 			// This product is needed but not marked done
 			p, ok := getProduct(log, s.db, a.ProductID)
 			if ok {
 				list = append(list, newItem(p, a.Amount, false))
 			}
 		},
-		func(a dbtypes.Ingredient, id product.ID) {
+		func(a recipe.Ingredient, id product.ID) {
 			// This product is needed and marked done in the DB
 			p, ok := getProduct(log, s.db, a.ProductID)
 			if ok {

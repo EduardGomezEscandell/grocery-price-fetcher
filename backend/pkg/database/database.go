@@ -9,6 +9,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/mysql"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/recipe"
 	"gopkg.in/yaml.v3"
 )
 
@@ -18,9 +19,9 @@ type DB interface {
 	SetProduct(p product.Product) (product.ID, error)
 	DeleteProduct(ID product.ID) error
 
-	Recipes() ([]dbtypes.Recipe, error)
-	LookupRecipe(name string) (dbtypes.Recipe, bool)
-	SetRecipe(r dbtypes.Recipe) error
+	Recipes() ([]recipe.Recipe, error)
+	LookupRecipe(name string) (recipe.Recipe, bool)
+	SetRecipe(r recipe.Recipe) error
 	DeleteRecipe(name string) error
 
 	Menus() ([]dbtypes.Menu, error)

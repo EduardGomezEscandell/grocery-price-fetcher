@@ -9,6 +9,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/recipe"
 )
 
 type Service struct {
@@ -78,7 +79,7 @@ func (s *Service) handleGet(log logger.Logger, w http.ResponseWriter, r *http.Re
 	}
 
 	type Item struct {
-		dbtypes.Ingredient
+		recipe.Ingredient
 		Name string `json:"name"`
 	}
 

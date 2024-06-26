@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/recipe"
 )
 
 func (s *SQL) clearPanties(tx *sql.Tx) error {
@@ -104,15 +105,15 @@ func (s *SQL) queryPantries(tx *sql.Tx) ([]string, error) {
 	return pantries, nil
 }
 
-func (s *SQL) queryPantryContents(tx *sql.Tx, name string) ([]dbtypes.Ingredient, error) {
+func (s *SQL) queryPantryContents(tx *sql.Tx, name string) ([]recipe.Ingredient, error) {
 	r, err := tx.QueryContext(s.ctx, "SELECT product_id, amount FROM pantry_items WHERE pantry_name = ?", name)
 	if err != nil {
 		return nil, fmt.Errorf("could not query pantry items: %v", err)
 	}
 
-	items := make([]dbtypes.Ingredient, 0)
+	items := make([]recipe.Ingredient, 0)
 	for r.Next() {
-		var item dbtypes.Ingredient
+		var item recipe.Ingredient
 		if err := r.Scan(&item.ProductID, &item.Amount); err != nil {
 			return nil, fmt.Errorf("could not scan pantry item: %v", err)
 		}
@@ -175,7 +176,7 @@ func (s *SQL) SetPantry(p dbtypes.Pantry) error {
 	err = bulkInsert(s, tx,
 		"pantry_items (pantry_name, product_id, amount)",
 		p.Contents,
-		func(i dbtypes.Ingredient) []any {
+		func(i recipe.Ingredient) []any {
 			return []any{p.Name, i.ProductID, i.Amount}
 		})
 	if err != nil {

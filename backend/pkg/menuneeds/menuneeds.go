@@ -7,12 +7,13 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/recipe"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/utils"
 )
 
-func ComputeNeeds(log logger.Logger, db database.DB, m dbtypes.Menu) []dbtypes.Ingredient {
+func ComputeNeeds(log logger.Logger, db database.DB, m dbtypes.Menu) []recipe.Ingredient {
 	type recipeAmount struct {
-		recipe dbtypes.Recipe
+		recipe recipe.Recipe
 		amount float32
 	}
 
@@ -49,9 +50,9 @@ func ComputeNeeds(log logger.Logger, db database.DB, m dbtypes.Menu) []dbtypes.I
 	}
 
 	// Convert the map to a slice
-	out := make([]dbtypes.Ingredient, 0, len(need))
+	out := make([]recipe.Ingredient, 0, len(need))
 	for k, v := range need {
-		out = append(out, dbtypes.Ingredient{
+		out = append(out, recipe.Ingredient{
 			ProductID: k,
 			Amount:    v,
 		})
@@ -64,20 +65,20 @@ func ComputeNeeds(log logger.Logger, db database.DB, m dbtypes.Menu) []dbtypes.I
 // It returns a list of ingredients that are needed but not in the pantry.
 //
 // The input slices need and have must be sorted by ProductID. The output slice is also sorted by ProductID.
-func Subtract(need []dbtypes.Ingredient, have []dbtypes.Ingredient) []dbtypes.Ingredient {
-	items := make([]dbtypes.Ingredient, 0, len(need))
+func Subtract(need []recipe.Ingredient, have []recipe.Ingredient) []recipe.Ingredient {
+	items := make([]recipe.Ingredient, 0, len(need))
 
-	utils.Zipper(need, have, func(n, h dbtypes.Ingredient) int { return cmp.Compare(n.ProductID, h.ProductID) },
-		func(n dbtypes.Ingredient) {
+	utils.Zipper(need, have, func(n, h recipe.Ingredient) int { return cmp.Compare(n.ProductID, h.ProductID) },
+		func(n recipe.Ingredient) {
 			// This product is needed but not in the pantry
 			items = append(items, n)
 		},
-		func(n, h dbtypes.Ingredient) {
+		func(n, h recipe.Ingredient) {
 			// This product is needed and in the pantry
 			n.Amount = max(n.Amount-h.Amount, 0)
 			items = append(items, n)
 		},
-		func(h dbtypes.Ingredient) {
+		func(h recipe.Ingredient) {
 			// This product is in the pantry but not needed
 		})
 

@@ -9,6 +9,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers/blank"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/recipe"
 	"github.com/stretchr/testify/require"
 )
 
@@ -108,15 +109,15 @@ func RecipesTest(t *testing.T, openDB func() database.DB) {
 	_, ok := db.LookupRecipe("AAAAAAAAAAAAAAAAAAAAA")
 	require.False(t, ok)
 
-	recipe1 := dbtypes.Recipe{
+	recipe1 := recipe.Recipe{
 		Name: "Recipe #1",
-		Ingredients: []dbtypes.Ingredient{
+		Ingredients: []recipe.Ingredient{
 			{ProductID: 53, Amount: 1.0},
 			{ProductID: 87, Amount: 2.0},
 		},
 	}
 
-	recipe2 := dbtypes.Recipe{
+	recipe2 := recipe.Recipe{
 		Name:        "Recipe #2",
 		Ingredients: nil,
 	}
@@ -153,7 +154,7 @@ func RecipesTest(t *testing.T, openDB func() database.DB) {
 
 	menus, err := db.Recipes()
 	require.NoError(t, err)
-	require.ElementsMatch(t, []dbtypes.Recipe{recipe1, recipe2}, menus, "Recipes do not match the ones just created")
+	require.ElementsMatch(t, []recipe.Recipe{recipe1, recipe2}, menus, "Recipes do not match the ones just created")
 
 	_, ok = db.LookupRecipe("AAAAAAAAAAAAAAAAAAAAA")
 	require.False(t, ok)
@@ -166,7 +167,7 @@ func RecipesTest(t *testing.T, openDB func() database.DB) {
 	require.True(t, ok, "Could not find empty Recipe after reopening DB")
 	require.Equal(t, recipe2, p, "Empty menu does not match the one after reopening DB")
 
-	require.ElementsMatch(t, []dbtypes.Recipe{recipe1, recipe2}, menus, "Recipes do not match the ones after reopening DB")
+	require.ElementsMatch(t, []recipe.Recipe{recipe1, recipe2}, menus, "Recipes do not match the ones after reopening DB")
 
 	err = db.DeleteRecipe(recipe1.Name)
 	require.NoError(t, err)
@@ -278,7 +279,7 @@ func PantriesTest(t *testing.T, openDB func() database.DB) {
 
 	pantry1 := dbtypes.Pantry{
 		Name: "Pantry #1",
-		Contents: []dbtypes.Ingredient{
+		Contents: []recipe.Ingredient{
 			{ProductID: 33, Amount: 1.0},
 			{ProductID: 66, Amount: 2.0},
 		},
@@ -286,7 +287,7 @@ func PantriesTest(t *testing.T, openDB func() database.DB) {
 
 	pantry2 := dbtypes.Pantry{
 		Name:     "Pantry #2",
-		Contents: []dbtypes.Ingredient{},
+		Contents: []recipe.Ingredient{},
 	}
 
 	require.NoError(t, db.SetPantry(pantry1), "Could not set Pantry")

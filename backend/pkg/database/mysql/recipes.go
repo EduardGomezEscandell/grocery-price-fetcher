@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/recipe"
 )
 
 func (s *SQL) clearRecipes(tx *sql.Tx) (err error) {
@@ -57,7 +57,7 @@ func (s *SQL) createRecipes(tx *sql.Tx) error {
 	return nil
 }
 
-func (s *SQL) Recipes() ([]dbtypes.Recipe, error) {
+func (s *SQL) Recipes() ([]recipe.Recipe, error) {
 	tx, err := s.db.BeginTx(s.ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
 		return nil, fmt.Errorf("could not begin transaction: %v", err)
@@ -69,7 +69,7 @@ func (s *SQL) Recipes() ([]dbtypes.Recipe, error) {
 		return nil, fmt.Errorf("could not query recipes: %v", err)
 	}
 
-	recipes := make([]dbtypes.Recipe, 0, len(recs))
+	recipes := make([]recipe.Recipe, 0, len(recs))
 	for _, name := range recs {
 		rec, err := s.queryIngredients(tx, name)
 		if err != nil {
@@ -86,33 +86,33 @@ func (s *SQL) Recipes() ([]dbtypes.Recipe, error) {
 	return recipes, nil
 }
 
-func (s *SQL) LookupRecipe(name string) (dbtypes.Recipe, bool) {
+func (s *SQL) LookupRecipe(name string) (recipe.Recipe, bool) {
 	tx, err := s.db.BeginTx(s.ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
 		s.log.Errorf("could not begin transaction: %v", err)
-		return dbtypes.Recipe{}, false
+		return recipe.Recipe{}, false
 	}
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
 	row := tx.QueryRowContext(s.ctx, "SELECT name FROM recipes WHERE name = ?", name)
 	if err := row.Scan(&name); err != nil {
-		return dbtypes.Recipe{}, false
+		return recipe.Recipe{}, false
 	}
 
 	if err := row.Err(); err != nil {
 		s.log.Warningf("could not get recipe %s: %v", name, err)
-		return dbtypes.Recipe{}, false
+		return recipe.Recipe{}, false
 	}
 
 	rec, err := s.queryIngredients(tx, name)
 	if err != nil {
 		s.log.Warningf("could not get recipe %s: %v", name, err)
-		return dbtypes.Recipe{}, false
+		return recipe.Recipe{}, false
 	}
 
 	if err := tx.Commit(); err != nil {
 		s.log.Errorf("could not commit transaction: %v", err)
-		return dbtypes.Recipe{}, false
+		return recipe.Recipe{}, false
 	}
 
 	return rec, true
@@ -130,7 +130,7 @@ func (s *SQL) queryRecipes(tx *sql.Tx) ([]string, error) {
 
 	var recs []string
 	for r.Next() {
-		var rec dbtypes.Recipe
+		var rec recipe.Recipe
 		if err := r.Scan(&rec.Name); err != nil {
 			s.log.Warnf("could not scan: %v", err)
 			continue
@@ -145,8 +145,8 @@ func (s *SQL) queryRecipes(tx *sql.Tx) ([]string, error) {
 	return recs, nil
 }
 
-func (s *SQL) queryIngredients(tx *sql.Tx, recipe string) (dbtypes.Recipe, error) {
-	rec := dbtypes.Recipe{Name: recipe}
+func (s *SQL) queryIngredients(tx *sql.Tx, recipeName string) (recipe.Recipe, error) {
+	rec := recipe.Recipe{Name: recipeName}
 
 	query := `
 	SELECT
@@ -158,14 +158,14 @@ func (s *SQL) queryIngredients(tx *sql.Tx, recipe string) (dbtypes.Recipe, error
 	`
 
 	s.log.Tracef(query)
-	ingr, err := tx.QueryContext(s.ctx, query, recipe)
+	ingr, err := tx.QueryContext(s.ctx, query, recipeName)
 	if err != nil {
 		return rec, fmt.Errorf("could not query ingredients: %v", err)
 	}
 	defer ingr.Close()
 
 	for ingr.Next() {
-		var i dbtypes.Ingredient
+		var i recipe.Ingredient
 		var dummy string
 		if err := ingr.Scan(&dummy, &i.ProductID, &i.Amount); err != nil {
 			return rec, fmt.Errorf("could not scan ingredients: %v", err)
@@ -180,7 +180,7 @@ func (s *SQL) queryIngredients(tx *sql.Tx, recipe string) (dbtypes.Recipe, error
 	return rec, nil
 }
 
-func (s *SQL) SetRecipe(r dbtypes.Recipe) error {
+func (s *SQL) SetRecipe(r recipe.Recipe) error {
 	tx, err := s.db.BeginTx(s.ctx, nil)
 	if err != nil {
 		return fmt.Errorf("could not begin transaction: %v", err)
@@ -204,7 +204,7 @@ func (s *SQL) SetRecipe(r dbtypes.Recipe) error {
 
 	err = bulkInsert(s, tx,
 		"recipe_ingredients(recipe_name, ingredient_id, amount)",
-		r.Ingredients, func(i dbtypes.Ingredient) []interface{} {
+		r.Ingredients, func(i recipe.Ingredient) []interface{} {
 			return []interface{}{r.Name, i.ProductID, i.Amount}
 		})
 	if err != nil {
