@@ -37,7 +37,7 @@ func (s *SQL) createShoppingLists(tx *sql.Tx) error {
 			CREATE TABLE shopping_list_items (
 				menu_name VARCHAR(255) REFERENCES menus(name),
 				pantry_name VARCHAR(255) REFERENCES pantries(name),
-				product_id VARCHAR(255) REFERENCES products(name),
+				product_id INT UNSIGNED REFERENCES products(id),
 				PRIMARY KEY (menu_name, pantry_name, product_id)
 			)`,
 		},

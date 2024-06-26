@@ -40,9 +40,9 @@ func (s *SQL) createPantries(tx *sql.Tx) error {
 			query: `
 			CREATE TABLE pantry_items (
 				pantry_name VARCHAR(255) REFERENCES pantries(name),
-				product_name VARCHAR(255) REFERENCES products(name),
+				product_id INT UNSIGNED REFERENCES products(id),
 				amount FLOAT,
-				PRIMARY KEY (pantry_name, product_name)
+				PRIMARY KEY (pantry_name, product_id)
 			)`,
 		},
 	}
@@ -105,7 +105,7 @@ func (s *SQL) queryPantries(tx *sql.Tx) ([]string, error) {
 }
 
 func (s *SQL) queryPantryContents(tx *sql.Tx, name string) ([]dbtypes.Ingredient, error) {
-	r, err := tx.QueryContext(s.ctx, "SELECT product_name, amount FROM pantry_items WHERE pantry_name = ?", name)
+	r, err := tx.QueryContext(s.ctx, "SELECT product_id, amount FROM pantry_items WHERE pantry_name = ?", name)
 	if err != nil {
 		return nil, fmt.Errorf("could not query pantry items: %v", err)
 	}
@@ -173,7 +173,7 @@ func (s *SQL) SetPantry(p dbtypes.Pantry) error {
 	}
 
 	err = bulkInsert(s, tx,
-		"pantry_items (pantry_name, product_name, amount)",
+		"pantry_items (pantry_name, product_id, amount)",
 		p.Contents,
 		func(i dbtypes.Ingredient) []any {
 			return []any{p.Name, i.ProductID, i.Amount}
