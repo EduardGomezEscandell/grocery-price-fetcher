@@ -8,6 +8,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
 )
 
 type Service struct {
@@ -64,11 +65,11 @@ func (s Service) Handle(_ logger.Logger, w http.ResponseWriter, r *http.Request)
 	menu := r.PathValue("menu")
 	ingredientRaw := r.PathValue("ingredient")
 
-	tmp, err := strconv.ParseUint(ingredientRaw, 10, 32)
+	tmp, err := strconv.ParseUint(ingredientRaw, 10, product.IDSize)
 	if err != nil {
 		return httputils.Errorf(http.StatusBadRequest, "invalid ingredient ID %q: %v", ingredientRaw, err)
 	}
-	ingredient := uint32(tmp)
+	ingredient := product.ID(tmp)
 
 	resp, err := s.compute(menu, ingredient)
 	if err != nil {
@@ -82,7 +83,7 @@ func (s Service) Handle(_ logger.Logger, w http.ResponseWriter, r *http.Request)
 	return nil
 }
 
-func (s *Service) compute(menuName string, ingredientID uint32) ([]respBodyItem, error) {
+func (s *Service) compute(menuName string, ingredientID product.ID) ([]respBodyItem, error) {
 	menu, ok := s.db.LookupMenu(menuName)
 	if !ok {
 		return nil, httputils.Errorf(http.StatusNotFound, "menu %q not found", menuName)

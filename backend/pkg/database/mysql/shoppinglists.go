@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
 )
 
 func (s *SQL) clearShoppingLists(tx *sql.Tx) error {
@@ -66,7 +67,7 @@ func (s *SQL) ShoppingLists() ([]dbtypes.ShoppingList, error) {
 
 	type item struct {
 		Menu, Pantry string
-		ProductID    uint32
+		ProductID    product.ID
 	}
 
 	items := make([]item, 0)
@@ -101,7 +102,7 @@ func (s *SQL) ShoppingLists() ([]dbtypes.ShoppingList, error) {
 		{
 			Menu:     items[0].Menu,
 			Pantry:   items[0].Pantry,
-			Contents: []uint32{items[0].ProductID},
+			Contents: []product.ID{items[0].ProductID},
 		},
 	}
 
@@ -114,7 +115,7 @@ func (s *SQL) ShoppingLists() ([]dbtypes.ShoppingList, error) {
 		lists = append(lists, dbtypes.ShoppingList{
 			Menu:     items[i].Menu,
 			Pantry:   items[i].Pantry,
-			Contents: []uint32{items[i].ProductID},
+			Contents: []product.ID{items[i].ProductID},
 		})
 	}
 
@@ -125,7 +126,7 @@ func (s *SQL) LookupShoppingList(menu, pantry string) (dbtypes.ShoppingList, boo
 	sl := dbtypes.ShoppingList{
 		Menu:     menu,
 		Pantry:   pantry,
-		Contents: make([]uint32, 0),
+		Contents: make([]product.ID, 0),
 	}
 
 	tx, err := s.db.BeginTx(s.ctx, nil)
@@ -149,7 +150,7 @@ func (s *SQL) LookupShoppingList(menu, pantry string) (dbtypes.ShoppingList, boo
 	}
 
 	for r.Next() {
-		var ID uint32
+		var ID product.ID
 		if err := r.Scan(&ID); err != nil {
 			s.log.Warningf("could not scan: %v", err)
 			return sl, false
@@ -192,7 +193,7 @@ func (s *SQL) SetShoppingList(list dbtypes.ShoppingList) error {
 		return fmt.Errorf("could not delete old shopping list items: %v", err)
 	}
 
-	err = bulkInsert(s, tx, "shopping_list_items(menu_name, pantry_name, product_id)", list.Contents, func(ID uint32) []any {
+	err = bulkInsert(s, tx, "shopping_list_items(menu_name, pantry_name, product_id)", list.Contents, func(ID product.ID) []any {
 		return []any{list.Menu, list.Pantry, ID}
 	})
 	if err != nil {

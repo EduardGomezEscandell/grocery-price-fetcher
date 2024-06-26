@@ -98,7 +98,7 @@ func (db *JSON) Products() ([]product.Product, error) {
 	return out, nil
 }
 
-func (db *JSON) LookupProduct(ID uint32) (product.Product, error) {
+func (db *JSON) LookupProduct(ID product.ID) (product.Product, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
@@ -113,13 +113,13 @@ func (db *JSON) LookupProduct(ID uint32) (product.Product, error) {
 	return db.products[i], nil
 }
 
-func (db *JSON) SetProduct(p product.Product) (uint32, error) {
+func (db *JSON) SetProduct(p product.Product) (product.ID, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
 	if p.ID == 0 {
 		//nolint:gosec // This is not for security purposes
-		p.ID = rand.Uint32()
+		p.ID = product.ID(rand.Uint32())
 	}
 
 	i := slices.IndexFunc(db.products, func(entry product.Product) bool {
@@ -139,7 +139,7 @@ func (db *JSON) SetProduct(p product.Product) (uint32, error) {
 	return p.ID, nil
 }
 
-func (db *JSON) DeleteProduct(ID uint32) error {
+func (db *JSON) DeleteProduct(ID product.ID) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 

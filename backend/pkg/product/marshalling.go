@@ -56,7 +56,7 @@ func (p *Product) UnmarshalTSV(args []string) (err error) {
 }
 
 type jsonHelper struct {
-	ID          uint32    `json:"id"`
+	ID          ID        `json:"id"`
 	Name        string    `json:"name"`
 	BatchSize   float32   `json:"batch_size"`
 	Price       float32   `json:"price"`

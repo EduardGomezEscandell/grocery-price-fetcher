@@ -8,6 +8,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/menuneeds"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
 )
 
 type Service struct {
@@ -74,9 +75,9 @@ func (s *Service) handleGet(log logger.Logger, w http.ResponseWriter, r *http.Re
 
 	// Build response
 	type Item struct {
-		ProductID uint32  `json:"product_id"`
-		Name      string  `json:"name"`
-		Amount    float32 `json:"amount"`
+		ProductID product.ID `json:"product_id"`
+		Name      string     `json:"name"`
+		Amount    float32    `json:"amount"`
 	}
 
 	var items []Item

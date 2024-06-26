@@ -9,6 +9,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
 )
 
 type Service struct {
@@ -203,10 +204,10 @@ func (s Service) handleDelete(_ logger.Logger, w http.ResponseWriter, r *http.Re
 }
 
 type ingredient struct {
-	ID        uint32  `json:"id"`
-	Name      string  `json:"name"`
-	Amount    float32 `json:"amount"`
-	UnitPrice float32 `json:"unit_price"`
+	ID        product.ID `json:"id"`
+	Name      string     `json:"name"`
+	Amount    float32    `json:"amount"`
+	UnitPrice float32    `json:"unit_price"`
 }
 
 type recipe struct {

@@ -490,7 +490,7 @@ func TestDBShoopingLists(t *testing.T) {
 	sl := dbtypes.ShoppingList{
 		Menu:     "My test menu",
 		Pantry:   "My test pantry",
-		Contents: []uint32{1},
+		Contents: []product.ID{1},
 	}
 
 	pantries, err := db.ShoppingLists()

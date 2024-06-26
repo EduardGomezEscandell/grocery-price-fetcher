@@ -96,7 +96,7 @@ func (s *SQL) Products() ([]product.Product, error) {
 	return products, nil
 }
 
-func (s *SQL) LookupProduct(ID uint32) (product.Product, error) {
+func (s *SQL) LookupProduct(ID product.ID) (product.Product, error) {
 	query := `
 	SELECT
 		id,
@@ -125,7 +125,7 @@ func (s *SQL) LookupProduct(ID uint32) (product.Product, error) {
 	return p, nil
 }
 
-func (s *SQL) SetProduct(p product.Product) (uint32, error) {
+func (s *SQL) SetProduct(p product.Product) (product.ID, error) {
 	tx, err := s.db.BeginTx(s.ctx, nil)
 	if err != nil {
 		return 0, fmt.Errorf("could not start transaction: %v", err)
@@ -138,7 +138,7 @@ func (s *SQL) SetProduct(p product.Product) (uint32, error) {
 		// We never expect to have anywhere near 2^32 (4.3 billion) products
 		// Collisions are extremely unlikely, but taken care of with the loop
 		verb = "INSERT"
-		p.ID = rand.Uint32() //nolint:gosec // We don't need a secure random number here
+		p.ID = product.ID(rand.Uint32()) //nolint:gosec // We don't need a secure random number here
 	}
 
 	for {
@@ -163,7 +163,7 @@ func (s *SQL) SetProduct(p product.Product) (uint32, error) {
 		if errors.As(err, &target) && target.Number == errKeyExists {
 			// Key conflict: generate a new ID
 			//nolint:gosec // We don't need a secure random number here
-			p.ID = rand.Uint32()
+			p.ID = product.ID(rand.Uint32())
 			continue
 		}
 
@@ -178,7 +178,7 @@ func (s *SQL) SetProduct(p product.Product) (uint32, error) {
 	return p.ID, nil
 }
 
-func (s *SQL) DeleteProduct(ID uint32) error {
+func (s *SQL) DeleteProduct(ID product.ID) error {
 	query := `DELETE FROM products WHERE id = ?`
 	s.log.Trace(query)
 
