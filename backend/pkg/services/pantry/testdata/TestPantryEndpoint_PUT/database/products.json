@@ -1,5 +1,6 @@
 [
     {
+        "id": 1,
         "name": "Cereal",
         "batch_size": 1,
         "provider": "NoProvider",
@@ -8,6 +9,7 @@
         ]
     },
     {
+        "id": 2,
         "name": "Orange Juice",
         "batch_size": 1000,
         "provider": "NoProvider",
