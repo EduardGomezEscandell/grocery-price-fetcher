@@ -9,7 +9,7 @@
                         "name": "breakfast",
                         "dishes": [
                             {
-                                "name": "Fruit salad",
+                                "recipe_id": 3,
                                 "amount": 2
                             }
                         ]

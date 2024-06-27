@@ -6,29 +6,38 @@ import RecipeEditor from './RecipeEditor';
 import { useNavigate } from 'react-router-dom';
 import ComparableString from '../../ComparableString/ComparableString';
 import { Recipe } from '../../Backend/endpoints/Recipe';
+import { Dish } from '../../State/State';
 
 interface Props {
     backend: Backend;
     sessionName: string;
 }
 
+interface SearchableDish {
+    id: number;
+    name: ComparableString;
+}
+
 export default function Recipes(props: Props) {
     const [sideBar, setSidebar] = useState(false)
     const [help, setHelp] = useState(false)
 
-    const [recipes, setRecipes] = useState<ComparableString[]>([])
+    const [recipes, setRecipes] = useState<SearchableDish[]>([])
     const [loaded, setLoaded] = useState(false)
     const [query, setQuery] = useState(new ComparableString(''))
     const [hidden, setHidden] = useState<string[]>([])
 
     const result = recipes
-        .filter(r => !hidden.includes(r.displayName))
-        .filter((r) => r.contains(query))
+        .filter(r => !hidden.includes(r.name.displayName))
+        .filter((r) => r.name.contains(query))
 
     if (!loaded) {
         props.backend.Dishes()
             .GET()
-            .then((d) => d.map(r => new ComparableString(r)))
+            .then((d) => d.map(r => {
+                return { id: r.id, name: new ComparableString(r.name) } as SearchableDish
+            }
+            ))
             .then(setRecipes)
             .then(() => setLoaded(true))
     }
@@ -62,28 +71,31 @@ export default function Recipes(props: Props) {
                             <NewRecipe
                                 onClick={() => {
                                     const name = (() => {
-                                        if (query.displayName !== '' && !recipes.find(a => query.equals(a))) {
+                                        if (query.displayName !== '' && !recipes.find(a => query.equals(a.name))) {
                                             return query.displayName
                                         }
 
                                         const name = `Nova recepta`
-                                        if (!recipes.find(a => a.displayName === name)) {
+                                        if (!recipes.find(a => a.name.displayName === name)) {
                                             return name
                                         }
 
                                         for (let i = 1; ; i++) {
                                             const name = `Nova recepta ${i}`
-                                            if (!recipes.find(a => a.displayName === name)) {
+                                            if (!recipes.find(a => a.name.displayName === name)) {
                                                 return name
                                             }
                                         }
                                     })()
 
                                     props.backend
-                                        .Recipe(props.sessionName, name)
-                                        .POST(new Recipe(name, []))
-                                        .then(() => {
-                                            setRecipes([new ComparableString(name), ...recipes])
+                                        .Recipe(props.sessionName, 0)
+                                        .POST(new Recipe(0, name, []))
+                                        .then((id: number) => {
+                                            setRecipes([
+                                                { id: id, name: new ComparableString(name) },
+                                                ...recipes
+                                            ])
                                         })
                                 }}
                             />
@@ -91,14 +103,14 @@ export default function Recipes(props: Props) {
                         {
                             result.map((r) => (
                                 <RecipeEditor
-                                    key={r.displayName}
+                                    key={r.id}
                                     backend={props.backend}
                                     sessionName={props.sessionName}
-                                    dish={r.displayName}
-                                    setHidden={() => setHidden([...hidden, r.displayName])}
+                                    dish={new Dish(r.id, r.name.displayName, 0)}
+                                    setHidden={() => setHidden([...hidden, r.name.displayName])}
                                     onRename={(newName: string) => {
-                                        const idx = recipes.findIndex(a => a.displayName === r.displayName)
-                                        recipes[idx] = new ComparableString(newName)
+                                        const idx = recipes.findIndex(a => a.id === r.id)
+                                        recipes[idx].name = new ComparableString(newName)
                                         setRecipes(recipes)
                                     }}
                                 />

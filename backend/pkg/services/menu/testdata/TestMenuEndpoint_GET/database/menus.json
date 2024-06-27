@@ -6,19 +6,19 @@
             "meals": [{
                 "name": "breakfast",
                 "dishes": [{
-                    "name": "cereal",
+                    "recipe_id": 1,
                     "amount": 1
                 }, {
-                    "name": "OJ",
+                    "recipe_id": 2,
                     "amount": 330
                 }]
             },{
                 "name": "lunch",
                 "dishes": [{
-                    "name": "sandwich",
+                    "recipe_id": 3,
                     "amount": 2
                 }, {
-                    "name": "apple",
+                    "recipe_id": 4,
                     "amount": 2
                 }]
             }]
@@ -27,7 +27,7 @@
             "meals": [{
                 "name": "breakfast",
                 "dishes": [{
-                    "name": "cereal",
+                    "recipe_id": 1,
                     "amount": 5
                 }]
             }]

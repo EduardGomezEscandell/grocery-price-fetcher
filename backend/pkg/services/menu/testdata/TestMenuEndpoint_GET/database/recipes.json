@@ -8,7 +8,7 @@
                 "amount": 0.1
             },
             {
-                "product_id": 3,
+                "product_id": 2,
                 "amount": 0.5
             }
         ]
@@ -18,9 +18,19 @@
         "Name": "OJ",
         "Ingredients": [
             {
-                "product_id": 2,
+                "product_id": 3,
                 "amount": 330
             }
         ]
+    },
+    {
+        "ID": 3,
+        "Name": "Sandwich",
+        "Ingredients": []
+    },
+    {
+        "ID": 4,
+        "Name": "Apple",
+        "Ingredients": []
     }
 ]

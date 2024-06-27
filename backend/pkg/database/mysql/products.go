@@ -2,16 +2,13 @@ package mysql
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"io/fs"
-	"strings"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers/blank"
-	"github.com/go-sql-driver/mysql"
 )
 
 func (s *SQL) clearProducts(tx *sql.Tx) error {
@@ -158,8 +155,7 @@ func (s *SQL) SetProduct(p product.Product) (product.ID, error) {
 			break
 		}
 
-		target := (&mysql.MySQLError{})
-		if errors.As(err, &target) && target.Number == errKeyExists {
+		if errorIs(err, errKeyExists) {
 			// Key conflict: generate a new ID
 			p.ID = product.NewRandomID()
 			continue
@@ -198,8 +194,6 @@ func parseProduct(log logger.Logger, r interface{ Scan(...any) error }) (p produ
 
 	err = r.Scan(&p.ID, &p.Name, &p.BatchSize, &p.Price, &provider, &productCode[0], &productCode[1], &productCode[2])
 	if errorIs(err, errKeyNotFound) {
-		return p, fs.ErrNotExist
-	} else if err != nil && strings.Contains(err.Error(), "sql: no rows in result set") { // MySQL terrible error handling
 		return p, fs.ErrNotExist
 	} else if err != nil {
 		return p, fmt.Errorf("could not scan product: %v", err)

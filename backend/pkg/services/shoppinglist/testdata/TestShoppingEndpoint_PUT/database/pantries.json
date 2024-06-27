@@ -3,7 +3,7 @@
         "name": "testpantry1",
         "contents": [
             {
-                "name": "Water",
+                "product_id": 3,
                 "amount": 5
             },
             {

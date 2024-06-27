@@ -62,9 +62,9 @@ export class MockPantryEndpoint extends PantryEndpoint {
         return new Promise(resolve => setTimeout(resolve, 100))
             .then(() => Pantry.fromJSON({
                 name: this.which, contents: [
-                    { name: "Albercocs", amount: 7 },
-                    { name: "Pastanaga", amount: 3 },
-                    { name: "Iogurt", amount: 2 },
+                    { product_id: 1, name: "Albercocs", amount: 7 },
+                    { product_id: 2, name: "Pastanaga", amount: 3 },
+                    { product_id: 3, name: "Iogurt", amount: 2 },
                 ]
             }),
         )

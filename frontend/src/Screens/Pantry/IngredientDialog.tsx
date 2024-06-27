@@ -1,10 +1,10 @@
 import React from 'react';
-import { PantryItem } from '../../State/State';
+import { Ingredient } from '../../State/State';
 import { IngredientUsage } from '../../Backend/endpoints/IngredientUse';
 
 
 interface Props {
-    item: PantryItem;
+    item: Ingredient;
     usage: IngredientUsage[];
     onClose: () => void;
 }

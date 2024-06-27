@@ -10,6 +10,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/recipe"
 )
 
 // ProductData represents a the need for a product and its unit cost.
@@ -84,7 +85,7 @@ func (s *Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 		return httputils.Errorf(http.StatusNotFound, "menu %s not found", m)
 	}
 
-	if err := json.NewEncoder(w).Encode(menu); err != nil {
+	if err := s.writeMenu(w, menu); err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "could not write menus to output: %w", err)
 	}
 
@@ -136,4 +137,63 @@ func (s Service) UpdateMenu(log logger.Logger, menu dbtypes.Menu) error {
 	}
 
 	return nil
+}
+
+// writeMenu writes the menu to the output stream, adding the names to the dishes.
+func (s *Service) writeMenu(w io.Writer, m dbtypes.Menu) error {
+	type msgDish struct {
+		RecipeID recipe.ID `json:"recipe_id"`
+		Name     string    `json:"name"`
+		Amount   float32   `json:"amount"`
+	}
+
+	type msgMeal struct {
+		Name   string    `json:"name"`
+		Dishes []msgDish `json:"dishes"`
+	}
+
+	type msgDay struct {
+		Name  string    `json:"name"`
+		Meals []msgMeal `json:"meals"`
+	}
+
+	type msgMenu struct {
+		Name string   `json:"name"`
+		Days []msgDay `json:"days"`
+	}
+
+	var days []msgDay
+	for _, d := range m.Days {
+		var meals []msgMeal
+		for _, m := range d.Meals {
+			var dishes []msgDish
+			for _, dish := range m.Dishes {
+				recipe, err := s.db.LookupRecipe(dish.ID)
+				if err != nil {
+					continue
+				}
+
+				dishes = append(dishes, msgDish{
+					RecipeID: recipe.ID,
+					Name:     recipe.Name,
+					Amount:   dish.Amount,
+				})
+			}
+
+			meals = append(meals, msgMeal{
+				Name:   m.Name,
+				Dishes: dishes,
+			})
+		}
+
+		days = append(days, msgDay{
+			Name:  d.Name,
+			Meals: meals,
+		})
+	}
+
+	return json.NewEncoder(w).Encode(msgMenu{
+		Name: m.Name,
+		Days: days,
+	})
 }

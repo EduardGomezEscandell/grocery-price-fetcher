@@ -14,11 +14,12 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/recipe"
 )
 
 type JSON struct {
 	products      []product.Product
-	recipes       []dbtypes.Recipe
+	recipes       []recipe.Recipe
 	menus         []dbtypes.Menu
 	pantries      []dbtypes.Pantry
 	shoppingLists []dbtypes.ShoppingList
@@ -158,38 +159,43 @@ func (db *JSON) DeleteProduct(ID product.ID) error {
 	return nil
 }
 
-func (db *JSON) Recipes() ([]dbtypes.Recipe, error) {
+func (db *JSON) Recipes() ([]recipe.Recipe, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	out := make([]dbtypes.Recipe, len(db.recipes))
+	out := make([]recipe.Recipe, len(db.recipes))
 	copy(out, db.recipes)
 	return out, nil
 }
 
-func (db *JSON) LookupRecipe(name string) (dbtypes.Recipe, bool) {
+func (db *JSON) LookupRecipe(id recipe.ID) (recipe.Recipe, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	i := slices.IndexFunc(db.recipes, func(p dbtypes.Recipe) bool {
-		return p.Name == name
+	i := slices.IndexFunc(db.recipes, func(p recipe.Recipe) bool {
+		return p.ID == id
 	})
 
 	if i == -1 {
-		return dbtypes.Recipe{}, false
+		return recipe.Recipe{}, fs.ErrNotExist
 	}
 
-	return db.recipes[i], true
+	return db.recipes[i], nil
 }
 
-func (db *JSON) SetRecipe(r dbtypes.Recipe) error {
+func (db *JSON) SetRecipe(r recipe.Recipe) (recipe.ID, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	i := slices.IndexFunc(db.recipes, func(entry dbtypes.Recipe) bool {
-		return entry.Name == r.Name
-	})
+	for r.ID == 0 {
+		newID := recipe.NewRandomID()
+		idx := slices.IndexFunc(db.recipes, func(entry recipe.Recipe) bool { return entry.ID == newID })
+		if idx == -1 {
+			r.ID = newID
+		}
+	}
 
+	i := slices.IndexFunc(db.recipes, func(entry recipe.Recipe) bool { return entry.ID == r.ID })
 	if i == -1 {
 		db.recipes = append(db.recipes, r)
 	} else {
@@ -197,21 +203,22 @@ func (db *JSON) SetRecipe(r dbtypes.Recipe) error {
 	}
 
 	if err := db.save(); err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+
+	return r.ID, nil
 }
 
-func (db *JSON) DeleteRecipe(name string) error {
+func (db *JSON) DeleteRecipe(id recipe.ID) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	i := slices.IndexFunc(db.recipes, func(p dbtypes.Recipe) bool {
-		return p.Name == name
+	i := slices.IndexFunc(db.recipes, func(p recipe.Recipe) bool {
+		return p.ID == id
 	})
 
 	if i == -1 {
-		return fmt.Errorf("recipe %q not found", name)
+		return fmt.Errorf("recipe %d not found", id)
 	}
 
 	db.recipes = append(db.recipes[:i], db.recipes[i+1:]...)

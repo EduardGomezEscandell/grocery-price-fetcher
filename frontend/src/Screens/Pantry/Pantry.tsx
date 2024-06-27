@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Pantry, PantryItem, ShoppingNeeds, ShoppingNeedsItem } from '../../State/State';
+import { Pantry, Ingredient, ShoppingNeeds } from '../../State/State';
 import Backend from '../../Backend/Backend';
 import TopBar from '../../TopBar/TopBar';
 import SaveButton from '../../SaveButton/SaveButton';
@@ -17,7 +17,7 @@ interface Props {
 }
 
 interface Focus {
-    item: PantryItem
+    item: Ingredient
     usage: IngredientUsage[]
 }
 
@@ -30,7 +30,7 @@ enum Dialog {
 
 export default function RenderPantry(pp: Props) {
     const [pantry, setPantry] = useState<Pantry>(new Pantry(pp.sessionName))
-    const [focussed, setFocussed] = useState<Focus>({ item: new PantryItem(0, "", 0), usage: [] })
+    const [focussed, setFocussed] = useState<Focus>({ item: new Ingredient(0, "", 0), usage: [] })
     const navigate = useNavigate()
 
     const [dialog, setDialog] = useState(Dialog.OFF)
@@ -93,7 +93,7 @@ export default function RenderPantry(pp: Props) {
                         </thead>
                         <tbody>
                             {
-                                pantry.contents.map((i: ShoppingNeedsItem, idx: number) => (
+                                pantry.contents.map((i: Ingredient, idx: number) => (
                                     <IngredientRow
                                         key={i.name}
                                         id={idx % 2 === 0 ? 'even' : 'odd'}
@@ -200,21 +200,21 @@ function compare(x:number, y:number): number {
 // - Items are sorted alphabetically.
 function filterPantry(pantry: Pantry, needs: ShoppingNeeds): Pantry {
     const filtered = new Pantry(pantry.name)
-    pantry.contents.sort((a, b) => compare(a.id, b.id))
-    needs.items.sort((a, b) => compare(a.id, b.id))
+    pantry.contents.sort((a, b) => compare(a.product_id, b.product_id))
+    needs.items.sort((a, b) => compare(a.product_id, b.product_id))
 
     let i = 0;
     let j = 0;
 
     while (i < pantry.contents.length && j < needs.items.length) {
-        const comp = compare(pantry.contents[i].id, needs.items[j].id)
+        const comp = compare(pantry.contents[i].product_id, needs.items[j].product_id)
         if (comp < 0) {
             // Ingredient in pantry but not in needs
             i++
         } else if (comp > 0) {
             // Ingredient in needs but not in pantry
             filtered.contents.push({
-                id: needs.items[j].id,
+                product_id: needs.items[j].product_id,
                 name: needs.items[j].name,
                 amount: 0,
             })
@@ -229,7 +229,7 @@ function filterPantry(pantry: Pantry, needs: ShoppingNeeds): Pantry {
 
     while (j < needs.items.length) {
         filtered.contents.push({
-            id: needs.items[j].id,
+            product_id: needs.items[j].product_id,
             name: needs.items[j].name,
             amount: 0,
         })

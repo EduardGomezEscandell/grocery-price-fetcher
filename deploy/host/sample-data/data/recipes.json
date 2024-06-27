@@ -1,5 +1,6 @@
 [
     {
+        "ID": 1,
         "Name": "Amanida de cigrons",
         "Ingredients": [
             {
@@ -33,6 +34,7 @@
         ]
     },
     {
+        "ID": 2,
         "Name": "Amanida de llenties",
         "Ingredients": [
             {
@@ -66,6 +68,7 @@
         ]
     },
     {
+        "ID": 3,
         "Name": "Cigrons amb xoriço",
         "Ingredients": [
             {
@@ -79,6 +82,7 @@
         ]
     },
     {
+        "ID": 4,
         "Name": "Llenties amb xoriço",
         "Ingredients": [
             {
@@ -92,6 +96,7 @@
         ]
     },
     {
+        "ID": 5,
         "Name": "Arròs amb ou",
         "Ingredients": [
             {
@@ -109,6 +114,7 @@
         ]
     },
     {
+        "ID": 6,
         "Name": "Arròs amb sofregit",
         "Ingredients": [
             {
@@ -146,6 +152,7 @@
         ]
     },
     {
+        "ID": 7,
         "Name": "Cereals amb llet",
         "Ingredients": [
             {
@@ -159,6 +166,7 @@
         ]
     },
     {
+        "ID": 8,
         "Name": "Flocs de civada",
         "Ingredients": [
             {
@@ -176,6 +184,7 @@
         ]
     },
     {
+        "ID": 9,
         "Name": "Flocs de civada",
         "Ingredients": [
             {
@@ -189,6 +198,7 @@
         ]
     },
     {
+        "ID": 10,
         "Name": "Torrada i suc de taronja",
         "Ingredients": [
             {
@@ -206,6 +216,7 @@
         ]
     },
     {
+        "ID": 11,
         "Name": "Cafè",
         "Ingredients": [
             {
@@ -215,6 +226,7 @@
         ]
     },
     {
+        "ID": 12,
         "Name": "Fajita",
         "Ingredients": [
             {
@@ -244,6 +256,7 @@
         ]
     },
     {
+        "ID": 13,
         "Name": "Fruita",
         "Ingredients": [
             {
@@ -253,6 +266,7 @@
         ]
     },
     {
+        "ID": 14,
         "Name": "Hamburguesa",
         "Ingredients": [
             {
@@ -270,6 +284,7 @@
         ]
     },
     {
+        "ID": 15,
         "Name": "Proteïna amb acompanyament",
         "Ingredients": [
             {
@@ -287,6 +302,7 @@
         ]
     },
     {
+        "ID": 16,
         "Name": "Vurguer",
         "Ingredients": [
             {
@@ -316,6 +332,7 @@
         ]
     },
     {
+        "ID": 17,
         "Name": "Iogurt",
         "Ingredients": [
             {
@@ -325,6 +342,7 @@
         ]
     },
     {
+        "ID": 18,
         "Name": "Iogurt vegà",
         "Ingredients": [
             {
@@ -334,6 +352,7 @@
         ]
     },
     {
+        "ID": 19,
         "Name": "Macarrons amb sofregit",
         "Ingredients": [
             {
@@ -367,6 +386,7 @@
         ]
     },
     {
+        "ID": 20,
         "Name": "Macarrons amb sofregit vegà",
         "Ingredients": [
             {
@@ -400,6 +420,7 @@
         ]
     },
     {
+        "ID": 21,
         "Name": "Bastonets i hummus",
         "Ingredients": [
             {
@@ -413,6 +434,7 @@
         ]
     },
     {
+        "ID": 22,
         "Name": "Pica-pica",
         "Ingredients": [
             {
@@ -426,6 +448,7 @@
         ]
     },
     {
+        "ID": 23,
         "Name": "Puré de patata",
         "Ingredients": [
             {
@@ -439,6 +462,7 @@
         ]
     },
     {
+        "ID": 24,
         "Name": "Sopa de galets",
         "Ingredients": [
             {
@@ -452,6 +476,7 @@
         ]
     },
     {
+        "ID": 25,
         "Name": "Torrada d'alvocat",
         "Ingredients": [
             {
@@ -473,6 +498,7 @@
         ]
     },
     {
+        "ID": 26,
         "Name": "Ramen",
         "Ingredients": [
             {
@@ -514,6 +540,7 @@
         ]
     },
     {
+        "ID": 27,
         "Name": "Truita francesa",
         "Ingredients": [
             {
@@ -523,6 +550,7 @@
         ]
     },
     {
+        "ID": 28,
         "Name": "Llom amb acompanyament",
         "Ingredients": [
             {
@@ -540,6 +568,7 @@
         ]
     },
     {
+        "ID": 29,
         "Name": "Pollastre amb acompanyament",
         "Ingredients": [
             {
@@ -557,6 +586,7 @@
         ]
     },
     {
+        "ID": 30,
         "Name": "Peix amb acompanyament",
         "Ingredients": [
             {
@@ -574,6 +604,7 @@
         ]
     },
     {
+        "ID": 31,
         "Name": "Ravioli",
         "Ingredients": [
             {

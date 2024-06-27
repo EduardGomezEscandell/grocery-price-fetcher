@@ -10,15 +10,20 @@ import { Product } from '../../State/State'
 interface Props {
     backend: Backend
     sessionName: string
-    dish: string
+    dish: Dish;
 
     setHidden: () => void
     onRename: (r: string) => void
 }
 
+interface Dish {
+    name: string
+    id: number
+}
+
 export default function RecipeEditor(props: Props): JSX.Element {
     const [folded, setFolded] = useState(true)
-    const [title, _setTitle] = useState<string>(props.dish)
+    const [title, _setTitle] = useState<string>(props.dish.name)
     const setTitle = (t: string) => {
         props.onRename(t)
         _setTitle(t)
@@ -46,9 +51,9 @@ export default function RecipeEditor(props: Props): JSX.Element {
             id='expanded'
         >
             <RecipeCard
-                recipeEP={props.backend.Recipe(props.sessionName, title)}
+                recipeEP={props.backend.Recipe(props.sessionName, props.dish.id)}
                 productsEP={props.backend.Products(props.sessionName)}
-                recipe={title}
+                dish={{id: props.dish.id, name: title}}
                 key={title}
                 setTitle={setTitle}
                 setDeleted={props.setHidden}
@@ -62,18 +67,18 @@ interface RecipeCardProps {
     recipeEP: RecipeEndpoint
     productsEP: ProductsEndpoint
 
-    recipe: string
+    dish: Dish
     setTitle: (r: string) => void
     setFolded: () => void
     setDeleted: () => void
 }
 
 function RecipeCard(props: RecipeCardProps): JSX.Element {
-    const [title, setTitle] = useState(props.recipe)
+    const [title, setTitle] = useState(props.dish.name)
     const [ingredients, _setIngredients] = useState<Ingredient[]>([])
     const [loaded, setLoaded] = useState(false)
     const [total, _setTotal] = useState(0)
-    const [backup, setBackup] = useState(new Recipe(props.recipe, ingredients))
+    const [backup, setBackup] = useState(new Recipe(props.dish.id, props.dish.name, ingredients))
     const [editing, setEditing] = useState(false)
     const [deletePage, setDeletePage] = useState(false)
 
@@ -86,7 +91,7 @@ function RecipeCard(props: RecipeCardProps): JSX.Element {
         props.recipeEP
             .GET()
             .then((r) => {
-                setBackup(deepNewRecipe(r.name, r.ingredients))
+                setBackup(deepNewRecipe(r.id, r.name, r.ingredients))
                 setIngredients(r.ingredients)
             })
             .then(() => setLoaded(true))
@@ -188,20 +193,28 @@ function RecipeCard(props: RecipeCardProps): JSX.Element {
                 <EditButtons
                     key='buttons'
                     onEdit={() => {
-                        setBackup(deepNewRecipe(props.recipe, ingredients))
+                        console.log('Editing')
+                        setBackup(deepNewRecipe(props.dish.id, props.dish.name, ingredients))
                         setEditing(true)
                     }}
                     onRestore={() => {
+                        console.log('Restoring')
                         setTitle(backup.name)
                         setIngredients(backup.ingredients)
                         setEditing(false)
                     }}
                     onSave={() => {
-                        saveRecipe(props.recipeEP, new Recipe(title, ingredients), backup.name)
+                        console.log("Saving")
+                        saveRecipe(props.recipeEP, new Recipe(props.dish.id, title, ingredients), backup.name)
                             .then((r) => {
+                                console.log(`Recipe saved: ${backup.name} -> ${r.name}`)
                                 setTitle(r.name)
                                 setIngredients(r.ingredients)
+                                if(backup.name !== r.name) {
+                                    props.setTitle(r.name)
+                                }
                             }, (e) => {
+                                console.log("Failure: ", e)
                                 if (e instanceof Response) {
                                     e.text().then(
                                         (t) => alert(`No s'ha pogut desar:\nError ${e.status}. ${t}`),
@@ -218,6 +231,7 @@ function RecipeCard(props: RecipeCardProps): JSX.Element {
                             .finally(() => setEditing(false))
                     }}
                     onDelete={() => {
+                        console.log('Deleting')
                         setTitle(backup.name)
                         setIngredients(backup.ingredients)
                         setEditing(false)
@@ -243,7 +257,7 @@ async function saveRecipe(recipeEP: RecipeEndpoint, r: Recipe, altName: string |
             }, (e) => {
                 if (altName && e instanceof Response && e.status === HTTPStatusConflict) {
                     alert("Ja existeix una recepta amb aquest nom")
-                    return saveRecipe(recipeEP, new Recipe(altName, r.ingredients), null)
+                    return saveRecipe(recipeEP, new Recipe(r.id, altName, r.ingredients), null)
                 }
                 return Promise.reject(e)
             })
@@ -453,8 +467,8 @@ function NewIngredientRow(props: NewIngredientProps): JSX.Element {
     )
 }
 
-function deepNewRecipe(name: string, ingredients: Ingredient[]): Recipe {
-    return new Recipe(name, ingredients.map(i => ({ ...i })))
+function deepNewRecipe(id: number, name: string, ingredients: Ingredient[]): Recipe {
+    return new Recipe(id, name, ingredients.map(i => ({ ...i })))
 }
 
 function atof(s: string): number {

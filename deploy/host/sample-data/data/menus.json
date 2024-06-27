@@ -9,11 +9,11 @@
                         "name": "Esmorzar",
                         "dishes": [
                             {
-                                "name": "Torrada i suc de taronja",
+                                "recipe_id": 10,
                                 "amount": 1
                             },
                             {
-                                "name": "Flocs de civada",
+                                "recipe_id": 8,
                                 "amount": 1
                             }
                         ]
@@ -22,15 +22,15 @@
                         "name": "Dinar",
                         "dishes": [
                             {
-                                "name": "Macarrons amb sofregit",
+                                "recipe_id": 19,
                                 "amount": 1
                             },
                             {
-                                "name": "Fruita",
+                                "recipe_id": 13,
                                 "amount": 1
                             },
                             {
-                                "name": "Cafè",
+                                "recipe_id": 11,
                                 "amount": 1
                             }
                         ]
@@ -39,11 +39,11 @@
                         "name": "Sopar",
                         "dishes": [
                             {
-                                "name": "Ravioli",
+                                "recipe_id": 31,
                                 "amount": 1
                             },
                             {
-                                "name": "Iogurt",
+                                "recipe_id": 17,
                                 "amount": 1
                             }
                         ]
@@ -57,11 +57,11 @@
                         "name": "Esmorzar",
                         "dishes": [
                             {
-                                "name": "Torrada i suc de taronja",
+                                "recipe_id": 10,
                                 "amount": 1
                             },
                             {
-                                "name": "Flocs de civada",
+                                "recipe_id": 8,
                                 "amount": 1
                             }
                         ]
@@ -70,19 +70,19 @@
                         "name": "Dinar",
                         "dishes": [
                             {
-                                "name": "Llenties amb xoriço",
+                                "recipe_id": 4,
                                 "amount": 1
                             },
                             {
-                                "name": "Pollastre amb acompanyament",
+                                "recipe_id": 29,
                                 "amount": 1
                             },
                             {
-                                "name": "Fruita",
+                                "recipe_id": 13,
                                 "amount": 1
                             },
                             {
-                                "name": "Cafè",
+                                "recipe_id": 11,
                                 "amount": 1
                             }
                         ]
@@ -91,11 +91,11 @@
                         "name": "Sopar",
                         "dishes": [
                             {
-                                "name": "Macarrons amb sofregit",
+                                "recipe_id": 19,
                                 "amount": 1
                             },
                             {
-                                "name": "Iogurt",
+                                "recipe_id": 17,
                                 "amount": 1
                             }
                         ]
@@ -109,7 +109,7 @@
                         "name": "Esmorzar",
                         "dishes": [
                             {
-                                "name": "Torrada i suc de taronja",
+                                "recipe_id": 10,
                                 "amount": 1
                             }
                         ]
@@ -118,15 +118,15 @@
                         "name": "Dinar",
                         "dishes": [
                             {
-                                "name": "Arròs amb sofregit",
+                                "recipe_id": 6,
                                 "amount": 1
                             },
                             {
-                                "name": "Fruita",
+                                "recipe_id": 13,
                                 "amount": 1
                             },
                             {
-                                "name": "Cafè",
+                                "recipe_id": 11,
                                 "amount": 1
                             }
                         ]
@@ -135,19 +135,19 @@
                         "name": "Sopar",
                         "dishes": [
                             {
-                                "name": "Sopa de galets",
+                                "recipe_id": 24,
                                 "amount": 2
                             },
                             {
-                                "name": "Proteïna amb acompanyament",
+                                "recipe_id": 15,
                                 "amount": 2
                             },
                             {
-                                "name": "Iogurt",
+                                "recipe_id": 17,
                                 "amount": 1
                             },
                             {
-                                "name": "Iogurt vegà",
+                                "recipe_id": 18,
                                 "amount": 1
                             }
                         ]
@@ -161,11 +161,11 @@
                         "name": "Esmorzar",
                         "dishes": [
                             {
-                                "name": "Torrada i suc de taronja",
+                                "recipe_id": 10,
                                 "amount": 1
                             },
                             {
-                                "name": "Flocs de civada",
+                                "recipe_id": 8,
                                 "amount": 1
                             }
                         ]
@@ -174,19 +174,19 @@
                         "name": "Dinar",
                         "dishes": [
                             {
-                                "name": "Amanida de llenties",
+                                "recipe_id": 2,
                                 "amount": 1
                             },
                             {
-                                "name": "Llom amb acompanyament",
+                                "recipe_id": 28,
                                 "amount": 1
                             },
                             {
-                                "name": "Fruita",
+                                "recipe_id": 13,
                                 "amount": 1
                             },
                             {
-                                "name": "Cafè",
+                                "recipe_id": 11,
                                 "amount": 1
                             }
                         ]
@@ -195,11 +195,11 @@
                         "name": "Sopar",
                         "dishes": [
                             {
-                                "name": "Arròs amb sofregit",
+                                "recipe_id": 6,
                                 "amount": 1
                             },
                             {
-                                "name": "Iogurt",
+                                "recipe_id": 17,
                                 "amount": 1
                             }
                         ]
@@ -213,7 +213,7 @@
                         "name": "Esmorzar",
                         "dishes": [
                             {
-                                "name": "Torrada i suc de taronja",
+                                "recipe_id": 10,
                                 "amount": 1
                             }
                         ]
@@ -222,19 +222,19 @@
                         "name": "Dinar",
                         "dishes": [
                             {
-                                "name": "Amanida de cigrons",
+                                "recipe_id": 1,
                                 "amount": 1
                             },
                             {
-                                "name": "Pollastre amb acompanyament",
+                                "recipe_id": 29,
                                 "amount": 1
                             },
                             {
-                                "name": "Fruita",
+                                "recipe_id": 13,
                                 "amount": 1
                             },
                             {
-                                "name": "Cafè",
+                                "recipe_id": 11,
                                 "amount": 1
                             }
                         ]
@@ -243,11 +243,11 @@
                         "name": "Sopar",
                         "dishes": [
                             {
-                                "name": "Ravioli",
+                                "recipe_id": 31,
                                 "amount": 1
                             },
                             {
-                                "name": "Iogurt",
+                                "recipe_id": 17,
                                 "amount": 1
                             }
                         ]
@@ -261,7 +261,7 @@
                         "name": "Esmorzar",
                         "dishes": [
                             {
-                                "name": "Torrada i suc de taronja",
+                                "recipe_id": 10,
                                 "amount": 1
                             }
                         ]
@@ -273,15 +273,15 @@
                         "name": "Sopar",
                         "dishes": [
                             {
-                                "name": "Ramen",
+                                "recipe_id": 26,
                                 "amount": 2
                             },
                             {
-                                "name": "Iogurt",
+                                "recipe_id": 17,
                                 "amount": 1
                             },
                             {
-                                "name": "Iogurt vegà",
+                                "recipe_id": 18,
                                 "amount": 1
                             }
                         ]
@@ -295,7 +295,7 @@
                         "name": "Esmorzar",
                         "dishes": [
                             {
-                                "name": "Cereals amb llet",
+                                "recipe_id": 7,
                                 "amount": 2
                             }
                         ]
@@ -304,23 +304,23 @@
                         "name": "Dinar",
                         "dishes": [
                             {
-                                "name": "Pica-pica",
+                                "recipe_id": 22,
                                 "amount": 2
                             },
                             {
-                                "name": "Puré de patata",
+                                "recipe_id": 23,
                                 "amount": 2
                             },
                             {
-                                "name": "Proteïna amb acompanyament",
+                                "recipe_id": 15,
                                 "amount": 2
                             },
                             {
-                                "name": "Fruita",
+                                "recipe_id": 13,
                                 "amount": 2
                             },
                             {
-                                "name": "Cafè",
+                                "recipe_id": 11,
                                 "amount": 1
                             }
                         ]
@@ -329,19 +329,19 @@
                         "name": "Sopar",
                         "dishes": [
                             {
-                                "name": "Sopa de galets",
+                                "recipe_id": 24,
                                 "amount": 2
                             },
                             {
-                                "name": "Proteïna amb acompanyament",
+                                "recipe_id": 15,
                                 "amount": 2
                             },
                             {
-                                "name": "Iogurt",
+                                "recipe_id": 17,
                                 "amount": 1
                             },
                             {
-                                "name": "Iogurt vegà",
+                                "recipe_id": 18,
                                 "amount": 1
                             }
                         ]
