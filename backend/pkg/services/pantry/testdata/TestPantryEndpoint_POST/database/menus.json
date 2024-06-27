@@ -9,7 +9,7 @@
                     "name": "cereal",
                     "amount": 1
                 }, {
-                    "name": "OJ",
+                    "recipe_id": 2,
                     "amount": 330
                 }]
             },{

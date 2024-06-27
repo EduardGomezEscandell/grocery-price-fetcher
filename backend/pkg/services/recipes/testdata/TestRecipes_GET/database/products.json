@@ -1,7 +1,16 @@
 [
     {
         "id": 1,
-        "name": "Apple",
+        "name": "Cereal",
+        "batch_size": 1,
+        "provider": "NoProvider",
+        "product_code": [
+            "1.54"
+        ]
+    },
+    {
+        "id": 2,
+        "name": "Milk",
         "batch_size": 1,
         "provider": "NoProvider",
         "product_code": [
@@ -9,20 +18,12 @@
         ]
     },
     {
-        "id": 2,
-        "name": "Banana",
-        "batch_size": 7,
+        "id": 3,
+        "name": "Orange Juice",
+        "batch_size": 1000,
         "provider": "NoProvider",
         "product_code": [
             "2.99"
-        ]
-    },{
-        "id": 3,
-        "name": "Water",
-        "batch_size": 2,
-        "provider": "NoProvider",
-        "product_code": [
-            "0.55"
         ]
     }
 ]

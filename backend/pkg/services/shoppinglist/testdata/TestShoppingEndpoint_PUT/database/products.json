@@ -16,5 +16,13 @@
         "product_code": [
             "2.99"
         ]
+    },{
+        "id": 3,
+        "name": "Water",
+        "batch_size": 7,
+        "provider": "NoProvider",
+        "product_code": [
+            "0.55"
+        ]
     }
 ]
