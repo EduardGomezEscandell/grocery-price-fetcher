@@ -27,8 +27,8 @@ class Backend {
         return this.mock ? new MockProductsEndpoint(namespace, this.cache) : new ProductsEndpoint(namespace, this.cache)
     }
 
-    Recipe(namespace: string, which: string): RecipeEndpoint {
-        return this.mock ? new MockRecipeEndpoint(namespace, which, this.cache) : new RecipeEndpoint(namespace, which, this.cache)
+    Recipe(namespace: string, id: number): RecipeEndpoint {
+        return this.mock ? new MockRecipeEndpoint(namespace, id, this.cache) : new RecipeEndpoint(namespace, id, this.cache)
     }
 
     Menu(which: string): MenuEndpoint {

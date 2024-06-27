@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
-import { PantryItem } from '../../State/State'
+import { Ingredient } from '../../State/State'
 import './Pantry.css'
 
 interface Props {
-    item: PantryItem;
+    item: Ingredient;
     id: string;
     onChange: (newHave: number) => void;
     onClick: () => void;

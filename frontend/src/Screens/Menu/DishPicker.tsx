@@ -4,7 +4,7 @@ import { Dish } from '../../State/State'
 import './DishPicker.css'
 
 interface Props {
-    recipes: string[];
+    dishes: Dish[];
     default: Dish;
     onChange: (d: Dish) => void;
     onRemove: () => void;
@@ -12,24 +12,27 @@ interface Props {
 }
 
 export default function DishPicker(pp: Props) {
-    const options = pp.recipes.map(recipe => ({ value: recipe, label: recipe }))
+    const options = pp.dishes.map(recipe => ({ value: recipe, label: recipe.name }))
 
-    const [name, _setName] = useState(pp.default.name)
+    const [recipe, _setRecipe] = useState(pp.default)
     const [amount, _setAmount] = useState(pp.default.amount.toString())
 
-    useEffect(() => {
-        _setName(pp.default.name)
-        _setAmount(pp.default.amount.toString())
-    }, [pp.default])
-
-    const setName = (n: string) => {
-        _setName(n)
-        pp.onChange(pp.default.withName(n))
+    const setID = (d: Dish) => {
+        _setRecipe(d)
+        pp.onChange({
+            id: d.id,
+            name: d.name,
+            amount: Number(amount),
+        })
     }
 
     const setAmount = (a: string) => {
         _setAmount(a)
-        pp.onChange(pp.default.withAmount(Number(a)))
+        pp.onChange({
+            id: recipe.id,
+            name: recipe.name,
+            amount: Number(a)
+        })
     }
 
     return (
@@ -40,7 +43,7 @@ export default function DishPicker(pp: Props) {
                 value={amount}
                 onClick={(e) => { e.target instanceof HTMLInputElement && e.target.select() }}
                 onChange={s => setAmount(s.target.value)}
-                contentEditable={name !== undefined && name !== ""}
+                contentEditable={recipe.id !== 0}
             />
             <Select
                 className='Select'
@@ -78,11 +81,11 @@ export default function DishPicker(pp: Props) {
                 components={{ DropdownIndicator:() => null, IndicatorSeparator:() => null }}
                 onChange={selected => {
                     if (selected == null) {
-                        return setName("")
+                        return setID({ id: 0, name: '', amount: 0 })
                     }
-                    setName(selected.value)
+                    setID(selected.value)
                 }}
-                value={{ value: name, label: name }}
+                value={{ value: recipe, label: recipe.name }}
                 options={options}
                 isSearchable
             />

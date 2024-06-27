@@ -174,8 +174,8 @@ function FocusDialog({ state, setState }: SubProps): JSX.Element {
                 {
                     meal.dishes.map((dish, i) =>
                         <DishPicker
-                            key={`dish-${i}`}
-                            recipes={state.dishes}
+                            key={`dish-${i}-${dish.id}`}
+                            dishes={state.dishes}
                             default={dish}
                             onChange={(newDish) => {
                                 meal.dishes[i] = newDish
@@ -188,7 +188,7 @@ function FocusDialog({ state, setState }: SubProps): JSX.Element {
                     )
                 }
                 <button className='AddOne' onClick={() => {
-                    meal.dishes.push(new Dish("", 1))
+                    meal.dishes.push(new Dish(0, "", 1))
                     setState(state.WithMenu(state.menu))
                 }}> + </button>
             </div>
@@ -281,7 +281,7 @@ interface IState {
     // Menu data
     days?: string[]
     mealSizes?: number[]
-    dishes?: string[]
+    dishes?: Dish[]
     menu?: Menu
 
     // UI state
@@ -297,7 +297,7 @@ class State {
     // Menu data
     days: string[]
     mealSizes: number[]
-    dishes: string[]
+    dishes: Dish[]
     menu: Menu
 
     // UI state
