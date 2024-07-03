@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/auth"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
@@ -22,6 +23,7 @@ import (
 	providersservice "github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/providers"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/recipe"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/recipes"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/session"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/shoppinglist"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/shoppingneeds"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/version"
@@ -40,7 +42,10 @@ type Manager struct {
 
 type Settings struct {
 	Database      database.Settings
+	Auth          auth.Settings
 	FrontEnd      frontend.Settings
+	Login         session.Settings
+	Logout        session.Settings
 	HelloWorld    helloworld.Settings
 	IngredientUse ingredientuse.Settings
 	Menu          menu.Settings
@@ -59,6 +64,8 @@ func (Settings) Defaults() Settings {
 	return Settings{
 		Database:      database.Settings{}.Defaults(),
 		FrontEnd:      frontend.Settings{}.Defaults(),
+		Login:         session.Settings{}.Defaults(),
+		Logout:        session.Settings{}.Defaults(),
 		HelloWorld:    helloworld.Settings{}.Defaults(),
 		IngredientUse: ingredientuse.Settings{}.Defaults(),
 		Menu:          menu.Settings{}.Defaults(),
@@ -94,6 +101,12 @@ func New(ctx context.Context, logger logger.Logger, settings Settings) (*Manager
 		return nil, fmt.Errorf("could not load database: %v", err)
 	}
 
+	authManager, err := auth.NewManager(settings.Auth)
+	if err != nil {
+		cancel()
+		return nil, fmt.Errorf("could not create auth manager: %v", err)
+	}
+
 	m := &Manager{
 		ctx:    ctx,
 		cancel: cancel,
@@ -107,6 +120,8 @@ func New(ctx context.Context, logger logger.Logger, settings Settings) (*Manager
 	}
 
 	for _, s := range []HTTPService{
+		session.NewLogin(settings.Login, authManager),
+		session.NewLogout(settings.Logout, authManager),
 		helloworld.New(settings.HelloWorld),
 		ingredientuse.New(settings.IngredientUse, db),
 		menu.New(settings.Menu, db),

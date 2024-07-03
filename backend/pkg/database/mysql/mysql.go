@@ -29,11 +29,11 @@ type SQL struct {
 
 type Settings struct {
 	User            string
-	PasswordFile    string
+	PasswordFile    string `yaml:"password-file"`
 	Host            string
 	Port            string
-	ConnectTimeout  time.Duration
-	ConnectCooldown time.Duration
+	ConnectTimeout  time.Duration `yaml:"connect-timeout"`
+	ConnectCooldown time.Duration `yaml:"connect-cooldown"`
 
 	// AllowInsertNewID allows the Set* functions to insert new objects with a user-provided ID.
 	AllowInsertNewID bool
