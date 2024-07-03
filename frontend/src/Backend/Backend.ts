@@ -8,16 +8,38 @@ import RecipeEndpoint, { MockRecipeEndpoint } from './endpoints/Recipe'
 import Cache from './cache/Cache'
 import ProductsEndpoint, { MockProductsEndpoint } from './endpoints/Products'
 import ProviderEndpoint, { MockProvidersEndpoint } from './endpoints/Provider'
+import { LoginEndpoint, MockLoginEndpoint } from './endpoints/Login'
+import { LogoutEndpoint, MockLogoutEndpoint } from './endpoints/Logout'
 
 class Backend {
-    constructor() {
-        if (import.meta.env.VITE_APP_MOCK_BACKEND !== "") {
+    private authorization: string
+
+    constructor(auth?: string) {
+        if (Backend.IsMock()) {
             this.mock = true
+        }
+
+        if (auth) {
+            this.authorization = auth
+        } else {
+            this.authorization = ''
         }
     }
 
     private mock: boolean = false
     cache: Cache = new Cache()
+
+    static IsMock(): boolean {
+        return import.meta.env.VITE_APP_MOCK_BACKEND !== ""
+    }
+
+    Login(): LoginEndpoint {
+        return this.mock ? new MockLoginEndpoint() : new LoginEndpoint()
+    }
+
+    Logout(): LogoutEndpoint {
+        return this.mock ? new MockLogoutEndpoint(this.authorization) : new LogoutEndpoint(this.authorization)
+    }
 
     Provider(): ProviderEndpoint {
         return this.mock ? new MockProvidersEndpoint(this.cache) : new ProviderEndpoint(this.cache)
