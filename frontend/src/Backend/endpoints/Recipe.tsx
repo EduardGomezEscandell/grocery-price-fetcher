@@ -3,8 +3,10 @@ import Cache from "../cache/Cache"
 export default class RecipeEndpoint {
     path: string
     cache: Cache
+    private auth: string
 
-    constructor(namespace: string, id: number, cache?: Cache) {
+    constructor(auth: string, namespace: string, id: number, cache?: Cache) {
+        this.auth = auth
         this.path = `/api/recipe/${namespace}/${id.toString()}`
         this.cache = cache || new Cache()
     }
@@ -17,6 +19,7 @@ export default class RecipeEndpoint {
         return fetch(this.path, {
             method: 'GET',
             headers: {
+                'Authorization': this.auth,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
@@ -44,6 +47,7 @@ export default class RecipeEndpoint {
         return fetch(this.path, {
             method: 'POST',
             headers: {
+                'Authorization': this.auth,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
@@ -64,6 +68,7 @@ export default class RecipeEndpoint {
         return fetch(this.path, {
             method: 'DELETE',
             headers: {
+                'Authorization': this.auth,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
@@ -79,8 +84,8 @@ export default class RecipeEndpoint {
 
 export class MockRecipeEndpoint extends RecipeEndpoint {
     recipe_id: number
-    constructor(namespace: string, recipe_id: number, cache?: Cache) {
-        super(namespace, recipe_id, cache)
+    constructor(auth: string, namespace: string, recipe_id: number, cache?: Cache) {
+        super(auth, namespace, recipe_id, cache)
         this.recipe_id = recipe_id
     }
 

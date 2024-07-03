@@ -1,7 +1,10 @@
 export class IngredientUseEndpoint {
     path: string
-    constructor(menu: string, ingredient: string) {
+    private auth: string
+
+    constructor(auth: string, menu: string, ingredient: string) {
         this.path = `/api/ingredient-use/${menu}/${ingredient}`
+        this.auth = auth
     }
 
     Path(): string {
@@ -12,6 +15,7 @@ export class IngredientUseEndpoint {
         return fetch(this.path, {
             method: 'GET',
             headers: {
+                'Authorization': this.auth,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
@@ -46,7 +50,7 @@ export class IngredientUsage {
         this.dish = dish
         this.amount = amount
     }
-    
+
     day: string;
     meal: string;
     dish: string;

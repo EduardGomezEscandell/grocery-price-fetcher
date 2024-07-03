@@ -2,10 +2,12 @@ import { Product } from "../../State/State";
 import Cache from "../cache/Cache";
 
 export default class ProviderEndpoint {
+    private auth: string
     cache: Cache | null = null;
     private static path = `/api/provider`
 
-    constructor(cache?: Cache) {
+    constructor(auth: string, cache?: Cache) {
+        this.auth = auth
         this.cache = cache || null;
     }
 
@@ -17,6 +19,7 @@ export default class ProviderEndpoint {
         return fetch(ProviderEndpoint.Path(q), {
             method: 'GET',
             headers: {
+                'Authorization': this.auth,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
@@ -46,10 +49,6 @@ interface Query {
 }
 
 export class MockProvidersEndpoint extends ProviderEndpoint {
-    constructor(cache?: Cache) {
-        super(cache)
-    }
-
     protected async get_uncached(q: Query): Promise<number> {
         const path = ProviderEndpoint.Path(q)
         console.log(`GET to ${path}`)

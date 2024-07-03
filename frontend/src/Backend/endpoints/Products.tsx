@@ -2,10 +2,12 @@ import { Product } from "../../State/State";
 import Cache from "../cache/Cache";
 
 export default class ProductsEndpoint {
+    private auth: string
     private path: string;
     protected cache: Cache | null = null;
 
-    constructor(namespace: string, cache?: Cache) {
+    constructor(auth: string, namespace: string, cache?: Cache) {
+        this.auth = auth
         this.path = `/api/products/${namespace}/`
         this.cache = cache || null;
     }
@@ -22,6 +24,7 @@ export default class ProductsEndpoint {
         return fetch(this.PathAll(), {
             method: 'GET',
             headers: {
+                'Authorization': this.auth,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
@@ -35,6 +38,7 @@ export default class ProductsEndpoint {
         return fetch(this.Path(id), {
             method: 'GET',
             headers: {
+                'Authorization': this.auth,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
@@ -48,6 +52,7 @@ export default class ProductsEndpoint {
         return fetch(this.Path(p.id), {
             method: 'POST',
             headers: {
+                'Authorization': this.auth,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
@@ -61,6 +66,7 @@ export default class ProductsEndpoint {
         return fetch(this.Path(id), {
             method: 'DELETE',
             headers: {
+                'Authorization': this.auth,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
@@ -108,10 +114,6 @@ export default class ProductsEndpoint {
 }
 
 export class MockProductsEndpoint extends ProductsEndpoint {
-    constructor(namespace: string, cache?: Cache) {
-        super(namespace, cache)
-    }
-
     private static mockData = [
         { id: 1, name: "Macarrons", price: 1.33, batch_size: 1, provider: 'Bonpreu', product_code: ['123', 'blabla'] },
         { id: 2, name: "Ceba", price: 0.76, batch_size: 1, provider: 'Bonpreu', product_code: ['123', 'blabla'] },
