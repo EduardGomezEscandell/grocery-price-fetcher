@@ -59,7 +59,8 @@ jobs:
             DOCKER_USER="${{ secrets.DOCKER_USER }}"        \
             GCLOUD_VM='${{ secrets.GCLOUD_VM }}'            \
             GCLOUD_ZONE='${{ secrets.GCLOUD_ZONE }}'        \
-            GCLOUD_PROJECT='${{ secrets.GCLOUD_PROJECT }}'
+            GCLOUD_PROJECT='${{ secrets.GCLOUD_PROJECT }}'  \
+            FQDN='https://lacompradeledu.cat'
     - name: Upload package
       uses: actions/upload-artifact@v4
       with:

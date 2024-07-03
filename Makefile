@@ -42,8 +42,9 @@ deploy: ## Deploy the application (see deploy/host Makefile)
 
 full-start: build-docker install start ## Build the application and self-host it
 
+FQDN ?= https://localhost
 install: ## Install the the application locally (see deploy/install Makefile)
-	cd deploy/host && make install
+	cd deploy/host && make install FQDN=$(FQDN)
 
 start: ## Self-host the application (see deploy/start Makefile)
 	cd deploy/host && make start

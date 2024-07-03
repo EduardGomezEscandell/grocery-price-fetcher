@@ -60,7 +60,7 @@ func TestUnmarshal(t *testing.T) {
 type: mysql
 options:
   user: joe
-  passwordfile: /etc/secret
+  password-file: /etc/secret
   host: hostboy
   port: 1234
 `)

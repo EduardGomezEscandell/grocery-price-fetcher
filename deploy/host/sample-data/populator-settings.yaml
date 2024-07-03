@@ -9,7 +9,7 @@ output:
   type: mysql
   options:
     user: root
-    passwordfile: /run/secrets/db_root_password
+    password-file: /run/secrets/db_root_password
     host: database
     port: '3306'
 verbosity: 4

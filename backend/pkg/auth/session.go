@@ -34,6 +34,8 @@ func NewManager(s Settings) (*Manager, error) {
 	out, err := os.ReadFile(s.ClientSecretFile)
 	if err != nil {
 		return nil, fmt.Errorf("could not read client secret file: %w", err)
+	} else if len(out) == 0 {
+		return nil, errors.New("empty client secret file")
 	}
 
 	return &Manager{

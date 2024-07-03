@@ -10,9 +10,13 @@ services:
     type: mysql
     options:
       user: root
-      passwordfile: /run/secrets/db_root_password
+      password-file: /run/secrets/db_root_password
       host: database
       port: '3306'
+  auth:
+    client-id: 1097497200114-7sf1777fi3jm2vob9ihp8gmnjrj84g8s.apps.googleusercontent.com
+    client-secret-file: /run/secrets/google_client_secret
+    redirect-uri: https://localhost
   pricing:
     refreshrate: 6h0m0s
 
