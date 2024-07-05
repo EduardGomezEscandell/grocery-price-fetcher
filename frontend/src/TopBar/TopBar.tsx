@@ -42,7 +42,7 @@ interface TitleProps {
 
 function Title(pp: TitleProps): JSX.Element {
     return <div key='1' className='Title'  onClick={pp.onClick}>
-        <img src='/logo64.png' alt='logo' className="Logo"/>
+        <img src='/logo96.png' alt='logo' className="Logo"/>
         <div className='Text'>
             {pp.titleText || "La\xa0compra de\xa0l'Edu" /* \xa0 is a non-breaking space */} 
         </div>

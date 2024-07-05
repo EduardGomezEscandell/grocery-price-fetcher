@@ -3,19 +3,14 @@
   "name": "La compra de l'Edu",
   "icons": [
     {
-      "src": "logo32.png",
+      "src": "logo48.png",
       "type": "image/png",
-      "sizes": "32x32"
+      "sizes": "48x48"
     },
     {
-      "src": "logo64.png",
+      "src": "logo96.png",
       "type": "image/png",
-      "sizes": "64x64"
-    },
-    {
-      "src": "logo1024.png",
-      "type": "image/png",
-      "sizes": "1024x1024"
+      "sizes": "96x96"
     }
   ],
   "start_url": ".",
