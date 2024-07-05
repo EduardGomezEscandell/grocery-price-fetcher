@@ -18,7 +18,7 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func TestBattery(t *testing.T) {
+func TestJSONDB(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(*testing.T, func() database.DB){

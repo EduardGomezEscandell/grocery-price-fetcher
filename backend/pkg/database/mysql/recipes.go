@@ -10,9 +10,11 @@ import (
 )
 
 func (s *SQL) clearRecipes(tx *sql.Tx) (err error) {
-	tables := []string{"recipe_ingredients", "recipes"}
+	tables := []string{"recipes", "recipe_ingredients"}
 
-	for _, table := range tables {
+	// Remove tables from bottom to top to avoid foreign key constraints
+	for i := range tables {
+		table := tables[len(tables)-i-1]
 		q := fmt.Sprintf("DROP TABLE %s", table)
 		s.log.Tracef(q)
 
@@ -33,17 +35,17 @@ func (s *SQL) createRecipes(tx *sql.Tx) error {
 		{
 			"recipes",
 			`CREATE TABLE recipes (
-				id INT UNSIGNED PRIMARY KEY,
+				id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
 				name VARCHAR(255) NOT NULL
 			)`,
 		},
 		{
 			"recipe_ingredients",
 			`CREATE TABLE recipe_ingredients (
-				recipe_id INT UNSIGNED REFERENCES recipes(id),
-				ingredient_id INT UNSIGNED REFERENCES ingredients(id),
+				recipe INT UNSIGNED REFERENCES recipes(id) ON DELETE CASCADE,
+				product INT UNSIGNED REFERENCES products(id) ON DELETE CASCADE,
 				amount FLOAT NOT NULL,
-				PRIMARY KEY (recipe_id, ingredient_id)
+				PRIMARY KEY (recipe, product)
 			)`,
 		},
 	}
@@ -154,11 +156,11 @@ func (s *SQL) queryRecipes(tx *sql.Tx) ([]recipe.Recipe, error) {
 func (s *SQL) queryIngredients(tx *sql.Tx, rec *recipe.Recipe) error {
 	query := `
 	SELECT
-		ingredient_id, amount
+		product, amount
 	FROM
 		recipe_ingredients
 	WHERE
-		recipe_id = ?
+		recipe = ?
 	`
 
 	s.log.Tracef(query)
@@ -191,34 +193,14 @@ func (s *SQL) SetRecipe(r recipe.Recipe) (recipe.ID, error) {
 	}
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
-	verb := "REPLACE"
 	if r.ID == 0 {
-		// Generate a new IDs until we find one that doesn't exist
-		// We never expect to have anywhere near 2^32 (4.3 billion) recipes
-		// Collisions are extremely unlikely, but taken care of with the loop
-		verb = "INSERT"
-		r.ID = recipe.NewRandomID()
-	}
-
-	for {
-		//nolint:gosec // This is safe because both halves of the query are hardcoded
-		queryRecipe := verb + ` INTO recipes (id, name) VALUES (?, ?)`
-		s.log.Tracef(queryRecipe)
-
-		_, err := tx.ExecContext(s.ctx, queryRecipe, r.ID, r.Name)
-		if err == nil {
-			// Success
-			break
+		if r.ID, err = s.insertNewRecipe(tx, r.Name); err != nil {
+			return 0, fmt.Errorf("could not insert recipe: %v", err)
 		}
-
-		if errorIs(err, errKeyExists) {
-			// Key conflict: generate a new ID
-			r.ID = recipe.NewRandomID()
-			continue
+	} else {
+		if err := s.insertRecipeWithID(tx, r.ID, r.Name); err != nil {
+			return 0, fmt.Errorf("could not insert recipe: %v", err)
 		}
-
-		// Some other error
-		return 0, fmt.Errorf("could not insert recipe: %v", err)
 	}
 
 	if err := s.deleteRecipeIngredients(tx, r.ID); err != nil {
@@ -226,9 +208,9 @@ func (s *SQL) SetRecipe(r recipe.Recipe) (recipe.ID, error) {
 	}
 
 	err = bulkInsert(s, tx,
-		"recipe_ingredients(recipe_id, ingredient_id, amount)",
-		r.Ingredients, func(i recipe.Ingredient) []interface{} {
-			return []interface{}{r.ID, i.ProductID, i.Amount}
+		"recipe_ingredients(recipe, product, amount)",
+		r.Ingredients, func(i recipe.Ingredient) []any {
+			return []any{uint(r.ID), uint(i.ProductID), i.Amount}
 		})
 	if err != nil {
 		return 0, fmt.Errorf("could not insert ingredients: %v", err)
@@ -241,6 +223,65 @@ func (s *SQL) SetRecipe(r recipe.Recipe) (recipe.ID, error) {
 	return r.ID, nil
 }
 
+func (s *SQL) insertRecipeWithID(tx *sql.Tx, id recipe.ID, name string) error {
+	query := `UPDATE recipes SET name = ? WHERE id = ?`
+	s.log.Tracef(query)
+
+	result, err := tx.ExecContext(s.ctx, query, name, id)
+	if err != nil {
+		return fmt.Errorf("could not update recipe: %v", err)
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("could not get rows affected: %v", err)
+	}
+
+	s.log.Tracef("Rows affected: %d", affected)
+
+	switch affected {
+	case 0:
+	case 1:
+		return nil
+	default:
+		return fmt.Errorf("unexpected number of rows affected: %d", affected)
+	}
+
+	if !s.allowInsertNewID {
+		return nil
+	}
+
+	// No rows affected, try to insert a new one if allowed
+	query = `INSERT INTO recipes (id, name) VALUES (?, ?)`
+	s.log.Tracef(query)
+
+	_, err = tx.ExecContext(s.ctx, query, id, name)
+	if err != nil && !errorIs(err, errKeyExists) {
+		return fmt.Errorf("could not insert recipe: %v", err)
+	}
+
+	return nil
+}
+
+func (s *SQL) insertNewRecipe(tx *sql.Tx, name string) (recipe.ID, error) {
+	queryRecipe := `INSERT INTO recipes (name) VALUES (?)`
+	s.log.Tracef(queryRecipe)
+
+	result, err := tx.ExecContext(s.ctx, queryRecipe, name)
+	if err != nil {
+		return 0, fmt.Errorf("could not insert recipe: %v", err)
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("could not get last insert ID: %v", err)
+	}
+
+	s.log.Tracef("Last insert ID: %d", id)
+
+	return recipe.ID(id), nil
+}
+
 func (s *SQL) DeleteRecipe(id recipe.ID) error {
 	tx, err := s.db.BeginTx(s.ctx, nil)
 	if err != nil {
@@ -250,10 +291,6 @@ func (s *SQL) DeleteRecipe(id recipe.ID) error {
 
 	if err := s.deleteRecipe(tx, id); err != nil {
 		return fmt.Errorf("could not delete recipe: %v", err)
-	}
-
-	if err := s.deleteRecipeIngredients(tx, id); err != nil {
-		return fmt.Errorf("could not delete ingredients: %v", err)
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -276,7 +313,7 @@ func (s *SQL) deleteRecipe(tx *sql.Tx, id recipe.ID) error {
 }
 
 func (s *SQL) deleteRecipeIngredients(tx *sql.Tx, id recipe.ID) error {
-	query := `DELETE FROM recipe_ingredients WHERE recipe_id = ?`
+	query := `DELETE FROM recipe_ingredients WHERE recipe = ?`
 	s.log.Tracef(query)
 
 	_, err := tx.ExecContext(s.ctx, query, id)

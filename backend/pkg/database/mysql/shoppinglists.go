@@ -14,7 +14,9 @@ import (
 func (s *SQL) clearShoppingLists(tx *sql.Tx) error {
 	tables := []string{"shopping_list_items"}
 
-	for _, table := range tables {
+	// Remove tables from bottom to top to avoid foreign key constraints
+	for i := range tables {
+		table := tables[len(tables)-i-1]
 		q := fmt.Sprintf("DROP TABLE %s", table)
 		s.log.Trace(q)
 
@@ -36,10 +38,10 @@ func (s *SQL) createShoppingLists(tx *sql.Tx) error {
 			name: "shopping_list_items",
 			query: `
 			CREATE TABLE shopping_list_items (
-				menu_name VARCHAR(255) REFERENCES menus(name),
-				pantry_name VARCHAR(255) REFERENCES pantries(name),
-				product_id INT UNSIGNED REFERENCES products(id),
-				PRIMARY KEY (menu_name, pantry_name, product_id)
+				menu_name VARCHAR(255) REFERENCES menus(name) ON DELETE CASCADE,
+				pantry_name VARCHAR(255) REFERENCES pantries(name) ON DELETE CASCADE,
+				product INT UNSIGNED REFERENCES products(id) ON DELETE CASCADE,
+				PRIMARY KEY (menu_name, pantry_name, product)
 			)`,
 		},
 	}
@@ -137,7 +139,7 @@ func (s *SQL) LookupShoppingList(menu, pantry string) (dbtypes.ShoppingList, boo
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
 	query := `
-	SELECT product_id
+	SELECT product
 	FROM shopping_list_items
 	WHERE menu_name = ? AND pantry_name = ?
 	`
@@ -193,7 +195,7 @@ func (s *SQL) SetShoppingList(list dbtypes.ShoppingList) error {
 		return fmt.Errorf("could not delete old shopping list items: %v", err)
 	}
 
-	err = bulkInsert(s, tx, "shopping_list_items(menu_name, pantry_name, product_id)", list.Contents, func(ID product.ID) []any {
+	err = bulkInsert(s, tx, "shopping_list_items(menu_name, pantry_name, product)", list.Contents, func(ID product.ID) []any {
 		return []any{list.Menu, list.Pantry, ID}
 	})
 	if err != nil {

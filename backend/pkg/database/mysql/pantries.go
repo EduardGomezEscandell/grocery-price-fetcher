@@ -8,10 +8,12 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/recipe"
 )
 
-func (s *SQL) clearPanties(tx *sql.Tx) error {
+func (s *SQL) clearPantries(tx *sql.Tx) error {
 	tables := []string{"pantries", "pantry_items"}
 
-	for _, table := range tables {
+	// Remove tables from bottom to top to avoid foreign key constraints
+	for i := range tables {
+		table := tables[len(tables)-i-1]
 		q := fmt.Sprintf("DROP TABLE %s", table)
 		s.log.Tracef(q)
 
@@ -40,10 +42,10 @@ func (s *SQL) createPantries(tx *sql.Tx) error {
 			name: "pantry_items",
 			query: `
 			CREATE TABLE pantry_items (
-				pantry_name VARCHAR(255) REFERENCES pantries(name),
-				product_id INT UNSIGNED REFERENCES products(id),
+				pantry VARCHAR(255) REFERENCES pantries(name) ON DELETE CASCADE,
+				product INT UNSIGNED REFERENCES products(id) ON DELETE CASCADE,
 				amount FLOAT,
-				PRIMARY KEY (pantry_name, product_id)
+				PRIMARY KEY (pantry, product)
 			)`,
 		},
 	}
@@ -106,7 +108,7 @@ func (s *SQL) queryPantries(tx *sql.Tx) ([]string, error) {
 }
 
 func (s *SQL) queryPantryContents(tx *sql.Tx, name string) ([]recipe.Ingredient, error) {
-	r, err := tx.QueryContext(s.ctx, "SELECT product_id, amount FROM pantry_items WHERE pantry_name = ?", name)
+	r, err := tx.QueryContext(s.ctx, "SELECT product, amount FROM pantry_items WHERE pantry = ?", name)
 	if err != nil {
 		return nil, fmt.Errorf("could not query pantry items: %v", err)
 	}
@@ -162,19 +164,19 @@ func (s *SQL) SetPantry(p dbtypes.Pantry) error {
 	}
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
-	_, err = tx.ExecContext(s.ctx, "REPLACE INTO pantries (name) VALUES (?)", p.Name)
-	if err != nil {
+	_, err = tx.ExecContext(s.ctx, "INSERT INTO pantries (name) VALUES (?)", p.Name)
+	if err != nil && !errorIs(err, errKeyExists) {
 		return fmt.Errorf("could not insert pantry: %v", err)
 	}
 
 	// Remove all items from the pantry
-	_, err = tx.ExecContext(s.ctx, "DELETE FROM pantry_items WHERE pantry_name = ?", p.Name)
+	_, err = tx.ExecContext(s.ctx, "DELETE FROM pantry_items WHERE pantry = ?", p.Name)
 	if err != nil {
 		return fmt.Errorf("could not delete old pantry items: %v", err)
 	}
 
 	err = bulkInsert(s, tx,
-		"pantry_items (pantry_name, product_id, amount)",
+		"pantry_items (pantry, product, amount)",
 		p.Contents,
 		func(i recipe.Ingredient) []any {
 			return []any{p.Name, i.ProductID, i.Amount}
@@ -200,11 +202,6 @@ func (s *SQL) DeletePantry(name string) error {
 	_, err = tx.ExecContext(s.ctx, "DELETE FROM pantries WHERE name = ?", name)
 	if err != nil {
 		return fmt.Errorf("could not delete pantry: %v", err)
-	}
-
-	_, err = tx.ExecContext(s.ctx, "DELETE FROM pantry_items WHERE pantry_name = ?", name)
-	if err != nil {
-		return fmt.Errorf("could not delete pantry items: %v", err)
 	}
 
 	if err := tx.Commit(); err != nil {

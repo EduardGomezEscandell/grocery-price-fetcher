@@ -84,7 +84,7 @@ options:
 	require.Equal(t, want, got)
 }
 
-func TestBattery(t *testing.T) {
+func TestMySQL(t *testing.T) {
 	testCases := map[string]func(*testing.T, func() database.DB){
 		"Products": dbtestutils.ProductsTest,
 		"Recipes":  dbtestutils.RecipesTest,
@@ -99,7 +99,7 @@ func TestBattery(t *testing.T) {
 			defer cancel()
 
 			log := testutils.NewLogger(t)
-			log.SetLevel(int(logrus.DebugLevel))
+			log.SetLevel(int(logrus.TraceLevel))
 
 			options := mysql.DefaultSettings()
 			options.PasswordFile = "./testdata/db_root_password.txt"
@@ -114,7 +114,7 @@ func TestBattery(t *testing.T) {
 	}
 }
 
-func TestDBProducts(t *testing.T) {
+func TestMySQLProducts(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -165,12 +165,12 @@ func TestDBProducts(t *testing.T) {
 	require.Empty(t, products)
 }
 
-func TestDBRecipes(t *testing.T) {
+func TestMySQLRecipes(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	log := testutils.NewLogger(t)
-	log.SetLevel(int(logrus.DebugLevel))
+	log.SetLevel(int(logrus.TraceLevel))
 
 	options := mysql.DefaultSettings()
 	options.PasswordFile = "./testdata/db_root_password.txt"
@@ -180,35 +180,33 @@ func TestDBRecipes(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	p := []product.Product{
-		{
-			Name:      "Hydrogen",
-			BatchSize: 1,
-			Price:     1,
-			Provider:  blank.Provider{},
-		},
-		{
-			Name:      "Oxygen",
-			BatchSize: 16,
-			Price:     14,
-			Provider:  blank.Provider{},
-		},
+	hydrogen := product.Product{
+		Name:      "Hydrogen",
+		BatchSize: 1,
+		Price:     1,
+		Provider:  blank.Provider{},
 	}
 
-	pID, err := db.SetProduct(p[0])
-	require.NoError(t, err)
-	p[0].ID = pID
+	oxygen := product.Product{
+		Name:      "Oxygen",
+		BatchSize: 16,
+		Price:     14,
+		Provider:  blank.Provider{},
+	}
 
-	pID, err = db.SetProduct(p[1])
+	pID, err := db.SetProduct(hydrogen)
 	require.NoError(t, err)
-	p[1].ID = pID
+	hydrogen.ID = pID
+
+	pID, err = db.SetProduct(oxygen)
+	require.NoError(t, err)
+	oxygen.ID = pID
 
 	rec := recipe.Recipe{
-		ID:   1,
 		Name: "Water",
 		Ingredients: []recipe.Ingredient{
-			{ProductID: 1, Amount: 2},
-			{ProductID: 2, Amount: 1},
+			{ProductID: hydrogen.ID, Amount: 2},
+			{ProductID: oxygen.ID, Amount: 1},
 		},
 	}
 
@@ -216,20 +214,24 @@ func TestDBRecipes(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, recs)
 
-	_, err = db.LookupRecipe(rec.ID)
+	_, err = db.LookupRecipe(555)
 	require.ErrorIs(t, err, fs.ErrNotExist)
 
 	rID, err := db.SetRecipe(rec)
 	require.NoError(t, err)
 	require.NotZero(t, rID, "expected non-zero ID")
+	rec.ID = rID
 
 	got, err := db.LookupRecipe(rec.ID)
 	require.NoError(t, err)
-	require.Equal(t, rec, got)
+	requireSameRecipe(t, rec, got)
 
 	recs, err = db.Recipes()
 	require.NoError(t, err)
-	require.ElementsMatch(t, []recipe.Recipe{rec}, recs)
+	require.Len(t, recs, 1)
+	requireSameRecipe(t, rec, recs[0])
+
+	t.Logf("Updating recipe to %+#v", rec)
 
 	rec.Ingredients[0].Amount = 3
 	_, err = db.SetRecipe(rec)
@@ -237,7 +239,8 @@ func TestDBRecipes(t *testing.T) {
 
 	recs, err = db.Recipes()
 	require.NoError(t, err)
-	require.ElementsMatch(t, []recipe.Recipe{rec}, recs)
+	require.Len(t, recs, 1)
+	requireSameRecipe(t, rec, recs[0])
 
 	err = db.DeleteRecipe(rec.ID)
 	require.NoError(t, err)
@@ -247,7 +250,14 @@ func TestDBRecipes(t *testing.T) {
 	require.Empty(t, recs)
 }
 
-func TestDBMenus(t *testing.T) {
+func requireSameRecipe(t *testing.T, want, got recipe.Recipe) {
+	t.Helper()
+	require.Equal(t, want.Name, got.Name)
+	require.Equal(t, want.ID, got.ID)
+	require.ElementsMatch(t, want.Ingredients, got.Ingredients)
+}
+
+func TestMySQLMenus(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -262,59 +272,59 @@ func TestDBMenus(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	p := []product.Product{
-		{
-			ID:        13,
-			Name:      "Hydrogen",
-			BatchSize: 1,
-			Price:     1,
-			Provider:  blank.Provider{},
+	H := product.Product{
+		Name:      "Hydrogen",
+		BatchSize: 1,
+		Price:     1,
+		Provider:  blank.Provider{},
+	}
+	O := product.Product{
+		Name:      "Oxygen",
+		BatchSize: 16,
+		Price:     14,
+		Provider:  blank.Provider{},
+	}
+
+	id, err := db.SetProduct(H)
+	require.NoErrorf(t, err, "could not set product %s", H.Name)
+	H.ID = id
+
+	id, err = db.SetProduct(O)
+	require.NoErrorf(t, err, "could not set product %s", O.Name)
+	O.ID = id
+
+	H2O := recipe.Recipe{
+		Name: "Water",
+		Ingredients: []recipe.Ingredient{
+			{ProductID: H.ID, Amount: 2},
+			{ProductID: O.ID, Amount: 1},
 		},
-		{
-			ID:        55,
-			Name:      "Oxygen",
-			BatchSize: 16,
-			Price:     14,
-			Provider:  blank.Provider{},
+	}
+	H2O2 := recipe.Recipe{
+		Name: "Hydrogen Peroxide",
+		Ingredients: []recipe.Ingredient{
+			{ProductID: H.ID, Amount: 2},
+			{ProductID: O.ID, Amount: 2},
+		},
+	}
+	O2 := recipe.Recipe{
+		Name: "Oxygen Gas",
+		Ingredients: []recipe.Ingredient{
+			{ProductID: O.ID, Amount: 2},
 		},
 	}
 
-	r := []recipe.Recipe{
-		{
-			ID:   1,
-			Name: "Water",
-			Ingredients: []recipe.Ingredient{
-				{ProductID: 13, Amount: 2},
-				{ProductID: 55, Amount: 1},
-			},
-		},
-		{
-			ID:   2,
-			Name: "Hydrogen Peroxide",
-			Ingredients: []recipe.Ingredient{
-				{ProductID: 13, Amount: 2},
-				{ProductID: 55, Amount: 2},
-			},
-		},
-		{
-			ID:   3,
-			Name: "Oxygen Gas",
-			Ingredients: []recipe.Ingredient{
-				{ProductID: 55, Amount: 2},
-			},
-		},
-	}
+	rID, err := db.SetRecipe(H2O)
+	require.NoErrorf(t, err, "could not set recipe %s", H2O.Name)
+	H2O.ID = rID
 
-	for _, product := range p {
-		_, err := db.SetProduct(product)
-		require.NoErrorf(t, err, "could not set product %s", product.Name)
-	}
+	rID, err = db.SetRecipe(H2O2)
+	require.NoErrorf(t, err, "could not set recipe %s", H2O2.Name)
+	H2O2.ID = rID
 
-	for _, recipe := range r {
-		rID, err := db.SetRecipe(recipe)
-		require.NoErrorf(t, err, "could not set recipe %s", recipe.Name)
-		require.NotZero(t, rID, "expected non-zero ID")
-	}
+	rID, err = db.SetRecipe(O2)
+	require.NoErrorf(t, err, "could not set recipe %s", O2.Name)
+	O2.ID = rID
 
 	menus, err := db.Menus()
 	require.NoError(t, err)
@@ -327,20 +337,20 @@ func TestDBMenus(t *testing.T) {
 				Name: "Monday",
 				Meals: []dbtypes.Meal{
 					{Name: "Lunch", Dishes: []dbtypes.Dish{
-						{ID: 1, Amount: 1.12},
+						{ID: H2O.ID, Amount: 1.12},
 					}},
 					{Name: "Dinner", Dishes: []dbtypes.Dish{
-						{ID: 2, Amount: 3},
-						{ID: 3, Amount: 4}}},
+						{ID: H2O2.ID, Amount: 3},
+						{ID: O2.ID, Amount: 4}}},
 				},
 			},
 			{
 				Name: "Saturday",
 				Meals: []dbtypes.Meal{
 					{Name: "Lunch", Dishes: []dbtypes.Dish{
-						{ID: 1, Amount: 1}}},
+						{ID: H2O.ID, Amount: 1}}},
 					{Name: "Dinner", Dishes: []dbtypes.Dish{
-						{ID: 2, Amount: 3}}},
+						{ID: H2O2.ID, Amount: 3}}},
 				},
 			},
 		},
@@ -376,7 +386,7 @@ func TestDBMenus(t *testing.T) {
 	require.Empty(t, menus)
 }
 
-func TestDBPantries(t *testing.T) {
+func TestMySQLPantries(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -393,14 +403,12 @@ func TestDBPantries(t *testing.T) {
 
 	p := []product.Product{
 		{
-			ID:        13,
 			Name:      "Hydrogen",
 			BatchSize: 1,
 			Price:     1,
 			Provider:  blank.Provider{},
 		},
 		{
-			ID:        55,
 			Name:      "Oxygen",
 			BatchSize: 16,
 			Price:     14,
@@ -408,17 +416,19 @@ func TestDBPantries(t *testing.T) {
 		},
 	}
 
-	_, err = db.SetProduct(p[0])
+	id, err := db.SetProduct(p[0])
 	require.NoError(t, err)
+	p[0].ID = id
 
-	_, err = db.SetProduct(p[1])
+	id, err = db.SetProduct(p[1])
 	require.NoError(t, err)
+	p[1].ID = id
 
 	pantry := dbtypes.Pantry{
 		Name: "Test Pantry",
 		Contents: []recipe.Ingredient{
-			{ProductID: 13, Amount: 2165},
-			{ProductID: 55, Amount: 100},
+			{ProductID: p[0].ID, Amount: 2165},
+			{ProductID: p[1].ID, Amount: 100},
 		},
 	}
 
@@ -434,11 +444,12 @@ func TestDBPantries(t *testing.T) {
 
 	got, ok := db.LookupPantry(pantry.Name)
 	require.True(t, ok)
-	require.Equal(t, pantry, got)
+	requireSamePantry(t, pantry, got)
 
 	pantries, err = db.Pantries()
 	require.NoError(t, err)
-	require.ElementsMatch(t, []dbtypes.Pantry{pantry}, pantries)
+	require.Len(t, pantries, 1)
+	requireSamePantry(t, pantry, pantries[0])
 
 	pantry.Contents[0].Amount = 1
 	err = db.SetPantry(pantry)
@@ -446,7 +457,8 @@ func TestDBPantries(t *testing.T) {
 
 	pantries, err = db.Pantries()
 	require.NoError(t, err)
-	require.ElementsMatch(t, []dbtypes.Pantry{pantry}, pantries)
+	require.Len(t, pantries, 1)
+	requireSamePantry(t, pantry, pantries[0])
 
 	err = db.DeletePantry(pantry.Name)
 	require.NoError(t, err)
@@ -456,7 +468,13 @@ func TestDBPantries(t *testing.T) {
 	require.Empty(t, pantries)
 }
 
-func TestDBShoopingLists(t *testing.T) {
+func requireSamePantry(t *testing.T, want, got dbtypes.Pantry) {
+	t.Helper()
+	require.Equal(t, want.Name, got.Name)
+	require.ElementsMatch(t, want.Contents, got.Contents)
+}
+
+func TestMySQLShoopingLists(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -473,14 +491,12 @@ func TestDBShoopingLists(t *testing.T) {
 
 	p := []product.Product{
 		{
-			ID:        15,
 			Name:      "Hydrogen",
 			BatchSize: 1,
 			Price:     1,
 			Provider:  blank.Provider{},
 		},
 		{
-			ID:        99,
 			Name:      "Oxygen",
 			BatchSize: 16,
 			Price:     14,
@@ -488,16 +504,24 @@ func TestDBShoopingLists(t *testing.T) {
 		},
 	}
 
-	_, err = db.SetProduct(p[0])
+	id, err := db.SetProduct(p[0])
+	require.NoError(t, err)
+	p[0].ID = id
+
+	id, err = db.SetProduct(p[1])
+	require.NoError(t, err)
+	p[1].ID = id
+
+	err = db.SetMenu(dbtypes.Menu{Name: "My test menu"})
 	require.NoError(t, err)
 
-	_, err = db.SetProduct(p[1])
+	err = db.SetPantry(dbtypes.Pantry{Name: "My test pantry"})
 	require.NoError(t, err)
 
 	sl := dbtypes.ShoppingList{
 		Menu:     "My test menu",
 		Pantry:   "My test pantry",
-		Contents: []product.ID{1},
+		Contents: []product.ID{p[0].ID},
 	}
 
 	pantries, err := db.ShoppingLists()
@@ -512,19 +536,21 @@ func TestDBShoopingLists(t *testing.T) {
 
 	got, ok := db.LookupShoppingList(sl.Menu, sl.Pantry)
 	require.True(t, ok)
-	require.Equal(t, sl, got)
+	requireSameShoppingList(t, sl, got)
 
 	pantries, err = db.ShoppingLists()
 	require.NoError(t, err)
-	require.ElementsMatch(t, []dbtypes.ShoppingList{sl}, pantries)
+	require.Len(t, pantries, 1)
+	requireSameShoppingList(t, sl, pantries[0])
 
-	sl.Contents = append(sl.Contents, 99)
+	sl.Contents = append(sl.Contents, p[1].ID)
 	err = db.SetShoppingList(sl)
 	require.NoError(t, err)
 
 	pantries, err = db.ShoppingLists()
 	require.NoError(t, err)
-	require.ElementsMatch(t, []dbtypes.ShoppingList{sl}, pantries)
+	require.Len(t, pantries, 1)
+	requireSameShoppingList(t, sl, pantries[0])
 
 	err = db.DeleteShoppingList(sl.Menu, sl.Pantry)
 	require.NoError(t, err)
@@ -532,4 +558,11 @@ func TestDBShoopingLists(t *testing.T) {
 	pantries, err = db.ShoppingLists()
 	require.NoError(t, err)
 	require.Empty(t, pantries)
+}
+
+func requireSameShoppingList(t *testing.T, want, got dbtypes.ShoppingList) {
+	t.Helper()
+	require.Equal(t, want.Menu, got.Menu)
+	require.Equal(t, want.Pantry, got.Pantry)
+	require.ElementsMatch(t, want.Contents, got.Contents)
 }

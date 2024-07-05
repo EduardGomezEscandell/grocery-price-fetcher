@@ -1,6 +1,6 @@
 services:
   database:
-    image: mysql
+    image: mysql:9.0.0
     expose:
       - "3306"
     ports:

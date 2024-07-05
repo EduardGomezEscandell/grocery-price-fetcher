@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/mysql"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers/blank"
@@ -67,6 +68,15 @@ func run(s Settings) int {
 
 	log := logger.New()
 	log.SetLevel(s.Verbosity)
+
+	if s.Output.Type == "mysql" {
+		sqlSettings, ok := s.Output.Options.(mysql.Settings)
+		if ok {
+			sqlSettings.AllowInsertNewID = true
+			s.Output.Options = sqlSettings
+			log.Infof("Allowing insertion of new IDs in output database")
+		}
+	}
 
 	log.Debugf("Running with options:\n%+#v", s)
 
