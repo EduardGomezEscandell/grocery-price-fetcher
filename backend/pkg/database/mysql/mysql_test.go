@@ -99,7 +99,7 @@ func TestBattery(t *testing.T) {
 			defer cancel()
 
 			log := testutils.NewLogger(t)
-			log.SetLevel(int(logrus.DebugLevel))
+			log.SetLevel(int(logrus.TraceLevel))
 
 			options := mysql.DefaultSettings()
 			options.PasswordFile = "./testdata/db_root_password.txt"
@@ -170,7 +170,7 @@ func TestDBRecipes(t *testing.T) {
 	defer cancel()
 
 	log := testutils.NewLogger(t)
-	log.SetLevel(int(logrus.DebugLevel))
+	log.SetLevel(int(logrus.TraceLevel))
 
 	options := mysql.DefaultSettings()
 	options.PasswordFile = "./testdata/db_root_password.txt"
@@ -230,6 +230,8 @@ func TestDBRecipes(t *testing.T) {
 	recs, err = db.Recipes()
 	require.NoError(t, err)
 	require.ElementsMatch(t, []recipe.Recipe{rec}, recs)
+
+	t.Logf("Updating recipe to %+#v", rec)
 
 	rec.Ingredients[0].Amount = 3
 	_, err = db.SetRecipe(rec)

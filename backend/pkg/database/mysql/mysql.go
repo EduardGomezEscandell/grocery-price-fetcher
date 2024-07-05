@@ -23,6 +23,8 @@ type SQL struct {
 	log logger.Logger
 
 	db *sql.DB
+
+	allowInsertNewID bool
 }
 
 type Settings struct {
@@ -32,16 +34,20 @@ type Settings struct {
 	Port            string
 	ConnectTimeout  time.Duration
 	ConnectCooldown time.Duration
+
+	// AllowInsertNewID allows the Set* functions to insert new objects with a user-provided ID.
+	AllowInsertNewID bool
 }
 
 func DefaultSettings() Settings {
 	return Settings{
-		User:            "root",
-		PasswordFile:    "",
-		Host:            "localhost",
-		Port:            "3306",
-		ConnectTimeout:  time.Minute,
-		ConnectCooldown: 5 * time.Second,
+		User:             "root",
+		PasswordFile:     "",
+		Host:             "localhost",
+		Port:             "3306",
+		ConnectTimeout:   time.Minute,
+		ConnectCooldown:  5 * time.Second,
+		AllowInsertNewID: false,
 	}
 }
 
@@ -60,10 +66,11 @@ func New(ctx context.Context, log logger.Logger, sett Settings) (*SQL, error) {
 
 	ctx, cancel := context.WithCancel(ctx)
 	sql := &SQL{
-		ctx:    ctx,
-		cancel: cancel,
-		log:    log,
-		db:     db,
+		ctx:              ctx,
+		cancel:           cancel,
+		log:              log,
+		db:               db,
+		allowInsertNewID: sett.AllowInsertNewID,
 	}
 
 	if err := sql.waitConnection(sett); err != nil {
