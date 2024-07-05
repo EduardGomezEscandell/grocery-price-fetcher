@@ -23,17 +23,17 @@ func ProductsTest(t *testing.T, openDB func() database.DB) {
 	require.ErrorIs(t, err, fs.ErrNotExist)
 
 	product1 := product.Product{
+		Provider:  blank.Provider{},
 		Name:      "Product #1",
 		Price:     1.99,
 		BatchSize: 11,
-		Provider:  blank.Provider{},
 	}
 
 	product2 := product.Product{
+		Provider:  blank.Provider{},
 		Name:      "Product #2",
 		Price:     0.64,
 		BatchSize: 99,
-		Provider:  blank.Provider{},
 	}
 
 	id, err := db.SetProduct(product1)
@@ -109,16 +109,36 @@ func RecipesTest(t *testing.T, openDB func() database.DB) {
 	_, err := db.LookupRecipe(1)
 	require.ErrorIs(t, err, fs.ErrNotExist)
 
+	hydrogen := product.Product{
+		Provider:  blank.Provider{},
+		Name:      "Hydrogen",
+		ID:        53,
+		BatchSize: 1,
+	}
+
+	oxygen := product.Product{
+		Provider:  blank.Provider{},
+		Name:      "Oxygen",
+		ID:        87,
+		BatchSize: 16,
+	}
+
+	_, err = db.SetProduct(hydrogen)
+	require.NoError(t, err)
+
+	_, err = db.SetProduct(oxygen)
+	require.NoError(t, err)
+
 	recipe1 := recipe.Recipe{
-		Name: "Recipe #1",
+		Name: "Water",
 		Ingredients: []recipe.Ingredient{
-			{ProductID: 53, Amount: 1.0},
-			{ProductID: 87, Amount: 2.0},
+			{ProductID: hydrogen.ID, Amount: 2.0},
+			{ProductID: oxygen.ID, Amount: 1.0},
 		},
 	}
 
 	recipe2 := recipe.Recipe{
-		Name:        "Recipe #2",
+		Name:        "Empty",
 		Ingredients: make([]recipe.Ingredient, 0),
 	}
 
@@ -200,6 +220,12 @@ func MenuTest(t *testing.T, openDB func() database.DB) {
 	_, ok := db.LookupMenu("AAAAAAAAAAAAAAAAAAAAA")
 	require.False(t, ok)
 
+	recipeID, err := db.SetRecipe(recipe.Recipe{
+		Name:        "Empty recipe",
+		Ingredients: []recipe.Ingredient{},
+	})
+	require.NoError(t, err)
+
 	myMenu := dbtypes.Menu{
 		Name: "myMenu",
 		Days: []dbtypes.Day{
@@ -210,7 +236,7 @@ func MenuTest(t *testing.T, openDB func() database.DB) {
 						Name: "Café da Manhã",
 						Dishes: []dbtypes.Dish{
 							{
-								ID:     68,
+								ID:     recipeID,
 								Amount: 16,
 							},
 						},
@@ -290,11 +316,31 @@ func PantriesTest(t *testing.T, openDB func() database.DB) {
 	_, ok := db.LookupPantry("AAAAAAAAAAAAAAAAAAAAA")
 	require.False(t, ok)
 
+	hydrogen := product.Product{
+		Provider:  blank.Provider{},
+		Name:      "Hydrogen",
+		ID:        53,
+		BatchSize: 1,
+	}
+
+	oxygen := product.Product{
+		Provider:  blank.Provider{},
+		Name:      "Oxygen",
+		ID:        87,
+		BatchSize: 16,
+	}
+
+	_, err := db.SetProduct(hydrogen)
+	require.NoError(t, err)
+
+	_, err = db.SetProduct(oxygen)
+	require.NoError(t, err)
+
 	pantry1 := dbtypes.Pantry{
 		Name: "Pantry #1",
 		Contents: []recipe.Ingredient{
-			{ProductID: 33, Amount: 1.0},
-			{ProductID: 66, Amount: 2.0},
+			{ProductID: hydrogen.ID, Amount: 2.0},
+			{ProductID: oxygen.ID, Amount: 1.0},
 		},
 	}
 
@@ -368,16 +414,57 @@ func ShoppingListsTest(t *testing.T, openDB func() database.DB) {
 	_, ok := db.LookupShoppingList("AAAAAAAAAAAAAAAAAAAAA", "AAAAAAAAAAAAaaaa")
 	require.False(t, ok)
 
+	hydrogen := product.Product{
+		Provider:  blank.Provider{},
+		Name:      "Hydrogen",
+		BatchSize: 1,
+	}
+
+	oxygen := product.Product{
+		Provider:  blank.Provider{},
+		Name:      "Oxygen",
+		BatchSize: 16,
+	}
+
+	id, err := db.SetProduct(hydrogen)
+	require.NoError(t, err)
+	hydrogen.ID = id
+
+	id, err = db.SetProduct(oxygen)
+	require.NoError(t, err)
+	oxygen.ID = id
+
+	menu1 := dbtypes.Menu{
+		Name: "Menu #1",
+	}
+
+	menu2 := dbtypes.Menu{
+		Name: "Menu #99",
+	}
+
+	err = db.SetMenu(menu1)
+	require.NoError(t, err)
+
+	err = db.SetMenu(menu2)
+	require.NoError(t, err)
+
+	pantry := dbtypes.Pantry{
+		Name: "Pantry #1",
+	}
+
+	err = db.SetPantry(pantry)
+	require.NoError(t, err)
+
 	list1 := dbtypes.ShoppingList{
-		Menu:     "Menu #1",
-		Pantry:   "Pantry #1",
-		Contents: []product.ID{13, 99},
+		Menu:     menu1.Name,
+		Pantry:   pantry.Name,
+		Contents: []product.ID{oxygen.ID},
 	}
 
 	list2 := dbtypes.ShoppingList{
-		Menu:     "Menu #99",
-		Pantry:   "Pantry #1",
-		Contents: []product.ID{500, 10000},
+		Menu:     menu2.Name,
+		Pantry:   pantry.Name,
+		Contents: []product.ID{hydrogen.ID},
 	}
 
 	require.NoError(t, db.SetShoppingList(list1), "Could not set ShoppingList")
@@ -388,7 +475,7 @@ func ShoppingListsTest(t *testing.T, openDB func() database.DB) {
 	slices.Sort(p.Contents)
 	require.Equal(t, list1, p, "ShoppingList does not match the one just created")
 
-	list1.Contents[0] = 111111
+	list1.Contents[0] = oxygen.ID
 
 	require.NoError(t, db.SetShoppingList(list1), "Could not override ShoppingList")
 	p, ok = db.LookupShoppingList(list1.Menu, list1.Pantry)
