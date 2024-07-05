@@ -2,8 +2,11 @@ package shoppingneeds
 
 import (
 	"encoding/json"
+	"errors"
+	"io/fs"
 	"net/http"
 
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/auth"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
@@ -14,7 +17,8 @@ import (
 type Service struct {
 	settings Settings
 
-	db database.DB
+	db   database.DB
+	auth auth.Getter
 }
 
 type Settings struct {
@@ -29,10 +33,11 @@ func (Settings) Defaults() Settings {
 
 var Version = "dev"
 
-func New(settings Settings, db database.DB) *Service {
+func New(settings Settings, db database.DB, auth auth.Getter) *Service {
 	return &Service{
 		settings: settings,
 		db:       db,
+		auth:     auth,
 	}
 }
 
@@ -62,11 +67,18 @@ func (s *Service) handleGet(log logger.Logger, w http.ResponseWriter, r *http.Re
 		return err
 	}
 
+	user, err := s.auth.GetUserID(r)
+	if err != nil {
+		return httputils.Errorf(http.StatusUnauthorized, "could not get user id: %v", err)
+	}
+
 	menu := r.PathValue("menu")
 
-	m, ok := s.db.LookupMenu(menu)
-	if !ok {
+	m, err := s.db.LookupMenu(user, menu)
+	if errors.Is(err, fs.ErrNotExist) {
 		return httputils.Errorf(http.StatusNotFound, "menu not found")
+	} else if err != nil {
+		return httputils.Errorf(http.StatusInternalServerError, "could not get menu: %v", err)
 	}
 
 	// Compute needs for the menu

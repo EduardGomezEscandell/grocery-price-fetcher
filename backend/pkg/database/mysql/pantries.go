@@ -35,16 +35,20 @@ func (s *SQL) createPantries(tx *sql.Tx) error {
 			name: "pantries",
 			query: `
 			CREATE TABLE pantries (
-				name VARCHAR(255) PRIMARY KEY
+				user VARCHAR(255) NOT NULL,
+				name VARCHAR(255) NOT NULL,
+				PRIMARY KEY (user, name)
 			)`,
 		},
 		{
 			name: "pantry_items",
 			query: `
 			CREATE TABLE pantry_items (
-				pantry VARCHAR(255) REFERENCES pantries(name) ON DELETE CASCADE,
+				user VARCHAR(255) NOT NULL,
+				pantry VARCHAR(255) NOT NULL,
 				product INT UNSIGNED REFERENCES products(id) ON DELETE CASCADE,
 				amount FLOAT,
+				FOREIGN KEY (user, pantry) REFERENCES pantries(user, name) ON DELETE CASCADE,
 				PRIMARY KEY (pantry, product)
 			)`,
 		},

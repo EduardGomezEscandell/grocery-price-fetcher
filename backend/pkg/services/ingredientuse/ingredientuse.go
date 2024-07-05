@@ -2,9 +2,12 @@ package ingredientuse
 
 import (
 	"encoding/json"
+	"errors"
+	"io/fs"
 	"net/http"
 	"strconv"
 
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/auth"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
@@ -14,7 +17,8 @@ import (
 type Service struct {
 	settings Settings
 
-	db database.DB
+	db   database.DB
+	auth *auth.Manager
 }
 
 type Settings struct {
@@ -27,10 +31,11 @@ func (Settings) Defaults() Settings {
 	}
 }
 
-func New(settings Settings, db database.DB) *Service {
+func New(settings Settings, db database.DB, auth *auth.Manager) *Service {
 	return &Service{
 		settings: settings,
 		db:       db,
+		auth:     auth,
 	}
 }
 
@@ -62,6 +67,11 @@ func (s Service) Handle(_ logger.Logger, w http.ResponseWriter, r *http.Request)
 		return err
 	}
 
+	user, err := s.auth.GetUserID(r)
+	if err != nil {
+		return httputils.Errorf(http.StatusUnauthorized, "could not get user: %v", err)
+	}
+
 	menu := r.PathValue("menu")
 	ingredientRaw := r.PathValue("ingredient")
 
@@ -71,7 +81,7 @@ func (s Service) Handle(_ logger.Logger, w http.ResponseWriter, r *http.Request)
 	}
 	ingredient := product.ID(tmp)
 
-	resp, err := s.compute(menu, ingredient)
+	resp, err := s.compute(user, menu, ingredient)
 	if err != nil {
 		return err
 	}
@@ -83,10 +93,12 @@ func (s Service) Handle(_ logger.Logger, w http.ResponseWriter, r *http.Request)
 	return nil
 }
 
-func (s *Service) compute(menuName string, ingredientID product.ID) ([]respBodyItem, error) {
-	menu, ok := s.db.LookupMenu(menuName)
-	if !ok {
+func (s *Service) compute(user, menuName string, ingredientID product.ID) ([]respBodyItem, error) {
+	menu, err := s.db.LookupMenu(user, menuName)
+	if errors.Is(err, fs.ErrNotExist) {
 		return nil, httputils.Errorf(http.StatusNotFound, "menu %q not found", menuName)
+	} else if err != nil {
+		return nil, httputils.Errorf(http.StatusInternalServerError, "could not get menu %q: %v", menuName, err)
 	}
 
 	resp := make([]respBodyItem, 0)

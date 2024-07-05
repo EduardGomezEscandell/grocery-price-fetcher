@@ -230,36 +230,45 @@ func (db *JSON) DeleteRecipe(id recipe.ID) error {
 	return nil
 }
 
-func (db *JSON) Menus() ([]dbtypes.Menu, error) {
+func (db *JSON) Menus(user string) ([]dbtypes.Menu, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	out := make([]dbtypes.Menu, len(db.menus))
-	copy(out, db.menus)
+	out := make([]dbtypes.Menu, 0, 1)
+	for _, m := range db.menus {
+		if m.User == user {
+			out = append(out, m)
+		}
+	}
+
 	return out, nil
 }
 
-func (db *JSON) LookupMenu(name string) (dbtypes.Menu, bool) {
+func (db *JSON) LookupMenu(user, name string) (dbtypes.Menu, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
 	i := slices.IndexFunc(db.menus, func(p dbtypes.Menu) bool {
-		return p.Name == name
+		return p.User == user && p.Name == name
 	})
 
 	if i == -1 {
-		return dbtypes.Menu{}, false
+		return dbtypes.Menu{}, fs.ErrNotExist
 	}
 
-	return db.menus[i], true
+	return db.menus[i], nil
 }
 
 func (db *JSON) SetMenu(m dbtypes.Menu) error {
+	if m.User == "" {
+		return errors.New("user cannot be empty")
+	}
+
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
 	i := slices.IndexFunc(db.menus, func(entry dbtypes.Menu) bool {
-		return entry.Name == m.Name
+		return entry.User == m.User && entry.Name == m.Name
 	})
 
 	if i == -1 {
@@ -274,12 +283,12 @@ func (db *JSON) SetMenu(m dbtypes.Menu) error {
 	return nil
 }
 
-func (db *JSON) DeleteMenu(name string) error {
+func (db *JSON) DeleteMenu(user, name string) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
 	i := slices.IndexFunc(db.menus, func(p dbtypes.Menu) bool {
-		return p.Name == name
+		return p.User == user && p.Name == name
 	})
 
 	if i == -1 {

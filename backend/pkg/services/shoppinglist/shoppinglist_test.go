@@ -39,7 +39,7 @@ func TestShoppingEndpoint(t *testing.T) {
 
 			db := testutils.Database(t, testutils.FixturePath(t, "database"))
 
-			sv := shoppinglist.New(shoppinglist.Settings{}.Defaults(), db)
+			sv := shoppinglist.New(shoppinglist.Settings{}.Defaults(), db, testutils.MockAuthGetter())
 			require.True(t, sv.Enabled())
 
 			fixture := testutils.FixturePath(t, "message", "body.json")

@@ -272,6 +272,8 @@ func TestMySQLMenus(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
+	user := "user_id_123"
+	
 	H := product.Product{
 		Name:      "Hydrogen",
 		BatchSize: 1,
@@ -326,11 +328,12 @@ func TestMySQLMenus(t *testing.T) {
 	require.NoErrorf(t, err, "could not set recipe %s", O2.Name)
 	O2.ID = rID
 
-	menus, err := db.Menus()
+	menus, err := db.Menus(user)
 	require.NoError(t, err)
 	require.Empty(t, menus)
 
 	m := dbtypes.Menu{
+		User: user,
 		Name: "Test Menu",
 		Days: []dbtypes.Day{
 			{
@@ -356,17 +359,17 @@ func TestMySQLMenus(t *testing.T) {
 		},
 	}
 
-	_, ok := db.LookupMenu(m.Name)
-	require.False(t, ok)
+	_, err = db.LookupMenu(user, m.Name)
+	require.Error(t, err)
 
 	err = db.SetMenu(m)
 	require.NoError(t, err)
 
-	got, ok := db.LookupMenu(m.Name)
-	require.True(t, ok)
+	got, err := db.LookupMenu(user, m.Name)
+	require.NoError(t, err)
 	require.Equal(t, m, got)
 
-	menus, err = db.Menus()
+	menus, err = db.Menus(user)
 	require.NoError(t, err)
 	require.ElementsMatch(t, []dbtypes.Menu{m}, menus)
 
@@ -374,14 +377,14 @@ func TestMySQLMenus(t *testing.T) {
 	err = db.SetMenu(m)
 	require.NoError(t, err)
 
-	menus, err = db.Menus()
+	menus, err = db.Menus(user)
 	require.NoError(t, err)
 	require.ElementsMatch(t, []dbtypes.Menu{m}, menus)
 
-	err = db.DeleteMenu(m.Name)
+	err = db.DeleteMenu(user, m.Name)
 	require.NoError(t, err)
 
-	menus, err = db.Menus()
+	menus, err = db.Menus(user)
 	require.NoError(t, err)
 	require.Empty(t, menus)
 }

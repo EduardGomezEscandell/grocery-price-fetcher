@@ -3,11 +3,14 @@ package shoppinglist
 import (
 	"cmp"
 	"encoding/json"
+	"errors"
 	"io"
+	"io/fs"
 	"math"
 	"net/http"
 	"slices"
 
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/auth"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
@@ -21,7 +24,8 @@ import (
 type Service struct {
 	settings Settings
 
-	db database.DB
+	db   database.DB
+	auth auth.Getter
 }
 
 type Settings struct {
@@ -34,10 +38,11 @@ func (Settings) Defaults() Settings {
 	}
 }
 
-func New(settings Settings, db database.DB) *Service {
+func New(settings Settings, db database.DB, auth auth.Getter) *Service {
 	return &Service{
 		settings: settings,
 		db:       db,
+		auth:     auth,
 	}
 }
 
@@ -71,12 +76,19 @@ func (s *Service) handleGet(log logger.Logger, w http.ResponseWriter, r *http.Re
 		return err
 	}
 
+	user, err := s.auth.GetUserID(r)
+	if err != nil {
+		return httputils.Errorf(http.StatusUnauthorized, "failed to get user ID: %v", err)
+	}
+
 	menu := r.PathValue("menu")
 	pantry := r.PathValue("pantry")
 
-	m, ok := s.db.LookupMenu(menu)
-	if !ok {
+	m, err := s.db.LookupMenu(user, menu)
+	if errors.Is(err, fs.ErrNotExist) {
 		return httputils.Errorf(http.StatusNotFound, "menu not found")
+	} else if err != nil {
+		return httputils.Errorf(http.StatusInternalServerError, "failed to lookup menu: %v", err)
 	}
 
 	p, ok := s.db.LookupPantry(pantry)
@@ -108,11 +120,18 @@ func (s *Service) handlePut(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 		return err
 	}
 
+	user, err := s.auth.GetUserID(r)
+	if err != nil {
+		return httputils.Errorf(http.StatusUnauthorized, "failed to get user ID: %v", err)
+	}
+
 	menu := r.PathValue("menu")
 	pantry := r.PathValue("pantry")
 
-	if _, ok := s.db.LookupMenu(menu); !ok {
+	if _, err = s.db.LookupMenu(user, menu); errors.Is(err, fs.ErrNotExist) {
 		return httputils.Errorf(http.StatusNotFound, "menu not found")
+	} else if err != nil {
+		return httputils.Errorf(http.StatusInternalServerError, "failed to lookup menu: %v", err)
 	}
 
 	if _, ok := s.db.LookupPantry(pantry); !ok {
@@ -145,14 +164,6 @@ func (s *Service) handlePut(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 func (s *Service) handleDelete(_ logger.Logger, w http.ResponseWriter, r *http.Request) error {
 	menu := r.PathValue("menu")
 	pantry := r.PathValue("pantry")
-
-	if _, ok := s.db.LookupMenu(menu); !ok {
-		return httputils.Errorf(http.StatusNotFound, "menu not found")
-	}
-
-	if _, ok := s.db.LookupPantry(pantry); !ok {
-		return httputils.Errorf(http.StatusNotFound, "pantry not found")
-	}
 
 	if err := s.db.DeleteShoppingList(menu, pantry); err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "failed to delete shopping list: %v", err)

@@ -159,7 +159,7 @@ func copyRecipes(log logger.Logger, input, output database.DB) error {
 }
 
 func copyMenus(log logger.Logger, input, output database.DB) error {
-	menus, err := input.Menus()
+	menus, err := input.Menus("default")
 	if err != nil {
 		return fmt.Errorf("could not get menus: %w", err)
 	}
@@ -224,7 +224,7 @@ func verifyEmpty(log logger.Logger, db database.DB) (bool, error) {
 		return false, nil
 	}
 
-	if menus, err := db.Menus(); err != nil {
+	if menus, err := db.Menus("default"); err != nil {
 		return false, fmt.Errorf("could not read output DB menus: %v", err)
 	} else if len(menus) != 0 {
 		log.Info("Output DB menus not empty, exiting")

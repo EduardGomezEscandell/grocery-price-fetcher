@@ -24,10 +24,10 @@ type DB interface {
 	SetRecipe(r recipe.Recipe) (recipe.ID, error)
 	DeleteRecipe(name recipe.ID) error
 
-	Menus() ([]dbtypes.Menu, error)
-	LookupMenu(name string) (dbtypes.Menu, bool)
+	Menus(user string) ([]dbtypes.Menu, error)
+	LookupMenu(user, name string) (dbtypes.Menu, error)
 	SetMenu(m dbtypes.Menu) error
-	DeleteMenu(name string) error
+	DeleteMenu(user, name string) error
 
 	Pantries() ([]dbtypes.Pantry, error)
 	LookupPantry(name string) (dbtypes.Pantry, bool)

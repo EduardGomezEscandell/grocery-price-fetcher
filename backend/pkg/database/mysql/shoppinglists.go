@@ -38,10 +38,13 @@ func (s *SQL) createShoppingLists(tx *sql.Tx) error {
 			name: "shopping_list_items",
 			query: `
 			CREATE TABLE shopping_list_items (
-				menu_name VARCHAR(255) REFERENCES menus(name) ON DELETE CASCADE,
-				pantry_name VARCHAR(255) REFERENCES pantries(name) ON DELETE CASCADE,
-				product INT UNSIGNED REFERENCES products(id) ON DELETE CASCADE,
-				PRIMARY KEY (menu_name, pantry_name, product)
+				user VARCHAR(255) NOT NULL,
+				menu VARCHAR(255) NOT NULL,
+				pantry VARCHAR(255) NOT NULL,
+				product INT UNSIGNED NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+				FOREIGN KEY (user, menu) REFERENCES menus(user, name) ON DELETE CASCADE,
+				FOREIGN KEY (user, pantry) REFERENCES pantries(user, name) ON DELETE CASCADE,
+				PRIMARY KEY (user, menu, pantry, product)
 			)`,
 		},
 	}
@@ -141,7 +144,7 @@ func (s *SQL) LookupShoppingList(menu, pantry string) (dbtypes.ShoppingList, boo
 	query := `
 	SELECT product
 	FROM shopping_list_items
-	WHERE menu_name = ? AND pantry_name = ?
+	WHERE menu = ? AND pantry = ?
 	`
 	s.log.Trace(query)
 
@@ -188,14 +191,14 @@ func (s *SQL) SetShoppingList(list dbtypes.ShoppingList) error {
 		DELETE FROM
 			shopping_list_items
 		WHERE 
-			menu_name = ? 
-			AND pantry_name = ?
+			menu = ? 
+			AND pantry = ?
 	`, list.Menu, list.Pantry)
 	if err != nil {
 		return fmt.Errorf("could not delete old shopping list items: %v", err)
 	}
 
-	err = bulkInsert(s, tx, "shopping_list_items(menu_name, pantry_name, product)", list.Contents, func(ID product.ID) []any {
+	err = bulkInsert(s, tx, "shopping_list_items(menu, pantry, product)", list.Contents, func(ID product.ID) []any {
 		return []any{list.Menu, list.Pantry, ID}
 	})
 	if err != nil {
@@ -210,7 +213,7 @@ func (s *SQL) SetShoppingList(list dbtypes.ShoppingList) error {
 }
 
 func (s *SQL) DeleteShoppingList(menu, pantry string) error {
-	query := `DELETE FROM shopping_list_items WHERE menu_name = ? AND pantry_name = ?`
+	query := `DELETE FROM shopping_list_items WHERE menu = ? AND pantry = ?`
 	s.log.Trace(query)
 
 	if _, err := s.db.ExecContext(s.ctx, query, menu, pantry); err != nil {

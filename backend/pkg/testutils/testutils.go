@@ -16,6 +16,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/auth"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/jsondb"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
@@ -215,4 +216,14 @@ func CompareToGolden(t *testing.T, got string, fileName string) {
 	} else {
 		require.Equal(t, want, got, "Generated file does not match golden")
 	}
+}
+
+func MockAuthGetter() auth.Getter {
+	return mockAuth{}
+}
+
+type mockAuth struct{}
+
+func (mockAuth) GetUserID(*http.Request) (string, error) {
+	return "test-user-123", nil
 }

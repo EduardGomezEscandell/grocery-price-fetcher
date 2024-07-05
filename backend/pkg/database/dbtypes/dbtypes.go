@@ -25,6 +25,7 @@ type Day struct {
 
 // Menu represents a menu for a week.
 type Menu struct {
+	User string `json:"user"`
 	Name string `json:"name"`
 	Days []Day  `json:"days,omitempty"`
 }

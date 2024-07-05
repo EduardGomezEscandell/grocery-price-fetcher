@@ -217,8 +217,10 @@ func MenuTest(t *testing.T, openDB func() database.DB) {
 	db := openDB()
 	defer db.Close()
 
-	_, ok := db.LookupMenu("AAAAAAAAAAAAAAAAAAAAA")
-	require.False(t, ok)
+	const user = "default"
+
+	_, err := db.LookupMenu("default", "AAAAAAAAAAAAAAAAAAAAA")
+	require.Error(t, err)
 
 	recipeID, err := db.SetRecipe(recipe.Recipe{
 		Name:        "Empty recipe",
@@ -227,6 +229,7 @@ func MenuTest(t *testing.T, openDB func() database.DB) {
 	require.NoError(t, err)
 
 	myMenu := dbtypes.Menu{
+		User: user,
 		Name: "myMenu",
 		Days: []dbtypes.Day{
 			{
@@ -247,32 +250,36 @@ func MenuTest(t *testing.T, openDB func() database.DB) {
 	}
 
 	require.NoError(t, db.SetMenu(myMenu), "Could not set Menu")
-	m, ok := db.LookupMenu(myMenu.Name)
-	require.True(t, ok, "Could not find Menu just created")
+	m, err := db.LookupMenu(user, myMenu.Name)
+	require.NoError(t, err, "Could not find Menu just created")
 	require.Equal(t, myMenu, m, "Menu does not match the one just created")
+
+	_, err = db.LookupMenu(anotherUser, myMenu.Name)
+	require.ErrorIs(t, err, fs.ErrNotExist, "Should not find Menu from another user")
 
 	myMenu.Days[0].Meals[0].Dishes[0].Amount = 20
 
 	require.NoError(t, db.SetMenu(myMenu), "Could not override Menu")
-	m, ok = db.LookupMenu(myMenu.Name)
-	require.True(t, ok, "Could not find Menu just overridden")
+	m, err = db.LookupMenu(user, myMenu.Name)
+	require.NoError(t, err, "Could not find Menu just overridden")
 	require.Equal(t, myMenu, m, "Menu does not match the one just overridden")
 
 	// Test implicit deletion of dishes
 	myMenu.Days[0].Meals[0].Dishes = nil
 
 	require.NoError(t, db.SetMenu(myMenu), "Could not override Menu")
-	m, ok = db.LookupMenu(myMenu.Name)
-	require.True(t, ok, "Could not find Menu just overridden")
+	m, err = db.LookupMenu(user, myMenu.Name)
+	require.NoError(t, err, "Could not find Menu just overridden")
 	require.Equal(t, myMenu, m, "Menu does not match the one just overridden")
 
 	emptyMenu := dbtypes.Menu{
+		User: user,
 		Name: "Empty Menu",
 	}
 
 	require.NoError(t, db.SetMenu(emptyMenu), "Could not set Menu")
-	m, ok = db.LookupMenu(emptyMenu.Name)
-	require.True(t, ok, "Could not find empty Menu just created")
+	m, err = db.LookupMenu(user, emptyMenu.Name)
+	require.NoError(t, err, "Could not find empty Menu just created")
 	require.Equal(t, emptyMenu, m, "Empty menu does not match the one just created")
 
 	t.Log("Closing DB and reopening")
@@ -281,28 +288,28 @@ func MenuTest(t *testing.T, openDB func() database.DB) {
 	db = openDB()
 	defer db.Close()
 
-	menus, err := db.Menus()
+	menus, err := db.Menus(user)
 	require.NoError(t, err)
 	require.ElementsMatch(t, []dbtypes.Menu{myMenu, emptyMenu}, menus, "Menus do not match the ones just created")
 
-	_, ok = db.LookupMenu("AAAAAAAAAAAAAAAAAAAAA")
-	require.False(t, ok)
+	_, err = db.LookupMenu(user, "AAAAAAAAAAAAAAAAAAAAA")
+	require.Error(t, err)
 
-	m, ok = db.LookupMenu(myMenu.Name)
-	require.True(t, ok, "Could not find Menu after reopening DB")
+	m, err = db.LookupMenu(user, myMenu.Name)
+	require.NoError(t, err, "Could not find Menu after reopening DB")
 	require.Equal(t, myMenu, m, "Menu does not match the one after reopening DB")
 
-	m, ok = db.LookupMenu(emptyMenu.Name)
-	require.True(t, ok, "Could not find empty Menu after reopening DB")
+	m, err = db.LookupMenu(user, emptyMenu.Name)
+	require.NoError(t, err, "Could not find empty Menu after reopening DB")
 	require.Equal(t, emptyMenu, m, "Empty menu does not match the one after reopening DB")
 
 	require.ElementsMatch(t, []dbtypes.Menu{myMenu, emptyMenu}, menus, "Menus do not match the ones after reopening DB")
 
-	err = db.DeleteMenu(myMenu.Name)
+	err = db.DeleteMenu(user, myMenu.Name)
 	require.NoError(t, err)
 
-	_, ok = db.LookupMenu(myMenu.Name)
-	require.False(t, ok)
+	_, err = db.LookupMenu(user, myMenu.Name)
+	require.Error(t, err)
 
 	require.NoError(t, db.Close())
 }

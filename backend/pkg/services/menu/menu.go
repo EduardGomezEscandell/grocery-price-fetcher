@@ -2,9 +2,12 @@ package menu
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
+	"io/fs"
 	"net/http"
 
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/auth"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
@@ -24,6 +27,7 @@ type ProductData struct {
 type Service struct {
 	settings Settings
 	db       database.DB
+	auth     auth.Getter
 }
 
 type Settings struct {
@@ -36,7 +40,7 @@ func (Settings) Defaults() Settings {
 	}
 }
 
-func New(s Settings, db database.DB) *Service {
+func New(s Settings, db database.DB, auth auth.Getter) *Service {
 	if !s.Enable {
 		return nil
 	}
@@ -44,6 +48,7 @@ func New(s Settings, db database.DB) *Service {
 	return &Service{
 		settings: s,
 		db:       db,
+		auth:     auth,
 	}
 }
 
@@ -75,14 +80,21 @@ func (s *Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 		return err
 	}
 
+	user, err := s.auth.GetUserID(r)
+	if err != nil {
+		return httputils.Errorf(http.StatusUnauthorized, "could not get user: %v", err)
+	}
+
 	m := r.PathValue("menu")
 	if m == "" {
 		return httputils.Error(http.StatusBadRequest, "missing menu")
 	}
 
-	menu, ok := s.db.LookupMenu(m)
-	if !ok {
+	menu, err := s.db.LookupMenu(user, m)
+	if errors.Is(err, fs.ErrNotExist) {
 		return httputils.Errorf(http.StatusNotFound, "menu %s not found", m)
+	} else if err != nil {
+		return httputils.Errorf(http.StatusInternalServerError, "could not get menu: %v", err)
 	}
 
 	if err := s.writeMenu(w, menu); err != nil {
@@ -95,6 +107,11 @@ func (s *Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 func (s *Service) handlePut(log logger.Logger, w http.ResponseWriter, r *http.Request) error {
 	if err := httputils.ValidateContentType(r, httputils.MediaTypeJSON); err != nil {
 		return err
+	}
+
+	user, err := s.auth.GetUserID(r)
+	if err != nil {
+		return httputils.Errorf(http.StatusUnauthorized, "could not get user: %v", err)
 	}
 
 	name := r.PathValue("menu")
@@ -115,6 +132,8 @@ func (s *Service) handlePut(log logger.Logger, w http.ResponseWriter, r *http.Re
 	if err := json.Unmarshal(out, &menu); err != nil {
 		return httputils.Errorf(http.StatusBadRequest, "failed to unmarshal request: %v:\n%s", err, string(out))
 	}
+
+	menu.User = user
 
 	log.Debugf("Received request with %d days", len(menu.Days))
 
