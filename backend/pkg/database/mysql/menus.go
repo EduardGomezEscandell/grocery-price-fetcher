@@ -38,6 +38,7 @@ func (s *SQL) createMenus(tx *sql.Tx) error {
 			`CREATE TABLE menus (
 				user VARCHAR(255),
 				name VARCHAR(255),
+				FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE,
 				PRIMARY KEY(user, name)
 			)`,
 		},
@@ -48,6 +49,7 @@ func (s *SQL) createMenus(tx *sql.Tx) error {
 				menu VARCHAR(255) NOT NULL,
 				pos INT NOT NULL,
 				name VARCHAR(255) NOT NULL,
+				FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE,
 				FOREIGN KEY (user, menu) REFERENCES menus(user, name) ON DELETE CASCADE,
 				PRIMARY KEY (user, menu, pos)
 			)`,
@@ -60,6 +62,7 @@ func (s *SQL) createMenus(tx *sql.Tx) error {
 				day INT NOT NULL,
 				pos INT NOT NULL,
 				name VARCHAR(255) NOT NULL,
+				FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE,
 				FOREIGN KEY (user, menu, day) REFERENCES menu_days(user, menu, pos) ON DELETE CASCADE,
 				PRIMARY KEY (user, menu, day, pos)
 			)`,
@@ -74,6 +77,7 @@ func (s *SQL) createMenus(tx *sql.Tx) error {
 				pos INT NOT NULL,
 				recipe INT UNSIGNED NOT NULL,
 				amount FLOAT NOT NULL,
+				FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE,
 				FOREIGN KEY (user, menu, day, meal) REFERENCES menu_meals(user, menu, day, pos) ON DELETE CASCADE,
 				FOREIGN KEY (recipe) REFERENCES recipes(id) ON DELETE CASCADE,
 				PRIMARY KEY (user, menu, day, meal, pos)

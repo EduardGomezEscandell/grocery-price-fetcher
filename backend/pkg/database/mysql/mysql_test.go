@@ -287,6 +287,9 @@ func TestMySQLMenus(t *testing.T) {
 		Provider:  blank.Provider{},
 	}
 
+	err = db.SetUser(user)
+	require.NoError(t, err)
+
 	id, err := db.SetProduct(H)
 	require.NoErrorf(t, err, "could not set product %s", H.Name)
 	H.ID = id
@@ -421,6 +424,9 @@ func TestMySQLPantries(t *testing.T) {
 		},
 	}
 
+	err = db.SetUser(user)
+	require.NoError(t, err)
+
 	id, err := db.SetProduct(p[0])
 	require.NoError(t, err)
 	p[0].ID = id
@@ -512,6 +518,9 @@ func TestMySQLShoopingLists(t *testing.T) {
 			Provider:  blank.Provider{},
 		},
 	}
+
+	err = db.SetUser(user)
+	require.NoError(t, err)
 
 	id, err := db.SetProduct(p[0])
 	require.NoError(t, err)

@@ -78,7 +78,7 @@ func New(ctx context.Context, log logger.Logger, sett Settings) (*SQL, error) {
 		return nil, fmt.Errorf("could not connect to database: %w", err)
 	}
 
-	if err := sql.createTables(); err != nil {
+	if err := sql.createDBTables(); err != nil {
 		sql.Close()
 		return nil, fmt.Errorf("could not create tables: %v", err)
 	}
@@ -86,7 +86,7 @@ func New(ctx context.Context, log logger.Logger, sett Settings) (*SQL, error) {
 	return sql, nil
 }
 
-func (s *SQL) createTables() error {
+func (s *SQL) createDBTables() error {
 	tx, err := s.db.BeginTx(s.ctx, nil)
 	if err != nil {
 		return fmt.Errorf("could not begin transaction: %w", err)
@@ -94,6 +94,7 @@ func (s *SQL) createTables() error {
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
 	err = errors.Join(
+		s.createUsers(tx),
 		s.createProducts(tx),
 		s.createRecipes(tx),
 		s.createMenus(tx),
@@ -251,4 +252,45 @@ func repeatStringWithSeparator(str string, sep string, n int) string {
 	}
 
 	return b.String()
+}
+
+func (s *SQL) dropTables(tx *sql.Tx, names ...string) error {
+	for _, n := range names {
+		q := fmt.Sprintf("DROP TABLE %s", n)
+		s.log.Trace(q)
+
+		_, err := tx.ExecContext(s.ctx, q)
+		if err != nil {
+			return fmt.Errorf("could not drop table: %v", err)
+		}
+	}
+
+	return nil
+}
+
+type tableDef struct {
+	name    string
+	columns []string
+}
+
+func (s *SQL) createTables(tx *sql.Tx, tables ...tableDef) error {
+	for _, t := range tables {
+		if t.name == "" {
+			return errors.New("table has no name")
+		}
+
+		if len(t.columns) == 0 {
+			return fmt.Errorf("table %s has no columns", t.name)
+		}
+
+		q := fmt.Sprintf("CREATE TABLE %s (%s)", t.name, strings.Join(t.columns, ", "))
+		s.log.Trace(q)
+
+		_, err := tx.ExecContext(s.ctx, q)
+		if err != nil && !errorIs(err, errTableExists) {
+			return fmt.Errorf("could not create table %s: %v", t.name, err)
+		}
+	}
+
+	return nil
 }

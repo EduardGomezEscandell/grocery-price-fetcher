@@ -43,7 +43,9 @@ func (s *SQL) createShoppingLists(tx *sql.Tx) error {
 				user VARCHAR(255) NOT NULL,
 				menu VARCHAR(255) NOT NULL,
 				pantry VARCHAR(255) NOT NULL,
-				product INT UNSIGNED NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+				product INT UNSIGNED NOT NULL,
+				FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE,
+				FOREIGN KEY (product) REFERENCES products(id) ON DELETE CASCADE,
 				FOREIGN KEY (user, menu) REFERENCES menus(user, name) ON DELETE CASCADE,
 				FOREIGN KEY (user, pantry) REFERENCES pantries(user, name) ON DELETE CASCADE,
 				PRIMARY KEY (user, menu, pantry, product)

@@ -39,6 +39,7 @@ func (s *SQL) createPantries(tx *sql.Tx) error {
 			CREATE TABLE pantries (
 				user VARCHAR(255) NOT NULL,
 				name VARCHAR(255) NOT NULL,
+				FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE,
 				PRIMARY KEY (user, name)
 			)`,
 		},
@@ -50,8 +51,9 @@ func (s *SQL) createPantries(tx *sql.Tx) error {
 				pantry VARCHAR(255),
 				product INT UNSIGNED,
 				amount FLOAT,
-				FOREIGN KEY (user, pantry) REFERENCES pantries(user, name) ON DELETE CASCADE,
+				FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE,
 				FOREIGN KEY (product) REFERENCES products(id) ON DELETE CASCADE,
+				FOREIGN KEY (user, pantry) REFERENCES pantries(user, name) ON DELETE CASCADE,
 				PRIMARY KEY (user, pantry, product)
 			)`,
 		},

@@ -18,12 +18,14 @@ import (
 )
 
 type JSON struct {
+	users         []string
 	products      []product.Product
 	recipes       []recipe.Recipe
 	menus         []dbtypes.Menu
 	pantries      []dbtypes.Pantry
 	shoppingLists []dbtypes.ShoppingList
 
+	usersPath         string
 	productsPath      string
 	recipesPath       string
 	menusPath         string
@@ -35,6 +37,7 @@ type JSON struct {
 }
 
 type Settings struct {
+	Users         string
 	Products      string
 	Recipes       string
 	Menus         string
@@ -48,6 +51,7 @@ func DefaultSettings() Settings {
 
 func DefaultSettingsPath(root string) Settings {
 	return Settings{
+		Users:         filepath.Join(root, "users.json"),
 		Products:      filepath.Join(root, "products.json"),
 		Recipes:       filepath.Join(root, "recipes.json"),
 		Menus:         filepath.Join(root, "menus.json"),
@@ -59,6 +63,7 @@ func DefaultSettingsPath(root string) Settings {
 func New(ctx context.Context, log logger.Logger, s Settings) (*JSON, error) {
 	db := &JSON{
 		log:               log,
+		usersPath:         s.Users,
 		productsPath:      s.Products,
 		recipesPath:       s.Recipes,
 		menusPath:         s.Menus,
@@ -70,6 +75,7 @@ func New(ctx context.Context, log logger.Logger, s Settings) (*JSON, error) {
 	log.Tracef("Loading database")
 
 	return db, errors.Join(
+		load(db.usersPath, &db.users),
 		load(db.productsPath, &db.products),
 		load(db.recipesPath, &db.recipes),
 		load(db.menusPath, &db.menus),
@@ -86,6 +92,74 @@ func (db *JSON) Close() error {
 		return err
 	}
 
+	return nil
+}
+
+func (db *JSON) LookupUser(id string) (bool, error) {
+	db.mu.RLock()
+	defer db.mu.RUnlock()
+
+	i := slices.IndexFunc(db.users, func(u string) bool {
+		return u == id
+	})
+
+	return i != -1, nil
+}
+
+func (db *JSON) SetUser(id string) error {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	i := slices.IndexFunc(db.users, func(u string) bool {
+		return u == id
+	})
+
+	if i != -1 {
+		return nil
+	}
+
+	db.users = append(db.users, id)
+	if err := db.save(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db *JSON) DeleteUser(id string) error {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	if i := slices.IndexFunc(db.users, func(u string) bool {
+		return u == id
+	}); i != -1 {
+		db.users = append(db.users[:i], db.users[i+1:]...)
+	}
+
+	for i := len(db.menus) - 1; i >= 0; i-- {
+		if db.menus[i].User != id {
+			continue
+		}
+		db.menus = append(db.menus[:i], db.menus[i+1:]...)
+	}
+
+	for i := len(db.pantries) - 1; i >= 0; i-- {
+		if db.pantries[i].User != id {
+			continue
+		}
+		db.pantries = append(db.pantries[:i], db.pantries[i+1:]...)
+	}
+
+	for i := len(db.shoppingLists) - 1; i >= 0; i-- {
+		if db.shoppingLists[i].User != id {
+			continue
+		}
+		db.shoppingLists = append(db.shoppingLists[:i], db.shoppingLists[i+1:]...)
+	}
+
+	if err := db.save(); err != nil {
+		return err
+	}
 	return nil
 }
 

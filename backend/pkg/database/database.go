@@ -14,6 +14,10 @@ import (
 )
 
 type DB interface {
+	LookupUser(id string) (bool, error)
+	SetUser(id string) error
+	DeleteUser(id string) error
+
 	Products() ([]product.Product, error)
 	LookupProduct(ID product.ID) (product.Product, error)
 	SetProduct(p product.Product) (product.ID, error)

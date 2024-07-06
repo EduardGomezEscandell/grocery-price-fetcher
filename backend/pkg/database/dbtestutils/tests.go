@@ -13,6 +13,65 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func UsersTest(t *testing.T, openDB func() database.DB) {
+	t.Helper()
+
+	db := openDB()
+	defer db.Close()
+
+	user1 := "user1"
+	user2 := "user2"
+
+	exists, err := db.LookupUser(user1)
+	require.NoError(t, err)
+	require.False(t, exists, "User should not exist")
+
+	require.NoError(t, db.SetUser(user1), "Could not set User")
+	exists, err = db.LookupUser(user1)
+	require.NoError(t, err)
+	require.True(t, exists, "User should exist")
+
+	require.NoError(t, db.SetUser(user2), "Could not set User")
+	exists, err = db.LookupUser(user2)
+	require.NoError(t, err)
+	require.True(t, exists, "User should exist")
+
+	require.NoError(t, db.DeleteUser(user1), "Could not delete User")
+	exists, err = db.LookupUser(user1)
+	require.NoError(t, err)
+	require.False(t, exists, "User should not exist")
+
+	t.Log("Closing DB and reopening")
+	require.NoError(t, db.Close())
+
+	db = openDB()
+	defer db.Close()
+
+	exists, err = db.LookupUser(user1)
+	require.NoError(t, err)
+	require.False(t, exists, "User should not exist after reopening DB")
+
+	exists, err = db.LookupUser(user2)
+	require.NoError(t, err)
+	require.False(t, exists, "User should not exist after reopening DB")
+
+	require.NoError(t, db.SetPantry(dbtypes.Pantry{User: user2, Name: "Pantry"}), "Could not set Pantry")
+	require.NoError(t, db.SetMenu(dbtypes.Menu{User: user2, Name: "Menu"}), "Could not set Menu")
+	require.NoError(t, db.SetShoppingList(dbtypes.ShoppingList{User: user2, Menu: "Menu", Pantry: "Pantry"}), "Could not set ShoppingList")
+
+	require.NoError(t, db.DeleteUser(user2), "Could not delete User")
+	exists, err = db.LookupUser(user2)
+	require.NoError(t, err)
+	require.False(t, exists, "User should not exist")
+
+	_, err = db.LookupPantry(user2, "Pantry")
+	require.ErrorIs(t, err, fs.ErrNotExist, "Pantry should not exist after deleting User")
+	_, err = db.LookupMenu(user2, "Menu")
+	require.ErrorIs(t, err, fs.ErrNotExist, "Menu should not exist after deleting User")
+	_, err = db.LookupShoppingList(user2, "Menu", "Pantry")
+	require.ErrorIs(t, err, fs.ErrNotExist, "ShoppingList should not exist after deleting User")
+}
+
 func ProductsTest(t *testing.T, openDB func() database.DB) {
 	t.Helper()
 
@@ -223,6 +282,9 @@ func MenuTest(t *testing.T, openDB func() database.DB) {
 	_, err := db.LookupMenu(user, "AAAAAAAAAAAAAAAAAAAAA")
 	require.Error(t, err)
 
+	err = db.SetUser(user)
+	require.NoError(t, err)
+
 	recipeID, err := db.SetRecipe(recipe.Recipe{
 		Name:        "Empty recipe",
 		Ingredients: []recipe.Ingredient{},
@@ -341,6 +403,9 @@ func PantriesTest(t *testing.T, openDB func() database.DB) {
 		BatchSize: 16,
 	}
 
+	err = db.SetUser(user)
+	require.NoError(t, err)
+
 	_, err = db.SetProduct(hydrogen)
 	require.NoError(t, err)
 
@@ -450,6 +515,9 @@ func ShoppingListsTest(t *testing.T, openDB func() database.DB) {
 		Name:      "Oxygen",
 		BatchSize: 16,
 	}
+
+	err = db.SetUser(user)
+	require.NoError(t, err)
 
 	id, err := db.SetProduct(hydrogen)
 	require.NoError(t, err)
