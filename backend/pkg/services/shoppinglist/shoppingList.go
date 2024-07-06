@@ -97,7 +97,11 @@ func (s *Service) handleGet(log logger.Logger, w http.ResponseWriter, r *http.Re
 	}
 
 	var done []product.ID
-	if D, ok := s.db.LookupShoppingList(menu, pantry); ok {
+	if D, err := s.db.LookupShoppingList(user, menu, pantry); errors.Is(err, fs.ErrNotExist) {
+		done = make([]product.ID, 0)
+	} else if err != nil {
+		return httputils.Errorf(http.StatusInternalServerError, "failed to lookup shopping list: %v", err)
+	} else {
 		done = D.Contents
 	}
 
@@ -145,6 +149,7 @@ func (s *Service) handlePut(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 	r.Body.Close()
 
 	sl := dbtypes.ShoppingList{
+		User:   user,
 		Menu:   menu,
 		Pantry: pantry,
 	}
@@ -162,10 +167,15 @@ func (s *Service) handlePut(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 }
 
 func (s *Service) handleDelete(_ logger.Logger, w http.ResponseWriter, r *http.Request) error {
+	user, err := s.auth.GetUserID(r)
+	if err != nil {
+		return httputils.Errorf(http.StatusUnauthorized, "failed to get user ID: %v", err)
+	}
+
 	menu := r.PathValue("menu")
 	pantry := r.PathValue("pantry")
 
-	if err := s.db.DeleteShoppingList(menu, pantry); err != nil {
+	if err := s.db.DeleteShoppingList(user, menu, pantry); err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "failed to delete shopping list: %v", err)
 	}
 

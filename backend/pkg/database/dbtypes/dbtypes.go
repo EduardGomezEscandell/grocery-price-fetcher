@@ -36,6 +36,7 @@ type Pantry struct {
 }
 
 type ShoppingList struct {
+	User     string       `json:"user"`
 	Menu     string       `json:"menu"`
 	Pantry   string       `json:"pantry"`
 	Contents []product.ID `json:"contents"`

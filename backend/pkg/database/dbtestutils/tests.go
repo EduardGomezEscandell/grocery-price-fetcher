@@ -217,9 +217,10 @@ func MenuTest(t *testing.T, openDB func() database.DB) {
 	db := openDB()
 	defer db.Close()
 
-	const user = "default"
+	const user = "test-user-123"
+	const anotherUser = "another-user-456"
 
-	_, err := db.LookupMenu("default", "AAAAAAAAAAAAAAAAAAAAA")
+	_, err := db.LookupMenu(user, "AAAAAAAAAAAAAAAAAAAAA")
 	require.Error(t, err)
 
 	recipeID, err := db.SetRecipe(recipe.Recipe{
@@ -418,8 +419,11 @@ func ShoppingListsTest(t *testing.T, openDB func() database.DB) {
 	db := openDB()
 	defer db.Close()
 
-	_, ok := db.LookupShoppingList("AAAAAAAAAAAAAAAAAAAAA", "AAAAAAAAAAAAaaaa")
-	require.False(t, ok)
+	const user = "test-user-123"
+	const anotherUser = "another-user-456"
+
+	_, err := db.LookupShoppingList(user, "AAAAAAAAAA", "AAAAAAAAAAAA")
+	require.ErrorIs(t, err, fs.ErrNotExist)
 
 	hydrogen := product.Product{
 		Provider:  blank.Provider{},
@@ -442,10 +446,12 @@ func ShoppingListsTest(t *testing.T, openDB func() database.DB) {
 	oxygen.ID = id
 
 	menu1 := dbtypes.Menu{
+		User: user,
 		Name: "Menu #1",
 	}
 
 	menu2 := dbtypes.Menu{
+		User: user,
 		Name: "Menu #99",
 	}
 
@@ -463,30 +469,35 @@ func ShoppingListsTest(t *testing.T, openDB func() database.DB) {
 	require.NoError(t, err)
 
 	list1 := dbtypes.ShoppingList{
+		User:     user,
 		Menu:     menu1.Name,
 		Pantry:   pantry.Name,
 		Contents: []product.ID{oxygen.ID},
 	}
 
 	list2 := dbtypes.ShoppingList{
+		User:     user,
 		Menu:     menu2.Name,
 		Pantry:   pantry.Name,
 		Contents: []product.ID{hydrogen.ID},
 	}
 
 	require.NoError(t, db.SetShoppingList(list1), "Could not set ShoppingList")
-	p, ok := db.LookupShoppingList(list1.Menu, list1.Pantry)
-	require.True(t, ok, "Could not find ShoppingList just created")
+	p, err := db.LookupShoppingList(user, list1.Menu, list1.Pantry)
+	require.NoError(t, err, "Could not find ShoppingList just created")
 	// Sort the slices to make sure the order is deterministic
 	slices.Sort(list1.Contents)
 	slices.Sort(p.Contents)
 	require.Equal(t, list1, p, "ShoppingList does not match the one just created")
 
+	p, err = db.LookupShoppingList(anotherUser, list1.Menu, list1.Pantry)
+	require.ErrorIs(t, err, fs.ErrNotExist, "Should not find ShoppingList from another user")
+
 	list1.Contents[0] = oxygen.ID
 
 	require.NoError(t, db.SetShoppingList(list1), "Could not override ShoppingList")
-	p, ok = db.LookupShoppingList(list1.Menu, list1.Pantry)
-	require.True(t, ok, "Could not find ShoppingList just overridden")
+	p, err = db.LookupShoppingList(user, list1.Menu, list1.Pantry)
+	require.NoError(t, err, "Could not find ShoppingList just overridden")
 	// Sort the slices to make sure the order is deterministic
 	slices.Sort(list1.Contents)
 	slices.Sort(p.Contents)
@@ -495,18 +506,18 @@ func ShoppingListsTest(t *testing.T, openDB func() database.DB) {
 	// Test implicit deletion of items
 	list1.Contents = list1.Contents[:1]
 	require.NoError(t, db.SetShoppingList(list1), "Could not override ShoppingList")
-	p, ok = db.LookupShoppingList(list1.Menu, list1.Pantry)
-	require.True(t, ok, "Could not find ShoppingList just overridden")
+	p, err = db.LookupShoppingList(user, list1.Menu, list1.Pantry)
+	require.NoError(t, err, "Could not find ShoppingList just overridden")
 	// Sort the slices to make sure the order is deterministic
 	slices.Sort(list1.Contents)
 	slices.Sort(p.Contents)
 	require.Equal(t, list1, p, "ShoppingList does not match the one just overridden")
 
 	require.NoError(t, db.SetShoppingList(list2), "Could not set ShoppingList")
-	p, ok = db.LookupShoppingList(list2.Menu, list2.Pantry)
-	require.True(t, ok, "Could not find empty ShoppingList just created")
+	p, err = db.LookupShoppingList(user, list2.Menu, list2.Pantry)
+	require.NoError(t, err, "Could not find empty ShoppingList just created")
 	// Sort the slices to make sure the order is deterministic
-	slices.Sort(list1.Contents)
+	slices.Sort(list2.Contents)
 	slices.Sort(p.Contents)
 	require.Equal(t, list2, p, "Empty menu does not match the one just created")
 
@@ -516,34 +527,36 @@ func ShoppingListsTest(t *testing.T, openDB func() database.DB) {
 	db = openDB()
 	defer db.Close()
 
-	menus, err := db.ShoppingLists()
+	sLists, err := db.ShoppingLists(user)
 	require.NoError(t, err)
-	require.ElementsMatch(t, []dbtypes.ShoppingList{list1, list2}, menus, "ShoppingLists do not match the ones just created")
+	require.ElementsMatch(t, []dbtypes.ShoppingList{list1, list2}, sLists, "ShoppingLists do not match the ones after reopening DB")
 
-	_, ok = db.LookupShoppingList("FAKE MENU", "FAKE PANTRY")
-	require.False(t, ok)
+	sLists, err = db.ShoppingLists(anotherUser)
+	require.NoError(t, err)
+	require.Empty(t, sLists, "Should not find ShoppingLists from another user")
 
-	p, ok = db.LookupShoppingList(list1.Menu, list1.Pantry)
-	require.True(t, ok, "Could not find ShoppingList after reopening DB")
+	_, err = db.LookupShoppingList(user, "FAKE MENU", "FAKE PANTRY")
+	require.ErrorIs(t, err, fs.ErrNotExist)
+
+	p, err = db.LookupShoppingList(user, list1.Menu, list1.Pantry)
+	require.NoError(t, err, "Could not find ShoppingList after reopening DB")
 	// Sort the slices to make sure the order is deterministic
 	slices.Sort(list1.Contents)
 	slices.Sort(p.Contents)
 	require.Equal(t, list1, p, "ShoppingList does not match the one after reopening DB")
 
-	p, ok = db.LookupShoppingList(list2.Menu, list2.Pantry)
-	require.True(t, ok, "Could not find empty ShoppingList after reopening DB")
+	p, err = db.LookupShoppingList(user, list2.Menu, list2.Pantry)
+	require.NoError(t, err, "Could not find empty ShoppingList after reopening DB")
 	// Sort the slices to make sure the order is deterministic
-	slices.Sort(list1.Contents)
+	slices.Sort(list2.Contents)
 	slices.Sort(p.Contents)
 	require.Equal(t, list2, p, "Empty menu does not match the one after reopening DB")
 
-	require.ElementsMatch(t, []dbtypes.ShoppingList{list1, list2}, menus, "ShoppingLists do not match the ones after reopening DB")
-
-	err = db.DeleteShoppingList(list1.Menu, list1.Pantry)
+	err = db.DeleteShoppingList(user, list1.Menu, list1.Pantry)
 	require.NoError(t, err)
 
-	_, ok = db.LookupShoppingList(list1.Menu, list1.Pantry)
-	require.False(t, ok)
+	_, err = db.LookupShoppingList(user, list1.Menu, list1.Pantry)
+	require.ErrorIs(t, err, fs.ErrNotExist)
 
 	require.NoError(t, db.Close())
 }

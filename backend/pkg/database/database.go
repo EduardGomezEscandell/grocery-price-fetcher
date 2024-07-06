@@ -34,10 +34,10 @@ type DB interface {
 	SetPantry(p dbtypes.Pantry) error
 	DeletePantry(name string) error
 
-	ShoppingLists() ([]dbtypes.ShoppingList, error)
-	LookupShoppingList(menu, pantry string) (dbtypes.ShoppingList, bool)
+	ShoppingLists(user string) ([]dbtypes.ShoppingList, error)
+	LookupShoppingList(user, menu, pantry string) (dbtypes.ShoppingList, error)
 	SetShoppingList(m dbtypes.ShoppingList) error
-	DeleteShoppingList(menu, pantry string) error
+	DeleteShoppingList(user, menu, pantry string) error
 
 	Close() error
 }

@@ -373,44 +373,57 @@ func (db *JSON) DeletePantry(name string) error {
 	return nil
 }
 
-func (db *JSON) ShoppingLists() ([]dbtypes.ShoppingList, error) {
+func (db *JSON) ShoppingLists(user string) ([]dbtypes.ShoppingList, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	out := make([]dbtypes.ShoppingList, len(db.shoppingLists))
-	copy(out, db.shoppingLists)
+	out := make([]dbtypes.ShoppingList, 0, 1)
+	for _, p := range db.shoppingLists {
+		if p.User == user {
+			out = append(out, p)
+		}
+	}
+
 	return out, nil
 }
 
-func (db *JSON) LookupShoppingList(menu, pantry string) (dbtypes.ShoppingList, bool) {
+func (db *JSON) LookupShoppingList(user, menu, pantry string) (dbtypes.ShoppingList, error) {
+	if user == "" {
+		return dbtypes.ShoppingList{}, errors.New("user cannot be empty")
+	} else if menu == "" {
+		return dbtypes.ShoppingList{}, errors.New("menu cannot be empty")
+	} else if pantry == "" {
+		return dbtypes.ShoppingList{}, errors.New("pantry cannot be empty")
+	}
+
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
 	i := slices.IndexFunc(db.shoppingLists, func(p dbtypes.ShoppingList) bool {
-		return p.Menu == menu && p.Pantry == pantry
+		return p.User == user && p.Menu == menu && p.Pantry == pantry
 	})
 
 	if i == -1 {
-		return dbtypes.ShoppingList{}, false
+		return dbtypes.ShoppingList{}, fs.ErrNotExist
 	}
 
-	return db.shoppingLists[i], true
+	return db.shoppingLists[i], nil
 }
 
 func (db *JSON) SetShoppingList(p dbtypes.ShoppingList) error {
+	if p.User == "" {
+		return errors.New("user cannot be empty")
+	} else if p.Menu == "" {
+		return errors.New("menu cannot be empty")
+	} else if p.Pantry == "" {
+		return errors.New("pantry cannot be empty")
+	}
+
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	if p.Menu == "" {
-		p.Menu = "default"
-	}
-
-	if p.Pantry == "" {
-		p.Pantry = "default"
-	}
-
 	i := slices.IndexFunc(db.shoppingLists, func(entry dbtypes.ShoppingList) bool {
-		return entry.Menu == p.Menu && entry.Pantry == p.Pantry
+		return entry.User == p.User && entry.Menu == p.Menu && entry.Pantry == p.Pantry
 	})
 
 	if i == -1 {
@@ -425,16 +438,24 @@ func (db *JSON) SetShoppingList(p dbtypes.ShoppingList) error {
 	return nil
 }
 
-func (db *JSON) DeleteShoppingList(menu, pantry string) error {
+func (db *JSON) DeleteShoppingList(user, menu, pantry string) error {
+	if user == "" {
+		return errors.New("user cannot be empty")
+	} else if menu == "" {
+		return errors.New("menu cannot be empty")
+	} else if pantry == "" {
+		return errors.New("pantry cannot be empty")
+	}
+
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
 	i := slices.IndexFunc(db.shoppingLists, func(p dbtypes.ShoppingList) bool {
-		return p.Menu == menu && p.Pantry == pantry
+		return p.User == user && p.Menu == menu && p.Pantry == pantry
 	})
 
 	if i == -1 {
-		return fmt.Errorf("shopping list (%s, %s) not found", menu, pantry)
+		return nil
 	}
 
 	db.shoppingLists = append(db.shoppingLists[:i], db.shoppingLists[i+1:]...)

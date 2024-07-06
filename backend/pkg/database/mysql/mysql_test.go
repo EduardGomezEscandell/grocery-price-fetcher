@@ -99,7 +99,7 @@ func TestMySQL(t *testing.T) {
 			defer cancel()
 
 			log := testutils.NewLogger(t)
-			log.SetLevel(int(logrus.TraceLevel))
+			log.SetLevel(int(logrus.DebugLevel))
 
 			options := mysql.DefaultSettings()
 			options.PasswordFile = "./testdata/db_root_password.txt"
@@ -170,7 +170,7 @@ func TestMySQLRecipes(t *testing.T) {
 	defer cancel()
 
 	log := testutils.NewLogger(t)
-	log.SetLevel(int(logrus.TraceLevel))
+	log.SetLevel(int(logrus.DebugLevel))
 
 	options := mysql.DefaultSettings()
 	options.PasswordFile = "./testdata/db_root_password.txt"
@@ -273,7 +273,7 @@ func TestMySQLMenus(t *testing.T) {
 	defer db.Close()
 
 	user := "user_id_123"
-	
+
 	H := product.Product{
 		Name:      "Hydrogen",
 		BatchSize: 1,
@@ -492,6 +492,9 @@ func TestMySQLShoopingLists(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
+	const user = "user_id_123"
+	const anotherUser = "user_id_456"
+
 	p := []product.Product{
 		{
 			Name:      "Hydrogen",
@@ -515,52 +518,60 @@ func TestMySQLShoopingLists(t *testing.T) {
 	require.NoError(t, err)
 	p[1].ID = id
 
-	err = db.SetMenu(dbtypes.Menu{Name: "My test menu"})
+	err = db.SetMenu(dbtypes.Menu{User: user, Name: "My test menu"})
 	require.NoError(t, err)
 
 	err = db.SetPantry(dbtypes.Pantry{Name: "My test pantry"})
 	require.NoError(t, err)
 
 	sl := dbtypes.ShoppingList{
+		User:     user,
 		Menu:     "My test menu",
 		Pantry:   "My test pantry",
 		Contents: []product.ID{p[0].ID},
 	}
 
-	pantries, err := db.ShoppingLists()
+	sLists, err := db.ShoppingLists(user)
 	require.NoError(t, err)
-	require.Empty(t, pantries)
+	require.Empty(t, sLists)
 
-	_, ok := db.LookupShoppingList(sl.Menu, sl.Pantry)
-	require.False(t, ok)
+	_, err = db.LookupShoppingList(user, sl.Menu, sl.Pantry)
+	require.ErrorIs(t, err, fs.ErrNotExist)
 
 	err = db.SetShoppingList(sl)
 	require.NoError(t, err)
 
-	got, ok := db.LookupShoppingList(sl.Menu, sl.Pantry)
-	require.True(t, ok)
+	got, err := db.LookupShoppingList(user, sl.Menu, sl.Pantry)
+	require.NoError(t, err)
 	requireSameShoppingList(t, sl, got)
 
-	pantries, err = db.ShoppingLists()
+	_, err = db.LookupShoppingList(anotherUser, sl.Menu, sl.Pantry)
+	require.ErrorIs(t, err, fs.ErrNotExist, "expected not to find shopping list for another user")
+
+	sLists, err = db.ShoppingLists(user)
 	require.NoError(t, err)
-	require.Len(t, pantries, 1)
-	requireSameShoppingList(t, sl, pantries[0])
+	require.Len(t, sLists, 1)
+	requireSameShoppingList(t, sl, sLists[0])
+
+	sLists, err = db.ShoppingLists(anotherUser)
+	require.NoError(t, err)
+	require.Empty(t, sLists, "expected no shopping lists for another user")
 
 	sl.Contents = append(sl.Contents, p[1].ID)
 	err = db.SetShoppingList(sl)
 	require.NoError(t, err)
 
-	pantries, err = db.ShoppingLists()
+	sLists, err = db.ShoppingLists(user)
 	require.NoError(t, err)
-	require.Len(t, pantries, 1)
-	requireSameShoppingList(t, sl, pantries[0])
+	require.Len(t, sLists, 1)
+	requireSameShoppingList(t, sl, sLists[0])
 
-	err = db.DeleteShoppingList(sl.Menu, sl.Pantry)
+	err = db.DeleteShoppingList(user, sl.Menu, sl.Pantry)
 	require.NoError(t, err)
 
-	pantries, err = db.ShoppingLists()
+	sLists, err = db.ShoppingLists(user)
 	require.NoError(t, err)
-	require.Empty(t, pantries)
+	require.Empty(t, sLists)
 }
 
 func requireSameShoppingList(t *testing.T, want, got dbtypes.ShoppingList) {

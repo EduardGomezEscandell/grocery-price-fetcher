@@ -193,7 +193,7 @@ func copyPantries(log logger.Logger, input, output database.DB) error {
 }
 
 func copyShoppingLists(log logger.Logger, input, output database.DB) error {
-	shoppingLists, err := input.ShoppingLists()
+	shoppingLists, err := input.ShoppingLists("default")
 	if err != nil {
 		return fmt.Errorf("could not get shopping lists: %w", err)
 	}
@@ -238,7 +238,7 @@ func verifyEmpty(log logger.Logger, db database.DB) (bool, error) {
 		return false, nil
 	}
 
-	if shoppingLists, err := db.ShoppingLists(); err != nil {
+	if shoppingLists, err := db.ShoppingLists("default"); err != nil {
 		return false, fmt.Errorf("could not read output DB shopping lists: %v", err)
 	} else if len(shoppingLists) != 0 {
 		log.Info("Output DB shopping lists not empty, exiting")
