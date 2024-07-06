@@ -321,8 +321,11 @@ func PantriesTest(t *testing.T, openDB func() database.DB) {
 	db := openDB()
 	defer db.Close()
 
-	_, ok := db.LookupPantry("AAAAAAAAAAAAAAAAAAAAA")
-	require.False(t, ok)
+	const user = "test-user-123"
+	const anotherUser = "another-user-456"
+
+	_, err := db.LookupPantry(user, "AAAAAAAAAA")
+	require.ErrorIs(t, err, fs.ErrNotExist)
 
 	hydrogen := product.Product{
 		Provider:  blank.Provider{},
@@ -338,13 +341,14 @@ func PantriesTest(t *testing.T, openDB func() database.DB) {
 		BatchSize: 16,
 	}
 
-	_, err := db.SetProduct(hydrogen)
+	_, err = db.SetProduct(hydrogen)
 	require.NoError(t, err)
 
 	_, err = db.SetProduct(oxygen)
 	require.NoError(t, err)
 
 	pantry1 := dbtypes.Pantry{
+		User: user,
 		Name: "Pantry #1",
 		Contents: []recipe.Ingredient{
 			{ProductID: hydrogen.ID, Amount: 2.0},
@@ -353,33 +357,41 @@ func PantriesTest(t *testing.T, openDB func() database.DB) {
 	}
 
 	pantry2 := dbtypes.Pantry{
+		User:     user,
 		Name:     "Pantry #2",
 		Contents: []recipe.Ingredient{},
 	}
 
 	require.NoError(t, db.SetPantry(pantry1), "Could not set Pantry")
-	p, ok := db.LookupPantry(pantry1.Name)
-	require.True(t, ok, "Could not find Pantry just created")
+	p, err := db.LookupPantry(user, pantry1.Name)
+	require.NoError(t, err, "Could not find Pantry just created")
 	require.Equal(t, pantry1, p, "Pantry does not match the one just created")
+
+	_, err = db.LookupPantry(anotherUser, pantry1.Name)
+	require.ErrorIs(t, err, fs.ErrNotExist, "Should not find Pantry from another user")
 
 	pantry1.Contents[0].Amount = 5.0
 
 	require.NoError(t, db.SetPantry(pantry1), "Could not override Pantry")
-	p, ok = db.LookupPantry(pantry1.Name)
-	require.True(t, ok, "Could not find Pantry just overridden")
+	p, err = db.LookupPantry(user, pantry1.Name)
+	require.NoError(t, err, "Could not find Pantry just overridden")
 	require.Equal(t, pantry1, p, "Pantry does not match the one just overridden")
 
 	// Test implicit deletion of ingredients
 	pantry1.Contents = pantry1.Contents[:1]
 	require.NoError(t, db.SetPantry(pantry1), "Could not override Pantry")
-	p, ok = db.LookupPantry(pantry1.Name)
-	require.True(t, ok, "Could not find Pantry just overridden")
+	p, err = db.LookupPantry(user, pantry1.Name)
+	require.NoError(t, err, "Could not find Pantry just overridden")
 	require.Equal(t, pantry1, p, "Pantry does not match the one just overridden")
 
 	require.NoError(t, db.SetPantry(pantry2), "Could not set Pantry")
-	p, ok = db.LookupPantry(pantry2.Name)
-	require.True(t, ok, "Could not find empty Pantry just created")
+	p, err = db.LookupPantry(user, pantry2.Name)
+	require.NoError(t, err, "Could not find empty Pantry just created")
 	require.Equal(t, pantry2, p, "Empty menu does not match the one just created")
+
+	pantries, err := db.Pantries(user)
+	require.NoError(t, err)
+	require.ElementsMatch(t, []dbtypes.Pantry{pantry1, pantry2}, pantries, "Pantries do not match the ones just created")
 
 	t.Log("Closing DB and reopening")
 	require.NoError(t, db.Close())
@@ -387,28 +399,30 @@ func PantriesTest(t *testing.T, openDB func() database.DB) {
 	db = openDB()
 	defer db.Close()
 
-	menus, err := db.Pantries()
+	pantries, err = db.Pantries(user)
 	require.NoError(t, err)
-	require.ElementsMatch(t, []dbtypes.Pantry{pantry1, pantry2}, menus, "Pantries do not match the ones just created")
+	require.ElementsMatch(t, []dbtypes.Pantry{pantry1, pantry2}, pantries, "Pantries do not match the ones after reopening DB")
 
-	_, ok = db.LookupPantry("AAAAAAAAAAAAAAAAAAAAA")
-	require.False(t, ok)
+	pantries, err = db.Pantries(anotherUser)
+	require.NoError(t, err)
+	require.Empty(t, pantries, "Should not find Pantries from another user")
 
-	p, ok = db.LookupPantry(pantry1.Name)
-	require.True(t, ok, "Could not find Pantry after reopening DB")
+	_, err = db.LookupPantry(user, "AAAAAAAAAAAAAAAAAAAAA")
+	require.ErrorIs(t, err, fs.ErrNotExist)
+
+	p, err = db.LookupPantry(user, pantry1.Name)
+	require.NoError(t, err, "Could not find Pantry after reopening DB")
 	require.Equal(t, pantry1, p, "Pantry does not match the one after reopening DB")
 
-	p, ok = db.LookupPantry(pantry2.Name)
-	require.True(t, ok, "Could not find empty Pantry after reopening DB")
+	p, err = db.LookupPantry(user, pantry2.Name)
+	require.NoError(t, err, "Could not find empty Pantry after reopening DB")
 	require.Equal(t, pantry2, p, "Empty menu does not match the one after reopening DB")
 
-	require.ElementsMatch(t, []dbtypes.Pantry{pantry1, pantry2}, menus, "Pantries do not match the ones after reopening DB")
-
-	err = db.DeletePantry(pantry1.Name)
+	err = db.DeletePantry(user, pantry1.Name)
 	require.NoError(t, err)
 
-	_, ok = db.LookupPantry(pantry1.Name)
-	require.False(t, ok)
+	_, err = db.LookupPantry(user, pantry1.Name)
+	require.ErrorIs(t, err, fs.ErrNotExist)
 
 	require.NoError(t, db.Close())
 }
@@ -462,6 +476,7 @@ func ShoppingListsTest(t *testing.T, openDB func() database.DB) {
 	require.NoError(t, err)
 
 	pantry := dbtypes.Pantry{
+		User: user,
 		Name: "Pantry #1",
 	}
 

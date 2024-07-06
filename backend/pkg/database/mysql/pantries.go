@@ -2,7 +2,9 @@ package mysql
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"io/fs"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/recipe"
@@ -35,17 +37,22 @@ func (s *SQL) createPantries(tx *sql.Tx) error {
 			name: "pantries",
 			query: `
 			CREATE TABLE pantries (
-				name VARCHAR(255) PRIMARY KEY
+				user VARCHAR(255) NOT NULL,
+				name VARCHAR(255) NOT NULL,
+				PRIMARY KEY (user, name)
 			)`,
 		},
 		{
 			name: "pantry_items",
 			query: `
 			CREATE TABLE pantry_items (
-				pantry VARCHAR(255) REFERENCES pantries(name) ON DELETE CASCADE,
-				product INT UNSIGNED REFERENCES products(id) ON DELETE CASCADE,
+				user VARCHAR(255),
+				pantry VARCHAR(255),
+				product INT UNSIGNED,
 				amount FLOAT,
-				PRIMARY KEY (pantry, product)
+				FOREIGN KEY (user, pantry) REFERENCES pantries(user, name) ON DELETE CASCADE,
+				FOREIGN KEY (product) REFERENCES products(id) ON DELETE CASCADE,
+				PRIMARY KEY (user, pantry, product)
 			)`,
 		},
 	}
@@ -62,25 +69,26 @@ func (s *SQL) createPantries(tx *sql.Tx) error {
 	return nil
 }
 
-func (s *SQL) Pantries() ([]dbtypes.Pantry, error) {
+func (s *SQL) Pantries(user string) ([]dbtypes.Pantry, error) {
 	tx, err := s.db.BeginTx(s.ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("could not begin transaction: %v", err)
 	}
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
-	names, err := s.queryPantries(tx)
+	names, err := s.queryPantries(tx, user)
 	if err != nil {
 		return nil, fmt.Errorf("could not query pantries: %v", err)
 	}
 
 	pantries := make([]dbtypes.Pantry, 0, len(names))
 	for _, name := range names {
-		contents, err := s.queryPantryContents(tx, name)
+		contents, err := s.queryPantryContents(tx, user, name)
 		if err != nil {
 			return nil, fmt.Errorf("could not query pantry items: %v", err)
 		}
 		pantries = append(pantries, dbtypes.Pantry{
+			User:     user,
 			Name:     name,
 			Contents: contents,
 		})
@@ -89,8 +97,14 @@ func (s *SQL) Pantries() ([]dbtypes.Pantry, error) {
 	return pantries, nil
 }
 
-func (s *SQL) queryPantries(tx *sql.Tx) ([]string, error) {
-	r, err := tx.QueryContext(s.ctx, "SELECT name FROM pantries")
+func (s *SQL) queryPantries(tx *sql.Tx, user string) ([]string, error) {
+	r, err := tx.QueryContext(s.ctx, `
+		SELECT 
+			name
+		FROM 
+			pantries
+		WHERE
+			user = ?`, user)
 	if err != nil {
 		return nil, fmt.Errorf("could not query pantries: %v", err)
 	}
@@ -107,8 +121,14 @@ func (s *SQL) queryPantries(tx *sql.Tx) ([]string, error) {
 	return pantries, nil
 }
 
-func (s *SQL) queryPantryContents(tx *sql.Tx, name string) ([]recipe.Ingredient, error) {
-	r, err := tx.QueryContext(s.ctx, "SELECT product, amount FROM pantry_items WHERE pantry = ?", name)
+func (s *SQL) queryPantryContents(tx *sql.Tx, user, name string) ([]recipe.Ingredient, error) {
+	r, err := tx.QueryContext(s.ctx, `
+		SELECT
+			product, amount
+		FROM
+			pantry_items
+		WHERE
+			user = ? AND pantry = ?`, user, name)
 	if err != nil {
 		return nil, fmt.Errorf("could not query pantry items: %v", err)
 	}
@@ -129,57 +149,82 @@ func (s *SQL) queryPantryContents(tx *sql.Tx, name string) ([]recipe.Ingredient,
 	return items, nil
 }
 
-func (s *SQL) LookupPantry(name string) (dbtypes.Pantry, bool) {
+func (s *SQL) LookupPantry(user, name string) (dbtypes.Pantry, error) {
+	if user == "" {
+		return dbtypes.Pantry{}, errors.New("user cannot be empty")
+	} else if name == "" {
+		return dbtypes.Pantry{}, errors.New("name cannot be empty")
+	}
+
 	tx, err := s.db.BeginTx(s.ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
-		return dbtypes.Pantry{}, false
+		return dbtypes.Pantry{}, fmt.Errorf("could not begin transaction: %v", err)
 	}
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
-	row := tx.QueryRowContext(s.ctx, "SELECT name FROM pantries WHERE name = ?", name)
-	if err = row.Scan(&name); err != nil {
-		return dbtypes.Pantry{}, false
+	row := tx.QueryRowContext(s.ctx, `
+		SELECT
+			COUNT(*)
+		FROM
+			pantries
+		WHERE
+			user = ? AND name = ?`, user, name)
+	var count int
+	if err = row.Scan(&count); err != nil {
+		return dbtypes.Pantry{}, fmt.Errorf("could not query pantry %s: %v", name, err)
+	} else if count == 0 {
+		return dbtypes.Pantry{}, fs.ErrNotExist
 	}
 
 	if err := row.Err(); err != nil {
-		s.log.Warningf("could not get pantry %s: %v", name, err)
-		return dbtypes.Pantry{}, false
+		return dbtypes.Pantry{}, fmt.Errorf("could not get pantry %s: %v", name, err)
 	}
 
-	contents, err := s.queryPantryContents(tx, name)
+	contents, err := s.queryPantryContents(tx, user, name)
 	if err != nil {
-		return dbtypes.Pantry{}, false
+		return dbtypes.Pantry{}, err
 	}
 
 	return dbtypes.Pantry{
+		User:     user,
 		Name:     name,
 		Contents: contents,
-	}, true
+	}, nil
 }
 
 func (s *SQL) SetPantry(p dbtypes.Pantry) error {
+	if p.User == "" {
+		return errors.New("user cannot be empty")
+	} else if p.Name == "" {
+		return errors.New("name cannot be empty")
+	}
+
 	tx, err := s.db.BeginTx(s.ctx, nil)
 	if err != nil {
 		return fmt.Errorf("could not begin transaction: %v", err)
 	}
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
-	_, err = tx.ExecContext(s.ctx, "INSERT INTO pantries (name) VALUES (?)", p.Name)
+	_, err = tx.ExecContext(s.ctx, "INSERT INTO pantries (user, name) VALUES (?, ?)", p.User, p.Name)
 	if err != nil && !errorIs(err, errKeyExists) {
 		return fmt.Errorf("could not insert pantry: %v", err)
 	}
 
 	// Remove all items from the pantry
-	_, err = tx.ExecContext(s.ctx, "DELETE FROM pantry_items WHERE pantry = ?", p.Name)
+	_, err = tx.ExecContext(s.ctx, `
+		DELETE FROM
+			pantry_items
+		WHERE
+			user = ?  AND pantry = ?`, p.User, p.Name)
 	if err != nil {
 		return fmt.Errorf("could not delete old pantry items: %v", err)
 	}
 
 	err = bulkInsert(s, tx,
-		"pantry_items (pantry, product, amount)",
+		"pantry_items (user, pantry, product, amount)",
 		p.Contents,
 		func(i recipe.Ingredient) []any {
-			return []any{p.Name, i.ProductID, i.Amount}
+			return []any{p.User, p.Name, i.ProductID, i.Amount}
 		})
 	if err != nil {
 		return fmt.Errorf("could not insert new pantry items: %v", err)
@@ -192,14 +237,24 @@ func (s *SQL) SetPantry(p dbtypes.Pantry) error {
 	return nil
 }
 
-func (s *SQL) DeletePantry(name string) error {
+func (s *SQL) DeletePantry(user, name string) error {
+	if user == "" {
+		return errors.New("user cannot be empty")
+	} else if name == "" {
+		return errors.New("name cannot be empty")
+	}
+
 	tx, err := s.db.BeginTx(s.ctx, nil)
 	if err != nil {
 		return fmt.Errorf("could not begin transaction: %v", err)
 	}
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
-	_, err = tx.ExecContext(s.ctx, "DELETE FROM pantries WHERE name = ?", name)
+	_, err = tx.ExecContext(s.ctx, `
+		DELETE FROM
+			pantries
+		WHERE 
+			user = ? AND name = ?`, user, name)
 	if err != nil {
 		return fmt.Errorf("could not delete pantry: %v", err)
 	}

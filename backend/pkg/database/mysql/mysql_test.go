@@ -404,6 +404,8 @@ func TestMySQLPantries(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
+	const user = "test-user-123"
+
 	p := []product.Product{
 		{
 			Name:      "Hydrogen",
@@ -428,6 +430,7 @@ func TestMySQLPantries(t *testing.T) {
 	p[1].ID = id
 
 	pantry := dbtypes.Pantry{
+		User: user,
 		Name: "Test Pantry",
 		Contents: []recipe.Ingredient{
 			{ProductID: p[0].ID, Amount: 2165},
@@ -435,21 +438,21 @@ func TestMySQLPantries(t *testing.T) {
 		},
 	}
 
-	pantries, err := db.Pantries()
+	pantries, err := db.Pantries(user)
 	require.NoError(t, err)
 	require.Empty(t, pantries)
 
-	_, ok := db.LookupPantry(pantry.Name)
-	require.False(t, ok)
+	_, err = db.LookupPantry(user, pantry.Name)
+	require.ErrorIs(t, err, fs.ErrNotExist)
 
 	err = db.SetPantry(pantry)
 	require.NoError(t, err)
 
-	got, ok := db.LookupPantry(pantry.Name)
-	require.True(t, ok)
+	got, err := db.LookupPantry(user, pantry.Name)
+	require.NoError(t, err)
 	requireSamePantry(t, pantry, got)
 
-	pantries, err = db.Pantries()
+	pantries, err = db.Pantries(user)
 	require.NoError(t, err)
 	require.Len(t, pantries, 1)
 	requireSamePantry(t, pantry, pantries[0])
@@ -458,15 +461,15 @@ func TestMySQLPantries(t *testing.T) {
 	err = db.SetPantry(pantry)
 	require.NoError(t, err)
 
-	pantries, err = db.Pantries()
+	pantries, err = db.Pantries(user)
 	require.NoError(t, err)
 	require.Len(t, pantries, 1)
 	requireSamePantry(t, pantry, pantries[0])
 
-	err = db.DeletePantry(pantry.Name)
+	err = db.DeletePantry(user, pantry.Name)
 	require.NoError(t, err)
 
-	pantries, err = db.Pantries()
+	pantries, err = db.Pantries(user)
 	require.NoError(t, err)
 	require.Empty(t, pantries)
 }
@@ -521,7 +524,7 @@ func TestMySQLShoopingLists(t *testing.T) {
 	err = db.SetMenu(dbtypes.Menu{User: user, Name: "My test menu"})
 	require.NoError(t, err)
 
-	err = db.SetPantry(dbtypes.Pantry{Name: "My test pantry"})
+	err = db.SetPantry(dbtypes.Pantry{User: user, Name: "My test pantry"})
 	require.NoError(t, err)
 
 	sl := dbtypes.ShoppingList{

@@ -91,9 +91,11 @@ func (s *Service) handleGet(log logger.Logger, w http.ResponseWriter, r *http.Re
 		return httputils.Errorf(http.StatusInternalServerError, "failed to lookup menu: %v", err)
 	}
 
-	p, ok := s.db.LookupPantry(pantry)
-	if !ok {
+	p, err := s.db.LookupPantry(user, pantry)
+	if errors.Is(err, fs.ErrNotExist) {
 		return httputils.Errorf(http.StatusNotFound, "pantry not found")
+	} else if err != nil {
+		return httputils.Errorf(http.StatusInternalServerError, "failed to lookup pantry: %v", err)
 	}
 
 	var done []product.ID
@@ -138,8 +140,10 @@ func (s *Service) handlePut(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 		return httputils.Errorf(http.StatusInternalServerError, "failed to lookup menu: %v", err)
 	}
 
-	if _, ok := s.db.LookupPantry(pantry); !ok {
+	if _, err = s.db.LookupPantry(user, pantry); errors.Is(err, fs.ErrNotExist) {
 		return httputils.Errorf(http.StatusNotFound, "pantry not found")
+	} else if err != nil {
+		return httputils.Errorf(http.StatusInternalServerError, "failed to lookup pantry: %v", err)
 	}
 
 	out, err := io.ReadAll(r.Body)

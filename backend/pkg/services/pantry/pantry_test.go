@@ -40,7 +40,7 @@ func TestPantryEndpoint(t *testing.T) {
 
 			db := testutils.Database(t, testutils.FixturePath(t, "database"))
 
-			sv := pantry.New(pantry.Settings{}.Defaults(), db)
+			sv := pantry.New(pantry.Settings{}.Defaults(), db, testutils.MockAuthGetter())
 			require.True(t, sv.Enabled())
 
 			fixture := testutils.FixturePath(t, "message", "body.json")

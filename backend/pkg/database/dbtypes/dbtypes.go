@@ -31,6 +31,7 @@ type Menu struct {
 }
 
 type Pantry struct {
+	User     string              `json:"user"`
 	Name     string              `json:"name"`
 	Contents []recipe.Ingredient `json:"contents"`
 }

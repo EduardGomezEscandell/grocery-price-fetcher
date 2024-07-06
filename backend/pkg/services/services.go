@@ -125,7 +125,7 @@ func New(ctx context.Context, logger logger.Logger, settings Settings) (*Manager
 		helloworld.New(settings.HelloWorld),
 		ingredientuse.New(settings.IngredientUse, db, authManager),
 		menu.New(settings.Menu, db, authManager),
-		pantry.New(settings.Pantry, db),
+		pantry.New(settings.Pantry, db, authManager),
 		products.New(settings.Products, db),
 		providersservice.New(settings.Providers),
 		recipe.New(settings.Recipe, db),

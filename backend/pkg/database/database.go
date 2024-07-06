@@ -29,10 +29,10 @@ type DB interface {
 	SetMenu(m dbtypes.Menu) error
 	DeleteMenu(user, name string) error
 
-	Pantries() ([]dbtypes.Pantry, error)
-	LookupPantry(name string) (dbtypes.Pantry, bool)
+	Pantries(user string) ([]dbtypes.Pantry, error)
+	LookupPantry(user, name string) (dbtypes.Pantry, error)
 	SetPantry(p dbtypes.Pantry) error
-	DeletePantry(name string) error
+	DeletePantry(user, name string) error
 
 	ShoppingLists(user string) ([]dbtypes.ShoppingList, error)
 	LookupShoppingList(user, menu, pantry string) (dbtypes.ShoppingList, error)

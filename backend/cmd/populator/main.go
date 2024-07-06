@@ -176,7 +176,7 @@ func copyMenus(log logger.Logger, input, output database.DB) error {
 }
 
 func copyPantries(log logger.Logger, input, output database.DB) error {
-	pantries, err := input.Pantries()
+	pantries, err := input.Pantries("default")
 	if err != nil {
 		return fmt.Errorf("could not get pantries: %w", err)
 	}
@@ -231,7 +231,7 @@ func verifyEmpty(log logger.Logger, db database.DB) (bool, error) {
 		return false, nil
 	}
 
-	if pantries, err := db.Pantries(); err != nil {
+	if pantries, err := db.Pantries("default"); err != nil {
 		return false, fmt.Errorf("could not read output DB pantries: %v", err)
 	} else if len(pantries) != 0 {
 		log.Info("Output DB pantries not empty, exiting")

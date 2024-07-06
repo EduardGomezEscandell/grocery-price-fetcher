@@ -304,31 +304,52 @@ func (db *JSON) DeleteMenu(user, name string) error {
 	return nil
 }
 
-func (db *JSON) Pantries() ([]dbtypes.Pantry, error) {
+func (db *JSON) Pantries(user string) ([]dbtypes.Pantry, error) {
+	if user == "" {
+		return nil, errors.New("user cannot be empty")
+	}
+
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	out := make([]dbtypes.Pantry, len(db.pantries))
-	copy(out, db.pantries)
+	out := make([]dbtypes.Pantry, 0, 1)
+	for _, p := range db.pantries {
+		if p.User == user {
+			out = append(out, p)
+		}
+	}
+
 	return out, nil
 }
 
-func (db *JSON) LookupPantry(name string) (dbtypes.Pantry, bool) {
+func (db *JSON) LookupPantry(user, name string) (dbtypes.Pantry, error) {
+	if user == "" {
+		return dbtypes.Pantry{}, errors.New("user cannot be empty")
+	} else if name == "" {
+		return dbtypes.Pantry{}, errors.New("name cannot be empty")
+	}
+
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
 	i := slices.IndexFunc(db.pantries, func(p dbtypes.Pantry) bool {
-		return p.Name == name
+		return p.User == user && p.Name == name
 	})
 
 	if i == -1 {
-		return dbtypes.Pantry{}, false
+		return dbtypes.Pantry{}, fs.ErrNotExist
 	}
 
-	return db.pantries[i], true
+	return db.pantries[i], nil
 }
 
 func (db *JSON) SetPantry(p dbtypes.Pantry) error {
+	if p.User == "" {
+		return errors.New("user cannot be empty")
+	} else if p.Name == "" {
+		return errors.New("name cannot be empty")
+	}
+
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
@@ -337,7 +358,7 @@ func (db *JSON) SetPantry(p dbtypes.Pantry) error {
 	}
 
 	i := slices.IndexFunc(db.pantries, func(entry dbtypes.Pantry) bool {
-		return entry.Name == p.Name
+		return entry.User == p.User && entry.Name == p.Name
 	})
 
 	if i == -1 {
@@ -352,16 +373,22 @@ func (db *JSON) SetPantry(p dbtypes.Pantry) error {
 	return nil
 }
 
-func (db *JSON) DeletePantry(name string) error {
+func (db *JSON) DeletePantry(user, name string) error {
+	if user == "" {
+		return errors.New("user cannot be empty")
+	} else if name == "" {
+		return errors.New("name cannot be empty")
+	}
+
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
 	i := slices.IndexFunc(db.pantries, func(p dbtypes.Pantry) bool {
-		return p.Name == name
+		return p.User == user && p.Name == name
 	})
 
 	if i == -1 {
-		return fmt.Errorf("pantry %q not found", name)
+		return nil
 	}
 
 	db.pantries = append(db.pantries[:i], db.pantries[i+1:]...)
