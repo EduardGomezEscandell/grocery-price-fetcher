@@ -10,65 +10,29 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/recipe"
 )
 
-func (s *SQL) clearPantries(tx *sql.Tx) error {
-	tables := []string{"pantries", "pantry_items"}
-
-	// Remove tables from bottom to top to avoid foreign key constraints
-	for i := range tables {
-		table := tables[len(tables)-i-1]
-		q := fmt.Sprintf("DROP TABLE %s", table)
-		s.log.Tracef(q)
-
-		_, err := tx.ExecContext(s.ctx, q)
-		if err != nil {
-			return fmt.Errorf("could not drop table: %v", err)
-		}
-	}
-
-	return nil
-}
-
-func (s *SQL) createPantries(tx *sql.Tx) error {
-	queries := []struct {
-		name  string
-		query string
-	}{
-		{
-			name: "pantries",
-			query: `
-			CREATE TABLE pantries (
-				user VARCHAR(255) NOT NULL,
-				name VARCHAR(255) NOT NULL,
-				FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE,
-				PRIMARY KEY (user, name)
-			)`,
+var pantryTables = []tableDef{
+	{
+		name: "pantries",
+		columns: []string{
+			"user VARCHAR(255) NOT NULL",
+			"name VARCHAR(255) NOT NULL",
+			"FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE",
+			"PRIMARY KEY (user, name)",
 		},
-		{
-			name: "pantry_items",
-			query: `
-			CREATE TABLE pantry_items (
-				user VARCHAR(255),
-				pantry VARCHAR(255),
-				product INT UNSIGNED,
-				amount FLOAT,
-				FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE,
-				FOREIGN KEY (product) REFERENCES products(id) ON DELETE CASCADE,
-				FOREIGN KEY (user, pantry) REFERENCES pantries(user, name) ON DELETE CASCADE,
-				PRIMARY KEY (user, pantry, product)
-			)`,
+	},
+	{
+		name: "pantry_items",
+		columns: []string{
+			"user VARCHAR(255)",
+			"pantry VARCHAR(255)",
+			"product INT UNSIGNED",
+			"amount FLOAT",
+			"FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE",
+			"FOREIGN KEY (product) REFERENCES products(id) ON DELETE CASCADE",
+			"FOREIGN KEY (user, pantry) REFERENCES pantries(user, name) ON DELETE CASCADE",
+			"PRIMARY KEY (user, pantry, product)",
 		},
-	}
-
-	for _, q := range queries {
-		s.log.Trace(q.query)
-
-		_, err := tx.ExecContext(s.ctx, q.query)
-		if err != nil && !errorIs(err, errTableExists) {
-			return fmt.Errorf("could not create table %s: %v", q.name, err)
-		}
-	}
-
-	return nil
+	},
 }
 
 func (s *SQL) Pantries(user string) ([]dbtypes.Pantry, error) {

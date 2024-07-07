@@ -2,7 +2,6 @@ package mysql
 
 import (
 	"cmp"
-	"database/sql"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -13,56 +12,21 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
 )
 
-func (s *SQL) clearShoppingLists(tx *sql.Tx) error {
-	tables := []string{"shopping_list_items"}
-
-	// Remove tables from bottom to top to avoid foreign key constraints
-	for i := range tables {
-		table := tables[len(tables)-i-1]
-		q := fmt.Sprintf("DROP TABLE %s", table)
-		s.log.Trace(q)
-
-		_, err := tx.ExecContext(s.ctx, q)
-		if err != nil {
-			return fmt.Errorf("could not drop table: %v", err)
-		}
-	}
-
-	return nil
-}
-
-func (s *SQL) createShoppingLists(tx *sql.Tx) error {
-	queries := []struct {
-		name  string
-		query string
-	}{
-		{
-			name: "shopping_list_items",
-			query: `
-			CREATE TABLE shopping_list_items (
-				user VARCHAR(255) NOT NULL,
-				menu VARCHAR(255) NOT NULL,
-				pantry VARCHAR(255) NOT NULL,
-				product INT UNSIGNED NOT NULL,
-				FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE,
-				FOREIGN KEY (product) REFERENCES products(id) ON DELETE CASCADE,
-				FOREIGN KEY (user, menu) REFERENCES menus(user, name) ON DELETE CASCADE,
-				FOREIGN KEY (user, pantry) REFERENCES pantries(user, name) ON DELETE CASCADE,
-				PRIMARY KEY (user, menu, pantry, product)
-			)`,
+var shoppingListTables = []tableDef{
+	{
+		name: "shopping_list_items",
+		columns: []string{
+			"user VARCHAR(255) NOT NULL",
+			"menu VARCHAR(255) NOT NULL",
+			"pantry VARCHAR(255) NOT NULL",
+			"product INT UNSIGNED NOT NULL",
+			"FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE",
+			"FOREIGN KEY (product) REFERENCES products(id) ON DELETE CASCADE",
+			"FOREIGN KEY (user, menu) REFERENCES menus(user, name) ON DELETE CASCADE",
+			"FOREIGN KEY (user, pantry) REFERENCES pantries(user, name) ON DELETE CASCADE",
+			"PRIMARY KEY (user, menu, pantry, product)",
 		},
-	}
-
-	for _, q := range queries {
-		s.log.Trace(q.query)
-
-		_, err := tx.ExecContext(s.ctx, q.query)
-		if err != nil && !errorIs(err, errTableExists) {
-			return fmt.Errorf("could not create table %s: %v", q.name, err)
-		}
-	}
-
-	return nil
+	},
 }
 
 func (s *SQL) ShoppingLists(user string) ([]dbtypes.ShoppingList, error) {

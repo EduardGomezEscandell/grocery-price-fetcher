@@ -10,91 +10,57 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/recipe"
 )
 
-func (s *SQL) clearMenus(tx *sql.Tx) error {
-	tables := []string{"menus", "menu_days", "menu_meals", "menu_dishes"}
-
-	// Remove tables from bottom to top to avoid foreign key constraints
-	for i := range tables {
-		table := tables[len(tables)-i-1]
-		q := fmt.Sprintf("DROP TABLE %s", table)
-		s.log.Tracef(q)
-
-		_, err := tx.ExecContext(s.ctx, q)
-		if err != nil {
-			return fmt.Errorf("could not drop table: %v", err)
-		}
-	}
-
-	return nil
-}
-
-func (s *SQL) createMenus(tx *sql.Tx) error {
-	queries := []struct {
-		name  string
-		query string
-	}{
-		{
-			"menus",
-			`CREATE TABLE menus (
-				user VARCHAR(255),
-				name VARCHAR(255),
-				FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE,
-				PRIMARY KEY(user, name)
-			)`,
+var menuTables = []tableDef{
+	{
+		name: "menus",
+		columns: []string{
+			"user VARCHAR(255)",
+			"name VARCHAR(255)",
+			"FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE",
+			"PRIMARY KEY (user, name)",
 		},
-		{
-			"menu_days",
-			`CREATE TABLE menu_days (
-				user VARCHAR(255) NOT NULL,
-				menu VARCHAR(255) NOT NULL,
-				pos INT NOT NULL,
-				name VARCHAR(255) NOT NULL,
-				FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE,
-				FOREIGN KEY (user, menu) REFERENCES menus(user, name) ON DELETE CASCADE,
-				PRIMARY KEY (user, menu, pos)
-			)`,
+	},
+	{
+		name: "menu_days",
+		columns: []string{
+			"user VARCHAR(255) NOT NULL",
+			"menu VARCHAR(255) NOT NULL",
+			"pos INT NOT NULL",
+			"name VARCHAR(255) NOT NULL",
+			"FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE",
+			"FOREIGN KEY (user, menu) REFERENCES menus(user, name) ON DELETE CASCADE",
+			"PRIMARY KEY (user, menu, pos)",
 		},
-		{
-			"menu_meals",
-			`CREATE TABLE menu_meals (
-				user VARCHAR(255) NOT NULL,
-				menu VARCHAR(255) NOT NULL,
-				day INT NOT NULL,
-				pos INT NOT NULL,
-				name VARCHAR(255) NOT NULL,
-				FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE,
-				FOREIGN KEY (user, menu, day) REFERENCES menu_days(user, menu, pos) ON DELETE CASCADE,
-				PRIMARY KEY (user, menu, day, pos)
-			)`,
+	},
+	{
+		name: "menu_meals",
+		columns: []string{
+			"user VARCHAR(255) NOT NULL",
+			"menu VARCHAR(255) NOT NULL",
+			"day INT NOT NULL",
+			"pos INT NOT NULL",
+			"name VARCHAR(255) NOT NULL",
+			"FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE",
+			"FOREIGN KEY (user, menu, day) REFERENCES menu_days(user, menu, pos) ON DELETE CASCADE",
+			"PRIMARY KEY (user, menu, day, pos)",
 		},
-		{
-			"menu_dishes",
-			`CREATE TABLE menu_dishes (
-				user VARCHAR(255),
-				menu VARCHAR(255),
-				day INT NOT NULL,
-				meal INT NOT NULL,
-				pos INT NOT NULL,
-				recipe INT UNSIGNED NOT NULL,
-				amount FLOAT NOT NULL,
-				FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE,
-				FOREIGN KEY (user, menu, day, meal) REFERENCES menu_meals(user, menu, day, pos) ON DELETE CASCADE,
-				FOREIGN KEY (recipe) REFERENCES recipes(id) ON DELETE CASCADE,
-				PRIMARY KEY (user, menu, day, meal, pos)
-			)`,
+	},
+	{
+		name: "menu_dishes",
+		columns: []string{
+			"user VARCHAR(255)",
+			"menu VARCHAR(255)",
+			"day INT NOT NULL",
+			"meal INT NOT NULL",
+			"pos INT NOT NULL",
+			"recipe INT UNSIGNED NOT NULL",
+			"amount FLOAT NOT NULL",
+			"FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE",
+			"FOREIGN KEY (user, menu, day, meal) REFERENCES menu_meals(user, menu, day, pos) ON DELETE CASCADE",
+			"FOREIGN KEY (recipe) REFERENCES recipes(id) ON DELETE CASCADE",
+			"PRIMARY KEY (user, menu, day, meal, pos)",
 		},
-	}
-
-	for _, q := range queries {
-		s.log.Trace(q.query)
-
-		_, err := tx.ExecContext(s.ctx, q.query)
-		if err != nil && !errorIs(err, errTableExists) {
-			return fmt.Errorf("could not create table %s: %v", q.name, err)
-		}
-	}
-
-	return nil
+	},
 }
 
 func (s *SQL) Menus(user string) ([]dbtypes.Menu, error) {

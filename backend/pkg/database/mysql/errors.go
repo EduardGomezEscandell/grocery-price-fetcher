@@ -8,9 +8,10 @@ import (
 )
 
 const (
-	errTableExists uint16 = 1050
-	errKeyExists   uint16 = 1062
-	errKeyNotFound uint16 = 1216
+	errTableExists   uint16 = 1050
+	errTableNotFound uint16 = 1146
+	errKeyExists     uint16 = 1062
+	errKeyNotFound   uint16 = 1216
 )
 
 func errorIs(err error, target uint16) bool {

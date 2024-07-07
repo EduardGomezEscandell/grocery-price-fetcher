@@ -9,57 +9,23 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/utils"
 )
 
-func (s *SQL) clearRecipes(tx *sql.Tx) (err error) {
-	tables := []string{"recipes", "recipe_ingredients"}
-
-	// Remove tables from bottom to top to avoid foreign key constraints
-	for i := range tables {
-		table := tables[len(tables)-i-1]
-		q := fmt.Sprintf("DROP TABLE %s", table)
-		s.log.Tracef(q)
-
-		_, err = tx.ExecContext(s.ctx, q)
-		if err != nil {
-			return fmt.Errorf("could not drop table: %v", err)
-		}
-	}
-
-	return nil
-}
-
-func (s *SQL) createRecipes(tx *sql.Tx) error {
-	queries := []struct {
-		name  string
-		query string
-	}{
-		{
-			"recipes",
-			`CREATE TABLE recipes (
-				id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-				name VARCHAR(255) NOT NULL
-			)`,
+var recipeTables = []tableDef{
+	{
+		name: "recipes",
+		columns: []string{
+			"id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT",
+			"name VARCHAR(255) NOT NULL",
 		},
-		{
-			"recipe_ingredients",
-			`CREATE TABLE recipe_ingredients (
-				recipe INT UNSIGNED REFERENCES recipes(id) ON DELETE CASCADE,
-				product INT UNSIGNED REFERENCES products(id) ON DELETE CASCADE,
-				amount FLOAT NOT NULL,
-				PRIMARY KEY (recipe, product)
-			)`,
+	},
+	{
+		name: "recipe_ingredients",
+		columns: []string{
+			"recipe INT UNSIGNED REFERENCES recipes(id) ON DELETE CASCADE",
+			"product INT UNSIGNED REFERENCES products(id) ON DELETE CASCADE",
+			"amount FLOAT NOT NULL",
+			"PRIMARY KEY (recipe, product)",
 		},
-	}
-
-	for _, q := range queries {
-		s.log.Trace(q.query)
-
-		_, err := tx.ExecContext(s.ctx, q.query)
-		if err != nil && !errorIs(err, errTableExists) {
-			return fmt.Errorf("could not create table %s: %v", q.name, err)
-		}
-	}
-
-	return nil
+	},
 }
 
 func (s *SQL) Recipes() ([]recipe.Recipe, error) {

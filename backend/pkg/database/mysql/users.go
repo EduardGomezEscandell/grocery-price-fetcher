@@ -1,21 +1,16 @@
 package mysql
 
 import (
-	"database/sql"
 	"fmt"
 )
 
-func (s *SQL) clearUsers(tx *sql.Tx) error {
-	return s.dropTables(tx, "users")
-}
-
-func (s *SQL) createUsers(tx *sql.Tx) error {
-	return s.createTables(tx, tableDef{
+var userTables = []tableDef{
+	{
 		name: "users",
 		columns: []string{
 			"id VARCHAR(255) NOT NULL PRIMARY KEY",
 		},
-	})
+	},
 }
 
 func (s *SQL) LookupUser(id string) (bool, error) {
