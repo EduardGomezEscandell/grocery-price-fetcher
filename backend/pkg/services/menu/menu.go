@@ -181,13 +181,14 @@ func (s *Service) writeMenu(w io.Writer, m dbtypes.Menu) error {
 		Days []msgDay `json:"days"`
 	}
 
+	cache := database.NewCachedUserLookup(m.User, s.db.LookupRecipe)
 	var days []msgDay
 	for _, d := range m.Days {
 		var meals []msgMeal
 		for _, m := range d.Meals {
 			var dishes []msgDish
 			for _, dish := range m.Dishes {
-				recipe, err := s.db.LookupRecipe(dish.ID)
+				recipe, err := cache.Lookup(dish.ID)
 				if err != nil {
 					continue
 				}

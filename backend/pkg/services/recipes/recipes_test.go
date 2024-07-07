@@ -59,7 +59,7 @@ func TestRecipes(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			sv := recipes.New(recipes.Settings{}.Defaults(), db)
+			sv := recipes.New(recipes.Settings{}.Defaults(), db, testutils.MockAuthGetter())
 			require.True(t, sv.Enabled())
 
 			testutils.TestEndpoint(t, testutils.ResponseTestOptions{

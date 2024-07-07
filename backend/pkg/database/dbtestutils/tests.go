@@ -55,6 +55,8 @@ func UsersTest(t *testing.T, openDB func() database.DB) {
 	require.NoError(t, err)
 	require.False(t, exists, "User should not exist after reopening DB")
 
+	recipeID, err := db.SetRecipe(recipe.Recipe{User: user2, Name: "Recipe"})
+	require.NoError(t, err, "Could not set Recipe")
 	require.NoError(t, db.SetPantry(dbtypes.Pantry{User: user2, Name: "Pantry"}), "Could not set Pantry")
 	require.NoError(t, db.SetMenu(dbtypes.Menu{User: user2, Name: "Menu"}), "Could not set Menu")
 	require.NoError(t, db.SetShoppingList(dbtypes.ShoppingList{User: user2, Menu: "Menu", Pantry: "Pantry"}), "Could not set ShoppingList")
@@ -64,6 +66,8 @@ func UsersTest(t *testing.T, openDB func() database.DB) {
 	require.NoError(t, err)
 	require.False(t, exists, "User should not exist")
 
+	_, err = db.LookupRecipe(user2, recipeID)
+	require.ErrorIs(t, err, fs.ErrNotExist, "Recipe should not exist after deleting User")
 	_, err = db.LookupPantry(user2, "Pantry")
 	require.ErrorIs(t, err, fs.ErrNotExist, "Pantry should not exist after deleting User")
 	_, err = db.LookupMenu(user2, "Menu")
@@ -165,7 +169,10 @@ func RecipesTest(t *testing.T, openDB func() database.DB) {
 	db := openDB()
 	defer db.Close()
 
-	_, err := db.LookupRecipe(1)
+	const user = "test-user-123"
+	const anotherUser = "another-user-456"
+
+	_, err := db.LookupRecipe(user, 123)
 	require.ErrorIs(t, err, fs.ErrNotExist)
 
 	hydrogen := product.Product{
@@ -182,6 +189,9 @@ func RecipesTest(t *testing.T, openDB func() database.DB) {
 		BatchSize: 16,
 	}
 
+	err = db.SetUser(user)
+	require.NoError(t, err)
+
 	_, err = db.SetProduct(hydrogen)
 	require.NoError(t, err)
 
@@ -189,6 +199,7 @@ func RecipesTest(t *testing.T, openDB func() database.DB) {
 	require.NoError(t, err)
 
 	recipe1 := recipe.Recipe{
+		User: user,
 		Name: "Water",
 		Ingredients: []recipe.Ingredient{
 			{ProductID: hydrogen.ID, Amount: 2.0},
@@ -197,6 +208,7 @@ func RecipesTest(t *testing.T, openDB func() database.DB) {
 	}
 
 	recipe2 := recipe.Recipe{
+		User:        user,
 		Name:        "Empty",
 		Ingredients: make([]recipe.Ingredient, 0),
 	}
@@ -206,9 +218,12 @@ func RecipesTest(t *testing.T, openDB func() database.DB) {
 	require.NotZero(t, rID, "ID should be non-zero")
 	recipe1.ID = rID
 
-	r, err := db.LookupRecipe(rID)
+	r, err := db.LookupRecipe(user, rID)
 	require.NoError(t, err, "Could not find Recipe just created")
 	require.Equal(t, recipe1, r, "Recipe does not match the one just created")
+
+	_, err = db.LookupRecipe(anotherUser, rID)
+	require.ErrorIs(t, err, fs.ErrNotExist, "Should not find Recipe from another user")
 
 	recipe1.Ingredients[0].Amount = 5.0
 
@@ -216,7 +231,7 @@ func RecipesTest(t *testing.T, openDB func() database.DB) {
 	require.NoError(t, err, "Could not override Recipe")
 	require.Equal(t, recipe1.ID, rID, "ID should be the same after overriding")
 
-	r, err = db.LookupRecipe(recipe1.ID)
+	r, err = db.LookupRecipe(user, recipe1.ID)
 	require.NoError(t, err, "Could not find Recipe just overridden")
 	require.Equal(t, recipe1, r, "Recipe does not match the one just overridden")
 
@@ -225,7 +240,7 @@ func RecipesTest(t *testing.T, openDB func() database.DB) {
 
 	_, err = db.SetRecipe(recipe1)
 	require.NoError(t, err, "Could not override Recipe")
-	r, err = db.LookupRecipe(recipe1.ID)
+	r, err = db.LookupRecipe(user, recipe1.ID)
 	require.NoError(t, err, "Could not find Recipe just overridden")
 	require.Equal(t, recipe1, r, "Recipe does not match the one just overridden")
 
@@ -234,9 +249,17 @@ func RecipesTest(t *testing.T, openDB func() database.DB) {
 	require.NotZero(t, rID, "ID should be non-zero")
 	recipe2.ID = rID
 
-	r, err = db.LookupRecipe(recipe2.ID)
+	r, err = db.LookupRecipe(user, recipe2.ID)
 	require.NoError(t, err, "Could not find empty Recipe just created")
 	require.Equal(t, recipe2, r, "Empty menu does not match the one just created")
+
+	recipes, err := db.Recipes(user)
+	require.NoError(t, err)
+	require.ElementsMatch(t, []recipe.Recipe{recipe1, recipe2}, recipes, "Recipes do not match the ones just created")
+
+	recipes, err = db.Recipes(anotherUser)
+	require.NoError(t, err)
+	require.Empty(t, recipes, "Should not find Recipes from another user")
 
 	t.Log("Closing DB and reopening")
 	require.NoError(t, db.Close())
@@ -244,28 +267,31 @@ func RecipesTest(t *testing.T, openDB func() database.DB) {
 	db = openDB()
 	defer db.Close()
 
-	menus, err := db.Recipes()
+	recipes, err = db.Recipes(user)
 	require.NoError(t, err)
-	require.ElementsMatch(t, []recipe.Recipe{recipe1, recipe2}, menus, "Recipes do not match the ones just created")
+	require.ElementsMatch(t, []recipe.Recipe{recipe1, recipe2}, recipes, "Recipes do not match the ones after reopening DB")
 
-	_, err = db.LookupRecipe(999999)
+	_, err = db.LookupRecipe(user, 999999)
 	require.ErrorIs(t, err, fs.ErrNotExist)
 
-	r, err = db.LookupRecipe(recipe1.ID)
+	r, err = db.LookupRecipe(user, recipe1.ID)
 	require.NoError(t, err, "Could not find Recipe after reopening DB")
 	require.Equal(t, recipe1, r, "Recipe does not match the one after reopening DB")
 
-	r, err = db.LookupRecipe(recipe2.ID)
+	r, err = db.LookupRecipe(user, recipe2.ID)
 	require.NoError(t, err, "Could not find empty Recipe after reopening DB")
 	require.Equal(t, recipe2, r, "Empty menu does not match the one after reopening DB")
 
-	require.ElementsMatch(t, []recipe.Recipe{recipe1, recipe2}, menus, "Recipes do not match the ones after reopening DB")
-
-	err = db.DeleteRecipe(recipe1.ID)
+	err = db.DeleteRecipe(user, recipe1.ID)
 	require.NoError(t, err)
 
-	_, err = db.LookupRecipe(recipe1.ID)
+	_, err = db.LookupRecipe(user, recipe1.ID)
 	require.ErrorIs(t, err, fs.ErrNotExist)
+
+	err = db.DeleteRecipe(anotherUser, recipe2.ID)
+	require.NoError(t, err)
+	_, err = db.LookupRecipe(user, recipe2.ID)
+	require.NoError(t, err, "Should not delete Recipe from another user")
 
 	require.NoError(t, db.Close())
 }
@@ -286,6 +312,7 @@ func MenuTest(t *testing.T, openDB func() database.DB) {
 	require.NoError(t, err)
 
 	recipeID, err := db.SetRecipe(recipe.Recipe{
+		User:        user,
 		Name:        "Empty recipe",
 		Ingredients: []recipe.Ingredient{},
 	})

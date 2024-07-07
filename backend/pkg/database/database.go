@@ -23,10 +23,10 @@ type DB interface {
 	SetProduct(p product.Product) (product.ID, error)
 	DeleteProduct(ID product.ID) error
 
-	Recipes() ([]recipe.Recipe, error)
-	LookupRecipe(name recipe.ID) (recipe.Recipe, error)
+	Recipes(asUser string) ([]recipe.Recipe, error)
+	LookupRecipe(asUser string, id recipe.ID) (recipe.Recipe, error)
 	SetRecipe(r recipe.Recipe) (recipe.ID, error)
-	DeleteRecipe(name recipe.ID) error
+	DeleteRecipe(asUser string, id recipe.ID) error
 
 	Menus(user string) ([]dbtypes.Menu, error)
 	LookupMenu(user, name string) (dbtypes.Menu, error)

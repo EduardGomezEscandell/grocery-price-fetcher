@@ -13,6 +13,7 @@ const IDSize = 32
 // Recipe represents a combination of ingredients that can be used to prepare a dish.
 type Recipe struct {
 	ID          ID
+	User        string
 	Name        string
 	Ingredients []Ingredient
 }

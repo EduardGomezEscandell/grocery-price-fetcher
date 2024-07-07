@@ -180,6 +180,8 @@ func TestMySQLRecipes(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
+	const user = "test-user-123"
+
 	hydrogen := product.Product{
 		Name:      "Hydrogen",
 		BatchSize: 1,
@@ -194,6 +196,9 @@ func TestMySQLRecipes(t *testing.T) {
 		Provider:  blank.Provider{},
 	}
 
+	err = db.SetUser(user)
+	require.NoError(t, err)
+
 	pID, err := db.SetProduct(hydrogen)
 	require.NoError(t, err)
 	hydrogen.ID = pID
@@ -203,6 +208,7 @@ func TestMySQLRecipes(t *testing.T) {
 	oxygen.ID = pID
 
 	rec := recipe.Recipe{
+		User: user,
 		Name: "Water",
 		Ingredients: []recipe.Ingredient{
 			{ProductID: hydrogen.ID, Amount: 2},
@@ -210,11 +216,11 @@ func TestMySQLRecipes(t *testing.T) {
 		},
 	}
 
-	recs, err := db.Recipes()
+	recs, err := db.Recipes(user)
 	require.NoError(t, err)
 	require.Empty(t, recs)
 
-	_, err = db.LookupRecipe(555)
+	_, err = db.LookupRecipe(user, 555)
 	require.ErrorIs(t, err, fs.ErrNotExist)
 
 	rID, err := db.SetRecipe(rec)
@@ -222,11 +228,11 @@ func TestMySQLRecipes(t *testing.T) {
 	require.NotZero(t, rID, "expected non-zero ID")
 	rec.ID = rID
 
-	got, err := db.LookupRecipe(rec.ID)
+	got, err := db.LookupRecipe(user, rec.ID)
 	require.NoError(t, err)
 	requireSameRecipe(t, rec, got)
 
-	recs, err = db.Recipes()
+	recs, err = db.Recipes(user)
 	require.NoError(t, err)
 	require.Len(t, recs, 1)
 	requireSameRecipe(t, rec, recs[0])
@@ -237,15 +243,15 @@ func TestMySQLRecipes(t *testing.T) {
 	_, err = db.SetRecipe(rec)
 	require.NoError(t, err)
 
-	recs, err = db.Recipes()
+	recs, err = db.Recipes(user)
 	require.NoError(t, err)
 	require.Len(t, recs, 1)
 	requireSameRecipe(t, rec, recs[0])
 
-	err = db.DeleteRecipe(rec.ID)
+	err = db.DeleteRecipe(user, rec.ID)
 	require.NoError(t, err)
 
-	recs, err = db.Recipes()
+	recs, err = db.Recipes(user)
 	require.NoError(t, err)
 	require.Empty(t, recs)
 }
@@ -299,6 +305,7 @@ func TestMySQLMenus(t *testing.T) {
 	O.ID = id
 
 	H2O := recipe.Recipe{
+		User: user,
 		Name: "Water",
 		Ingredients: []recipe.Ingredient{
 			{ProductID: H.ID, Amount: 2},
@@ -306,6 +313,7 @@ func TestMySQLMenus(t *testing.T) {
 		},
 	}
 	H2O2 := recipe.Recipe{
+		User: user,
 		Name: "Hydrogen Peroxide",
 		Ingredients: []recipe.Ingredient{
 			{ProductID: H.ID, Amount: 2},
@@ -313,6 +321,7 @@ func TestMySQLMenus(t *testing.T) {
 		},
 	}
 	O2 := recipe.Recipe{
+		User: user,
 		Name: "Oxygen Gas",
 		Ingredients: []recipe.Ingredient{
 			{ProductID: O.ID, Amount: 2},

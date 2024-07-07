@@ -136,6 +136,13 @@ func (db *JSON) DeleteUser(id string) error {
 		db.users = append(db.users[:i], db.users[i+1:]...)
 	}
 
+	for i := len(db.recipes) - 1; i >= 0; i-- {
+		if db.recipes[i].User != id {
+			continue
+		}
+		db.recipes = append(db.recipes[:i], db.recipes[i+1:]...)
+	}
+
 	for i := len(db.menus) - 1; i >= 0; i-- {
 		if db.menus[i].User != id {
 			continue
@@ -233,21 +240,26 @@ func (db *JSON) DeleteProduct(ID product.ID) error {
 	return nil
 }
 
-func (db *JSON) Recipes() ([]recipe.Recipe, error) {
+func (db *JSON) Recipes(user string) ([]recipe.Recipe, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	out := make([]recipe.Recipe, len(db.recipes))
-	copy(out, db.recipes)
+	out := make([]recipe.Recipe, 0)
+	for _, r := range db.recipes {
+		if r.User == user {
+			out = append(out, r)
+		}
+	}
+
 	return out, nil
 }
 
-func (db *JSON) LookupRecipe(id recipe.ID) (recipe.Recipe, error) {
+func (db *JSON) LookupRecipe(asUser string, id recipe.ID) (recipe.Recipe, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
 	i := slices.IndexFunc(db.recipes, func(p recipe.Recipe) bool {
-		return p.ID == id
+		return p.ID == id && p.User == asUser
 	})
 
 	if i == -1 {
@@ -272,6 +284,8 @@ func (db *JSON) SetRecipe(r recipe.Recipe) (recipe.ID, error) {
 	i := slices.IndexFunc(db.recipes, func(entry recipe.Recipe) bool { return entry.ID == r.ID })
 	if i == -1 {
 		db.recipes = append(db.recipes, r)
+	} else if db.recipes[i].User != r.User {
+		return 0, fmt.Errorf("permission denied: recipe %d bolongs to another user", r.ID)
 	} else {
 		db.recipes[i] = r
 	}
@@ -283,16 +297,16 @@ func (db *JSON) SetRecipe(r recipe.Recipe) (recipe.ID, error) {
 	return r.ID, nil
 }
 
-func (db *JSON) DeleteRecipe(id recipe.ID) error {
+func (db *JSON) DeleteRecipe(asUser string, id recipe.ID) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
 	i := slices.IndexFunc(db.recipes, func(p recipe.Recipe) bool {
-		return p.ID == id
+		return p.ID == id && p.User == asUser
 	})
 
 	if i == -1 {
-		return fmt.Errorf("recipe %d not found", id)
+		return nil
 	}
 
 	db.recipes = append(db.recipes[:i], db.recipes[i+1:]...)

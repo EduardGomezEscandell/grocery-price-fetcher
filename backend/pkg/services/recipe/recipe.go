@@ -9,6 +9,7 @@ import (
 	"path"
 	"strconv"
 
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/auth"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
@@ -19,6 +20,7 @@ import (
 type Service struct {
 	settings Settings
 	db       database.DB
+	auth     auth.Getter
 }
 
 type Settings struct {
@@ -31,10 +33,11 @@ func (s Settings) Defaults() Settings {
 	}
 }
 
-func New(s Settings, db database.DB) Service {
+func New(s Settings, db database.DB, auth auth.Getter) Service {
 	return Service{
 		settings: s,
 		db:       db,
+		auth:     auth,
 	}
 }
 
@@ -73,7 +76,12 @@ func (s Service) handleGet(log logger.Logger, w http.ResponseWriter, r *http.Req
 		return err
 	}
 
-	rec, err := s.db.LookupRecipe(id)
+	user, err := s.auth.GetUserID(r)
+	if err != nil {
+		return httputils.Errorf(http.StatusUnauthorized, "could not get user: %v", err)
+	}
+
+	rec, err := s.db.LookupRecipe(user, id)
 	if errors.Is(err, fs.ErrNotExist) {
 		return httputils.Errorf(http.StatusNotFound, "recipe %d not found", id)
 	} else if err != nil {
@@ -118,6 +126,11 @@ func (s Service) handlePost(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 		return err
 	}
 
+	user, err := s.auth.GetUserID(r)
+	if err != nil {
+		return httputils.Errorf(http.StatusUnauthorized, "could not get user: %v", err)
+	}
+
 	var body recipeMsg
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		return httputils.Errorf(http.StatusBadRequest, "failed to read request: %v", err)
@@ -128,6 +141,7 @@ func (s Service) handlePost(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 	}
 
 	dbRecipe := recipe.Recipe{
+		User:        user,
 		ID:          body.ID,
 		Name:        body.Name,
 		Ingredients: make([]recipe.Ingredient, 0, len(body.Ingredients)),
@@ -173,7 +187,12 @@ func (s Service) handleDelete(_ logger.Logger, w http.ResponseWriter, r *http.Re
 		return err
 	}
 
-	if err := s.db.DeleteRecipe(id); err != nil {
+	user, err := s.auth.GetUserID(r)
+	if err != nil {
+		return httputils.Errorf(http.StatusUnauthorized, "could not get user: %v", err)
+	}
+
+	if err := s.db.DeleteRecipe(user, id); err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "failed to delete recipe: %v", err)
 	}
 

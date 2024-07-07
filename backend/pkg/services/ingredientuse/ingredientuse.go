@@ -102,7 +102,7 @@ func (s *Service) compute(user, menuName string, ingredientID product.ID) ([]res
 	}
 
 	resp := make([]respBodyItem, 0)
-	cached := database.NewCachedLookup(s.db.LookupRecipe)
+	cached := database.NewCachedUserLookup(user, s.db.LookupRecipe)
 
 	for _, day := range menu.Days {
 		for _, meal := range day.Meals {

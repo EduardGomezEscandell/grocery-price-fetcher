@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"io/fs"
 
@@ -13,8 +14,12 @@ var recipeTables = []tableDef{
 	{
 		name: "recipes",
 		columns: []string{
-			"id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT",
+			"id INT UNSIGNED NOT NULL AUTO_INCREMENT",
 			"name VARCHAR(255) NOT NULL",
+			"user VARCHAR(255) NOT NULL",
+			"FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE",
+			"UNIQUE KEY (name, user)",
+			"PRIMARY KEY (id)",
 		},
 	},
 	{
@@ -28,14 +33,14 @@ var recipeTables = []tableDef{
 	},
 }
 
-func (s *SQL) Recipes() ([]recipe.Recipe, error) {
+func (s *SQL) Recipes(user string) ([]recipe.Recipe, error) {
 	tx, err := s.db.BeginTx(s.ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
 		return nil, fmt.Errorf("could not begin transaction: %v", err)
 	}
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
-	recs, err := s.queryRecipes(tx)
+	recs, err := s.queryRecipes(tx, user)
 	if err != nil {
 		return nil, fmt.Errorf("could not query recipes: %v", err)
 	}
@@ -58,7 +63,7 @@ func (s *SQL) Recipes() ([]recipe.Recipe, error) {
 	return recs[:p], nil
 }
 
-func (s *SQL) LookupRecipe(id recipe.ID) (recipe.Recipe, error) {
+func (s *SQL) LookupRecipe(asUser string, id recipe.ID) (recipe.Recipe, error) {
 	tx, err := s.db.BeginTx(s.ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
 		return recipe.Recipe{}, fmt.Errorf("could not begin transaction: %v", err)
@@ -69,8 +74,8 @@ func (s *SQL) LookupRecipe(id recipe.ID) (recipe.Recipe, error) {
 		ID: id,
 	}
 
-	row := tx.QueryRowContext(s.ctx, "SELECT name FROM recipes WHERE id = ?", id)
-	if err := row.Scan(&rec.Name); errorIs(err, errKeyNotFound) {
+	row := tx.QueryRowContext(s.ctx, "SELECT user, name FROM recipes WHERE id = ? AND user = ?", id, asUser)
+	if err := row.Scan(&rec.User, &rec.Name); errorIs(err, errKeyNotFound) {
 		return rec, fs.ErrNotExist
 	} else if err != nil {
 		return rec, fmt.Errorf("could not scan: %v", err)
@@ -92,11 +97,11 @@ func (s *SQL) LookupRecipe(id recipe.ID) (recipe.Recipe, error) {
 	return rec, nil
 }
 
-func (s *SQL) queryRecipes(tx *sql.Tx) ([]recipe.Recipe, error) {
-	query := `SELECT id, name FROM recipes`
+func (s *SQL) queryRecipes(tx *sql.Tx, user string) ([]recipe.Recipe, error) {
+	query := `SELECT id, user, name FROM recipes WHERE user = ?`
 
 	s.log.Tracef(query)
-	r, err := tx.QueryContext(s.ctx, query)
+	r, err := tx.QueryContext(s.ctx, query, user)
 	if err != nil {
 		return nil, fmt.Errorf("could not query: %v", err)
 	}
@@ -105,7 +110,7 @@ func (s *SQL) queryRecipes(tx *sql.Tx) ([]recipe.Recipe, error) {
 	var recs []recipe.Recipe
 	for r.Next() {
 		var rec recipe.Recipe
-		if err := r.Scan(&rec.ID, &rec.Name); err != nil {
+		if err := r.Scan(&rec.ID, &rec.User, &rec.Name); err != nil {
 			s.log.Warnf("could not scan: %v", err)
 			continue
 		}
@@ -153,6 +158,12 @@ func (s *SQL) queryIngredients(tx *sql.Tx, rec *recipe.Recipe) error {
 }
 
 func (s *SQL) SetRecipe(r recipe.Recipe) (recipe.ID, error) {
+	if r.User == "" {
+		return 0, errors.New("user cannot be empty")
+	} else if r.Name == "" {
+		return 0, errors.New("name cannot be empty")
+	}
+
 	tx, err := s.db.BeginTx(s.ctx, nil)
 	if err != nil {
 		return 0, fmt.Errorf("could not begin transaction: %v", err)
@@ -160,11 +171,11 @@ func (s *SQL) SetRecipe(r recipe.Recipe) (recipe.ID, error) {
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
 	if r.ID == 0 {
-		if r.ID, err = s.insertNewRecipe(tx, r.Name); err != nil {
+		if r.ID, err = s.insertNewRecipe(tx, r); err != nil {
 			return 0, fmt.Errorf("could not insert recipe: %v", err)
 		}
 	} else {
-		if err := s.insertRecipeWithID(tx, r.ID, r.Name); err != nil {
+		if err := s.insertRecipeWithID(tx, r); err != nil {
 			return 0, fmt.Errorf("could not insert recipe: %v", err)
 		}
 	}
@@ -189,11 +200,19 @@ func (s *SQL) SetRecipe(r recipe.Recipe) (recipe.ID, error) {
 	return r.ID, nil
 }
 
-func (s *SQL) insertRecipeWithID(tx *sql.Tx, id recipe.ID, name string) error {
-	query := `UPDATE recipes SET name = ? WHERE id = ?`
+func (s *SQL) insertRecipeWithID(tx *sql.Tx, r recipe.Recipe) error {
+	query := `
+	UPDATE
+		recipes
+	SET
+		name = ?
+	WHERE
+		id = ?
+		AND user = ?
+	`
 	s.log.Tracef(query)
 
-	result, err := tx.ExecContext(s.ctx, query, name, id)
+	result, err := tx.ExecContext(s.ctx, query, r.Name, r.ID, r.User)
 	if err != nil {
 		return fmt.Errorf("could not update recipe: %v", err)
 	}
@@ -218,10 +237,10 @@ func (s *SQL) insertRecipeWithID(tx *sql.Tx, id recipe.ID, name string) error {
 	}
 
 	// No rows affected, try to insert a new one if allowed
-	query = `INSERT INTO recipes (id, name) VALUES (?, ?)`
+	query = `INSERT INTO recipes (id, user, name) VALUES (?, ?, ?)`
 	s.log.Tracef(query)
 
-	_, err = tx.ExecContext(s.ctx, query, id, name)
+	_, err = tx.ExecContext(s.ctx, query, r.ID, r.User, r.Name)
 	if err != nil && !errorIs(err, errKeyExists) {
 		return fmt.Errorf("could not insert recipe: %v", err)
 	}
@@ -229,11 +248,11 @@ func (s *SQL) insertRecipeWithID(tx *sql.Tx, id recipe.ID, name string) error {
 	return nil
 }
 
-func (s *SQL) insertNewRecipe(tx *sql.Tx, name string) (recipe.ID, error) {
-	queryRecipe := `INSERT INTO recipes (name) VALUES (?)`
+func (s *SQL) insertNewRecipe(tx *sql.Tx, r recipe.Recipe) (recipe.ID, error) {
+	queryRecipe := `INSERT INTO recipes (user, name) VALUES (?, ?)`
 	s.log.Tracef(queryRecipe)
 
-	result, err := tx.ExecContext(s.ctx, queryRecipe, name)
+	result, err := tx.ExecContext(s.ctx, queryRecipe, r.User, r.Name)
 	if err != nil {
 		return 0, fmt.Errorf("could not insert recipe: %v", err)
 	}
@@ -248,14 +267,14 @@ func (s *SQL) insertNewRecipe(tx *sql.Tx, name string) (recipe.ID, error) {
 	return recipe.ID(id), nil
 }
 
-func (s *SQL) DeleteRecipe(id recipe.ID) error {
+func (s *SQL) DeleteRecipe(asUser string, id recipe.ID) error {
 	tx, err := s.db.BeginTx(s.ctx, nil)
 	if err != nil {
 		return fmt.Errorf("could not begin transaction: %v", err)
 	}
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
-	if err := s.deleteRecipe(tx, id); err != nil {
+	if err := s.deleteRecipe(tx, asUser, id); err != nil {
 		return fmt.Errorf("could not delete recipe: %v", err)
 	}
 
@@ -266,11 +285,18 @@ func (s *SQL) DeleteRecipe(id recipe.ID) error {
 	return nil
 }
 
-func (s *SQL) deleteRecipe(tx *sql.Tx, id recipe.ID) error {
+func (s *SQL) deleteRecipe(tx *sql.Tx, asUser string, id recipe.ID) error {
 	query := `DELETE FROM recipes WHERE id = ?`
+	argv := []any{id}
+
+	if asUser != "" {
+		query += ` AND user = ?`
+		argv = append(argv, asUser)
+	}
+
 	s.log.Tracef(query)
 
-	_, err := tx.ExecContext(s.ctx, query, id)
+	_, err := tx.ExecContext(s.ctx, query, argv...)
 	if err != nil {
 		return fmt.Errorf("could not delete product: %v", err)
 	}

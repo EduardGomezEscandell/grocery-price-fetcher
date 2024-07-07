@@ -142,7 +142,7 @@ func copyProducts(log logger.Logger, input, output database.DB) error {
 }
 
 func copyRecipes(log logger.Logger, input, output database.DB) error {
-	recipes, err := input.Recipes()
+	recipes, err := input.Recipes("default")
 	if err != nil {
 		return fmt.Errorf("could not get recipes: %w", err)
 	}
@@ -217,7 +217,7 @@ func verifyEmpty(log logger.Logger, db database.DB) (bool, error) {
 		return false, nil
 	}
 
-	if recipes, err := db.Recipes(); err != nil {
+	if recipes, err := db.Recipes("default"); err != nil {
 		return false, fmt.Errorf("could not read output DB recipes: %v", err)
 	} else if len(recipes) != 0 {
 		log.Info("Output DB recipes not empty, exiting")
