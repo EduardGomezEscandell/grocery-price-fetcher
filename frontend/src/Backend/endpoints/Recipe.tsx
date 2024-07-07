@@ -5,9 +5,9 @@ export default class RecipeEndpoint {
     cache: Cache
     private auth: string
 
-    constructor(auth: string, namespace: string, id: number, cache?: Cache) {
+    constructor(auth: string, id: number, cache?: Cache) {
         this.auth = auth
-        this.path = `/api/recipe/${namespace}/${id.toString()}`
+        this.path = `/api/recipe/${id.toString()}`
         this.cache = cache || new Cache()
     }
 
@@ -84,8 +84,8 @@ export default class RecipeEndpoint {
 
 export class MockRecipeEndpoint extends RecipeEndpoint {
     recipe_id: number
-    constructor(auth: string, namespace: string, recipe_id: number, cache?: Cache) {
-        super(auth, namespace, recipe_id, cache)
+    constructor(auth: string, recipe_id: number, cache?: Cache) {
+        super(auth, recipe_id, cache)
         this.recipe_id = recipe_id
     }
 

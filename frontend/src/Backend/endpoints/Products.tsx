@@ -2,22 +2,21 @@ import { Product } from "../../State/State";
 import Cache from "../cache/Cache";
 
 export default class ProductsEndpoint {
+    private static path = `/api/products/`
     private auth: string
-    private path: string;
     protected cache: Cache | null = null;
 
-    constructor(auth: string, namespace: string, cache?: Cache) {
+    constructor(auth: string,  cache?: Cache) {
         this.auth = auth
-        this.path = `/api/products/${namespace}/`
         this.cache = cache || null;
     }
 
     PathAll(): string {
-        return this.path + '*'
+        return ProductsEndpoint.path + '*'
     }
 
     Path(id: number): string {
-        return this.path + id.toString()
+        return ProductsEndpoint.path + id.toString()
     }
 
     protected async get_uncached(): Promise<Product[]> {

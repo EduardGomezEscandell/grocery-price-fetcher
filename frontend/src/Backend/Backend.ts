@@ -45,12 +45,12 @@ class Backend {
         return this.mock ? new MockProvidersEndpoint(this.authorization, this.cache) : new ProviderEndpoint(this.authorization, this.cache)
     }
 
-    Products(namespace: string): ProductsEndpoint {
-        return this.mock ? new MockProductsEndpoint(this.authorization, namespace, this.cache) : new ProductsEndpoint(this.authorization, namespace, this.cache)
+    Products(): ProductsEndpoint {
+        return this.mock ? new MockProductsEndpoint(this.authorization, this.cache) : new ProductsEndpoint(this.authorization, this.cache)
     }
 
-    Recipe(namespace: string, id: number): RecipeEndpoint {
-        return this.mock ? new MockRecipeEndpoint(this.authorization, namespace, id, this.cache) : new RecipeEndpoint(this.authorization, namespace, id, this.cache)
+    Recipe(id: number): RecipeEndpoint {
+        return this.mock ? new MockRecipeEndpoint(this.authorization, id, this.cache) : new RecipeEndpoint(this.authorization, id, this.cache)
     }
 
     Menu(which: string): MenuEndpoint {

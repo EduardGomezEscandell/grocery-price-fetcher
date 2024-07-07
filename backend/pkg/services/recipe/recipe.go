@@ -46,7 +46,7 @@ func (s Service) Name() string {
 }
 
 func (s Service) Path() string {
-	return "/api/recipe/{namespace}/{id}"
+	return "/api/recipe/{id}"
 }
 
 func (s Service) Enabled() bool {
@@ -71,7 +71,7 @@ func (s Service) handleGet(log logger.Logger, w http.ResponseWriter, r *http.Req
 		return err
 	}
 
-	_, id, err := parseEndpoint(r)
+	id, err := parseEndpoint(r)
 	if err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func (s Service) handlePost(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 		return err
 	}
 
-	namespace, urlID, err := parseEndpoint(r)
+	urlID, err := parseEndpoint(r)
 	if err != nil {
 		return err
 	}
@@ -171,7 +171,7 @@ func (s Service) handlePost(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 		w.WriteHeader(http.StatusAccepted)
 	} else {
 		w.WriteHeader(http.StatusCreated)
-		w.Header().Set("Location", path.Join("/api/recipe/", namespace, fmt.Sprint(newID)))
+		w.Header().Set("Location", path.Join("/api/recipe/", fmt.Sprint(newID)))
 	}
 
 	if err := json.NewEncoder(w).Encode(map[string]interface{}{"id": newID}); err != nil {
@@ -182,7 +182,7 @@ func (s Service) handlePost(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 }
 
 func (s Service) handleDelete(_ logger.Logger, w http.ResponseWriter, r *http.Request) error {
-	_, id, err := parseEndpoint(r)
+	id, err := parseEndpoint(r)
 	if err != nil {
 		return err
 	}
@@ -213,24 +213,16 @@ type recipeMsg struct {
 	Ingredients []ingredient `json:"ingredients"`
 }
 
-func parseEndpoint(r *http.Request) (namespace string, id recipe.ID, err error) {
-	n := r.PathValue("namespace")
-	if n == "" {
-		return "", 0, httputils.Error(http.StatusBadRequest, "missing namespace")
-	} else if n != "default" {
-		// Only the default namespace is supported for now
-		return "", 0, httputils.Errorf(http.StatusNotFound, "namespace %s not found", n)
-	}
-
+func parseEndpoint(r *http.Request) (id recipe.ID, err error) {
 	sid := r.PathValue("id")
 	if sid == "" {
-		return "", 0, httputils.Error(http.StatusBadRequest, "missing id")
+		return 0, httputils.Error(http.StatusBadRequest, "missing id")
 	}
 
 	idURL, err := strconv.ParseUint(sid, 10, recipe.IDSize)
 	if err != nil {
-		return "", 0, httputils.Errorf(http.StatusBadRequest, "invalid id: %v", err)
+		return 0, httputils.Errorf(http.StatusBadRequest, "invalid id: %v", err)
 	}
 
-	return n, recipe.ID(idURL), nil
+	return recipe.ID(idURL), nil
 }
