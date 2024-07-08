@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"slices"
 	"sync"
+	"time"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
@@ -19,6 +20,7 @@ import (
 
 type JSON struct {
 	users         []string
+	sessions      []dbtypes.Session
 	products      []product.Product
 	recipes       []recipe.Recipe
 	menus         []dbtypes.Menu
@@ -26,6 +28,7 @@ type JSON struct {
 	shoppingLists []dbtypes.ShoppingList
 
 	usersPath         string
+	sesionsPath       string
 	productsPath      string
 	recipesPath       string
 	menusPath         string
@@ -38,6 +41,7 @@ type JSON struct {
 
 type Settings struct {
 	Users         string
+	Sessions      string
 	Products      string
 	Recipes       string
 	Menus         string
@@ -52,6 +56,7 @@ func DefaultSettings() Settings {
 func DefaultSettingsPath(root string) Settings {
 	return Settings{
 		Users:         filepath.Join(root, "users.json"),
+		Sessions:      filepath.Join(root, "sessions.json"),
 		Products:      filepath.Join(root, "products.json"),
 		Recipes:       filepath.Join(root, "recipes.json"),
 		Menus:         filepath.Join(root, "menus.json"),
@@ -76,6 +81,7 @@ func New(ctx context.Context, log logger.Logger, s Settings) (*JSON, error) {
 
 	return db, errors.Join(
 		load(db.usersPath, &db.users),
+		load(db.sesionsPath, &db.sessions),
 		load(db.productsPath, &db.products),
 		load(db.recipesPath, &db.recipes),
 		load(db.menusPath, &db.menus),
@@ -136,37 +142,81 @@ func (db *JSON) DeleteUser(id string) error {
 		db.users = append(db.users[:i], db.users[i+1:]...)
 	}
 
-	for i := len(db.recipes) - 1; i >= 0; i-- {
-		if db.recipes[i].User != id {
-			continue
-		}
-		db.recipes = append(db.recipes[:i], db.recipes[i+1:]...)
+	db.sessions = removeIf(db.sessions, func(s dbtypes.Session) bool { return s.User == id })
+	db.recipes = removeIf(db.recipes, func(r recipe.Recipe) bool { return r.User == id })
+	db.menus = removeIf(db.menus, func(m dbtypes.Menu) bool { return m.User == id })
+	db.pantries = removeIf(db.pantries, func(p dbtypes.Pantry) bool { return p.User == id })
+	db.shoppingLists = removeIf(db.shoppingLists, func(s dbtypes.ShoppingList) bool { return s.User == id })
+
+	if err := db.save(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (db *JSON) LookupSession(ID string) (dbtypes.Session, error) {
+	db.mu.RLock()
+	defer db.mu.RUnlock()
+
+	i := slices.IndexFunc(db.sessions, func(s dbtypes.Session) bool {
+		return s.ID == ID
+	})
+
+	if i == -1 {
+		return dbtypes.Session{}, fs.ErrNotExist
 	}
 
-	for i := len(db.menus) - 1; i >= 0; i-- {
-		if db.menus[i].User != id {
-			continue
-		}
-		db.menus = append(db.menus[:i], db.menus[i+1:]...)
-	}
+	return db.sessions[i], nil
+}
 
-	for i := len(db.pantries) - 1; i >= 0; i-- {
-		if db.pantries[i].User != id {
-			continue
-		}
-		db.pantries = append(db.pantries[:i], db.pantries[i+1:]...)
-	}
+func (db *JSON) SetSession(session dbtypes.Session) error {
+	db.mu.Lock()
+	defer db.mu.Unlock()
 
-	for i := len(db.shoppingLists) - 1; i >= 0; i-- {
-		if db.shoppingLists[i].User != id {
-			continue
-		}
-		db.shoppingLists = append(db.shoppingLists[:i], db.shoppingLists[i+1:]...)
+	i := slices.IndexFunc(db.sessions, func(s dbtypes.Session) bool {
+		return s.ID == session.ID
+	})
+
+	if i != -1 {
+		db.sessions[i] = session
+	} else {
+		db.sessions = append(db.sessions, session)
 	}
 
 	if err := db.save(); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (db *JSON) DeleteSession(ID string) error {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	i := slices.IndexFunc(db.sessions, func(s dbtypes.Session) bool {
+		return s.ID == ID
+	})
+
+	if i == -1 {
+		return nil
+	}
+
+	db.sessions = append(db.sessions[:i], db.sessions[i+1:]...)
+	if err := db.save(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (db *JSON) PurgeSessions() error {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	now := time.Now()
+	db.sessions = removeIf(db.sessions, func(s dbtypes.Session) bool {
+		return now.After(s.NotAfter)
+	})
+
 	return nil
 }
 
@@ -678,4 +728,26 @@ func (b backup) remove(log logger.Logger) {
 	if err := os.RemoveAll(b.tmp); err != nil {
 		log.Warnf("Could not remove backup: %v", err)
 	}
+}
+
+func removeIf[T any](slice []T, predicate func(T) bool) []T {
+	return slice[:partition(slice, predicate)]
+}
+
+func partition[T any](slice []T, predicate func(T) bool) (p int) {
+	if len(slice) == 0 {
+		return 0
+	}
+	for i := range slice {
+		if !predicate(slice[i]) {
+			continue
+		}
+		if i == p {
+			p++
+			continue
+		}
+		slice[i], slice[p] = slice[p], slice[i]
+		p++
+	}
+	return p
 }

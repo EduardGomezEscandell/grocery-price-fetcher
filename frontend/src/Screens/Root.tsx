@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { CookiesProvider, useCookies } from 'react-cookie';
 import Backend from "../Backend/Backend";
 import LandingPage from "./LandingPage/LandingPage";
 import RenderMenu from "./Menu/Menu";
@@ -11,67 +12,57 @@ import Products from './Products/Products';
 import LoginPage from './LandingPage/LoginPage';
 
 export default function Root(): JSX.Element {
+    const sessionName = "default"
+
     return <LoginRouter
-        sessionName="default"
-        loginPage={r => <LoginPage onLogIn={creds => r.logIn(creds)} />}
+        loginPage={r => <LoginPage logIn={creds => r.logIn(creds)} />}
         routes={new Map<string, ElementFactory>([
-            ["/", r => <LandingPage backend={r.backend()} onLogout={() => r.logOut()} />],
-            ["/products", r => <Products backend={r.backend()} sessionName={r.props.sessionName} />],
-            ["/recipes", r => <Recipes backend={r.backend()} sessionName={r.props.sessionName} />],
-            ["/menu", r => <RenderMenu backend={r.backend()} sessionName={r.props.sessionName} />],
-            ["/pantry", r => <RenderPantry backend={r.backend()} sessionName={r.props.sessionName} />],
-            ["/shopping-list", r => <ShoppingList backend={r.backend()} sessionName={r.props.sessionName} />],
+            ["/", r => <LandingPage backend={r.backend} logOut={() => r.logOut()} />],
+            ["/products", r => <Products backend={r.backend} sessionName={sessionName} />],
+            ["/recipes", r => <Recipes backend={r.backend} sessionName={sessionName} />],
+            ["/menu", r => <RenderMenu backend={r.backend} sessionName={sessionName} />],
+            ["/pantry", r => <RenderPantry backend={r.backend} sessionName={sessionName} />],
+            ["/shopping-list", r => <ShoppingList backend={r.backend} sessionName={sessionName} />],
         ])
         }
     />
 }
 
-type ElementFactory = (r: LoginRouter) => React.ReactNode;
+type ElementFactory = (r: Auth) => React.ReactNode;
 
 interface routerProps {
-    sessionName: string;
     routes: Map<string, ElementFactory>;
     loginPage: ElementFactory;
 }
 
 // This class wraps a router with the requirement of logging in before accessing the routes.
-class LoginRouter extends React.Component<routerProps, { backend: Backend | undefined }> {
-    constructor(props: routerProps) {
-        super(props);
-        this.state = { backend: undefined };
+function LoginRouter(props: routerProps): JSX.Element {
+    const [refreshOnAuth, _f] = useState(0)
+    const forceRefresh = () => _f(refreshOnAuth + 1)
+
+    const cookie = new Cookie('GROCERY_PRICE_FETCHER_AUTH', forceRefresh)
+    const auth = new Auth(cookie)
+
+    const [loading, setLoading] = useState(true)
+    if (loading) {
+        auth.validate().then(() => setLoading(false))
     }
 
-    isLoggedIn(): boolean {
-        return this.state.backend !== undefined;
-    }
-
-    logOut() {
-        this.setState({ backend: undefined });
-    }
-
-    logIn(auth: string) {
-        this.setState({ backend: new Backend(auth) });
-    }
-
-    backend(): Backend {
-        if (this.state.backend === undefined) {
-            throw new Error("Backend not initialized");
-        }
-        return this.state.backend;
-    }
-
-    render(): JSX.Element {
-        return (
+    return (
+        <CookiesProvider>
             <BrowserRouter>
-                <Routes>
+                <Routes key={refreshOnAuth.toString()}>
                     {
-                        Array.from(this.props.routes.entries()).map((entry: [string, ElementFactory]) => {
+                        Array.from(props.routes.entries()).map((entry: [string, ElementFactory]) => {
                             return <Route
                                 key={entry[0]}
                                 path={entry[0]}
-                                element={this.isLoggedIn()
-                                    ? entry[1](this)
-                                    : this.props.loginPage(this)
+                                element={
+                                    loading
+                                        ? <>Carregant...</> 
+                                        : auth.loggedIn()
+                                            ?   entry[1](auth)
+                                            : props.loginPage(auth)
                                 }
                             />
                         })
@@ -79,6 +70,79 @@ class LoginRouter extends React.Component<routerProps, { backend: Backend | unde
                     <Route path="*" element={<NotFound />} />
                 </Routes>
             </BrowserRouter>
-        );
+        </CookiesProvider>
+    );
+}
+
+
+class Auth {
+    backend: Backend;
+    private cookie: Cookie;
+
+    constructor(cookie: Cookie) {
+        this.cookie = cookie;
+        this.backend = new Backend(() => this.cookie.Get());
+    }
+
+    loggedIn(): boolean {
+        return this.cookie.Get() !== undefined
+    }
+
+    async validate() {
+        const v = this.cookie.Get()
+        if (!v) {
+            return Promise.resolve()
+        }
+        return this.backend.AuthRefresh()
+            .POST(v)
+            .then(v => this.cookie.Set(v))
+            .catch(() => this.cookie.Remove())
+    }
+
+    async logIn(code: string): Promise<void> {
+        return this.backend.AuthLogin()
+            .POST(code)
+            .then((auth: string) => this.cookie.Set(auth))
+    }
+
+    async logOut(): Promise<void> {
+        return this.backend.AuthLogout()
+            .POST()
+            .then(() => this.cookie.Remove())
+    }
+}
+
+class Cookie {
+    Set: (v: string) => void
+    Remove: () => void
+    Get: () => string | undefined
+
+    constructor(name: string, onChange: () => void) {
+        const [cookies, setCookie, removeCookie] = useCookies([name]);
+
+        var cached = cookies[name]
+        const _onChange = (v?: string) => {
+            if (cached === v) {
+                return
+            }
+            cached = v
+            onChange()
+        }
+
+        this.Set = (v: string) => {
+            setCookie(name, v, { sameSite: 'strict', secure: true })
+            _onChange(v)
+        }
+
+        this.Remove = () => {
+            removeCookie(name);
+            _onChange(undefined)
+        }
+
+        this.Get = () => {
+            const value = cookies[name]
+            _onChange(value)
+            return value
+        }
     }
 }

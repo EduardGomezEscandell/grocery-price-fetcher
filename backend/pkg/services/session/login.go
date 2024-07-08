@@ -27,7 +27,7 @@ func (s LoginService) Name() string {
 }
 
 func (s LoginService) Path() string {
-	return "/api/login"
+	return "/api/auth/login"
 }
 
 func (s LoginService) Enabled() bool {
@@ -54,12 +54,12 @@ func (s LoginService) Handle(log logger.Logger, w http.ResponseWriter, r *http.R
 		return httputils.Errorf(http.StatusBadRequest, "could not decode request body: %v", err)
 	}
 
-	token, err := s.sessions.NewSession(data.Code)
+	session, err := s.sessions.NewSession(data.Code)
 	if err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "could not create session: %v", err)
 	}
 
-	if _, err := fmt.Fprintf(w, "Bearer %s", token); err != nil {
+	if _, err := fmt.Fprintf(w, "Bearer %s", session.ID); err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "could not write response: %v", err)
 	}
 

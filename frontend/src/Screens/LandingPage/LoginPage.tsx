@@ -1,34 +1,26 @@
 import React from 'react'
 import Backend from '../../Backend/Backend';
-import { useGoogleLogin, googleLogout } from '@react-oauth/google';
+import { useGoogleLogin, googleLogout as _googleLogout } from '@react-oauth/google';
 import { Footer, HelpText, PageHeader } from './LandingPage';
 import './LandingPage.css';
 
 interface Props {
-    onLogIn: (creds: string) => void;
+    logIn: (creds: string) => Promise<void>;
 }
 
 export default function LoginPage(props: Props) {
     return (
         <div className='LandingPage'>
             <PageHeader />
-            <Login setCredential={(c: string) => props.onLogIn(c)} />
+            <Login onLogin={props.logIn} />
             <Footer />
         </div >
     )
 }
 
-export function Login(props: { setCredential: (credential: string) => void }) {
+export function Login(props: { onLogin: (credential: string) => Promise<void> }) {
     const onError = () => {
         alert('Error al iniciar sessió')
-    }
-
-    const onSuccess = (creds?: string) => {
-        if (creds) {
-            props.setCredential(creds)
-        } else {
-            onError()
-        }
     }
 
     return (
@@ -40,14 +32,14 @@ export function Login(props: { setCredential: (credential: string) => void }) {
                 <p>
                     Inicia sessió amb el teu compte de Google per començar a planificar la teva compra setmanal.
                 </p>
-                <GoogleLogin onSuccess={onSuccess} onError={onError} />
+                <GoogleLogin onSuccess={props.onLogin} onError={onError} />
             </div>
 
         </div >
     )
 }
 
-function GoogleLogin(props: { onSuccess: (c: string) => void, onError: () => void }): JSX.Element {
+function GoogleLogin(props: { onSuccess: (c: string) => Promise<void>, onError: () => void }): JSX.Element {
     let login: () => void
 
     if (Backend.IsMock()) {
@@ -59,13 +51,7 @@ function GoogleLogin(props: { onSuccess: (c: string) => void, onError: () => voi
         login = useGoogleLogin({
             flow: 'auth-code',
             onSuccess: (creds) => {
-                if (!creds.code) {
-                    props.onError()
-                }
-                new Backend().Login()
-                    .POST(creds.code)
-                    .then(props.onSuccess)
-                    .catch(props.onError)
+                props.onSuccess(creds.code).catch(props.onError)
             },
             onError: props.onError
         })
@@ -78,25 +64,22 @@ function GoogleLogin(props: { onSuccess: (c: string) => void, onError: () => voi
     )
 }
 
-export function GoogleLogout(props: { backend: Backend, onLogout: () => void }) {
+export function GoogleLogout(props: { backend: Backend, logOut: () => Promise<void> }) {
     return (
         <div id='login'>
             <button
-                onClick={() => {
-                    props.backend.Logout().POST()
-                        .then(() => {
-                            Backend.IsMock()
-                                ? console.log('Mock logout')
-                                : googleLogout()
-                            props.onLogout()
-                        }).catch(() => {
-                            alert('Error al tancar la sessió')
-                        })
-                }}
+                onClick={() => props.logOut().then(
+                    () => googleLogout(),
+                    () => alert('Error al tancar la sessió')
+                )}
                 id='google'
             >
                 Tanca la sessió
             </button>
         </div >
     )
+}
+
+function googleLogout() {
+    Backend.IsMock() ? console.log('Mock logout') : _googleLogout()
 }

@@ -5,7 +5,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { GoogleLogout } from './LoginPage';
 
 interface Props {
-    onLogout: () => void;
+    logOut: () => Promise<void>;
     backend: Backend;
 }
 
@@ -20,7 +20,7 @@ export default function LandingPage(props: Props) {
         <div className='LandingPage'>
             <PageHeader style={baseStyle} />
             <MainMenu style={baseStyle} setHelp={setHelp} />
-            <GoogleLogout backend={props.backend} onLogout={props.onLogout} />
+            <GoogleLogout backend={props.backend} logOut={props.logOut} />
             <Footer style={baseStyle} />
             {help && <HelpDialog onClose={() => setHelp(false)} />}
         </div >

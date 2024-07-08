@@ -1,12 +1,12 @@
-export class LoginEndpoint {
-    protected static path = '/api/login'
+export class AuthLoginEndpoint {
+    protected static path = '/api/auth/login'
 
     Path(): string {
-        return LoginEndpoint.path
+        return AuthLoginEndpoint.path
     }
 
     async POST(code: string): Promise<string> {
-        return fetch(LoginEndpoint.path, {
+        return fetch(AuthLoginEndpoint.path, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -21,10 +21,10 @@ export class LoginEndpoint {
     }
 }
 
-export class MockLoginEndpoint extends LoginEndpoint {
+export class MockAuthLoginEndpoint extends AuthLoginEndpoint {
     async POST(code: string): Promise<string> {
         console.log(`POST to ${this.Path()}: ${code}`)
         return new Promise(resolve => setTimeout(resolve, 100))
-            .then(() => 'Mock Google endpoint')
+            .then(() => 'Bearer MOCK_123456789')
     }
 }

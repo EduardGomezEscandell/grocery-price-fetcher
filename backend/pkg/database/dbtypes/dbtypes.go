@@ -1,9 +1,19 @@
 package dbtypes
 
 import (
+	"time"
+
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/recipe"
 )
+
+type Session struct {
+	ID           string
+	User         string
+	AccessToken  string
+	RefreshToken string
+	NotAfter     time.Time
+}
 
 // Dish represents a single dish that is part of a meal.
 type Dish struct {

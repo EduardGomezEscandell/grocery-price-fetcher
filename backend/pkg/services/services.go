@@ -35,6 +35,7 @@ type Manager struct {
 
 	log          logger.Logger
 	db           database.DB
+	auth         *auth.Manager
 	pricing      *pricing.Service
 	httpServices map[string]HTTPService
 	frontEnd     frontend.Service
@@ -44,8 +45,9 @@ type Settings struct {
 	Database      database.Settings
 	Auth          auth.Settings
 	FrontEnd      frontend.Settings
-	Login         session.Settings
-	Logout        session.Settings
+	AuthLogin     session.Settings
+	AuthLogout    session.Settings
+	AuthRefresh   session.Settings
 	HelloWorld    helloworld.Settings
 	IngredientUse ingredientuse.Settings
 	Menu          menu.Settings
@@ -62,10 +64,12 @@ type Settings struct {
 
 func (Settings) Defaults() Settings {
 	return Settings{
+		Auth:          auth.Settings{}.Defaults(),
 		Database:      database.Settings{}.Defaults(),
 		FrontEnd:      frontend.Settings{}.Defaults(),
-		Login:         session.Settings{}.Defaults(),
-		Logout:        session.Settings{}.Defaults(),
+		AuthLogin:     session.Settings{}.Defaults(),
+		AuthLogout:    session.Settings{}.Defaults(),
+		AuthRefresh:   session.Settings{}.Defaults(),
 		HelloWorld:    helloworld.Settings{}.Defaults(),
 		IngredientUse: ingredientuse.Settings{}.Defaults(),
 		Menu:          menu.Settings{}.Defaults(),
@@ -101,7 +105,7 @@ func New(ctx context.Context, logger logger.Logger, settings Settings) (*Manager
 		return nil, fmt.Errorf("could not load database: %v", err)
 	}
 
-	authManager, err := auth.NewManager(settings.Auth)
+	auth, err := auth.NewManager(ctx, settings.Auth, logger, db)
 	if err != nil {
 		cancel()
 		return nil, fmt.Errorf("could not create auth manager: %v", err)
@@ -112,6 +116,7 @@ func New(ctx context.Context, logger logger.Logger, settings Settings) (*Manager
 		cancel: cancel,
 
 		db:      db,
+		auth:    auth,
 		log:     logger,
 		pricing: pricing.New(ctx, settings.Pricing, logger, db),
 
@@ -120,24 +125,30 @@ func New(ctx context.Context, logger logger.Logger, settings Settings) (*Manager
 	}
 
 	for _, s := range []HTTPService{
-		session.NewLogin(settings.Login, authManager),
-		session.NewLogout(settings.Logout, authManager),
+		session.NewLogin(settings.AuthLogin, auth),
+		session.NewRefresh(settings.AuthRefresh, auth),
+		session.NewLogout(settings.AuthLogout, auth),
 		helloworld.New(settings.HelloWorld),
-		ingredientuse.New(settings.IngredientUse, db, authManager),
-		menu.New(settings.Menu, db, authManager),
-		pantry.New(settings.Pantry, db, authManager),
+		ingredientuse.New(settings.IngredientUse, db, auth),
+		menu.New(settings.Menu, db, auth),
+		pantry.New(settings.Pantry, db, auth),
 		products.New(settings.Products, db),
 		providersservice.New(settings.Providers),
-		recipe.New(settings.Recipe, db, authManager),
-		recipes.New(settings.Recipes, db, authManager),
-		shoppinglist.New(settings.ShoppingList, db, authManager),
-		shoppingneeds.New(settings.ShoppingNeeds, db, authManager),
+		recipe.New(settings.Recipe, db, auth),
+		recipes.New(settings.Recipes, db, auth),
+		shoppinglist.New(settings.ShoppingList, db, auth),
+		shoppingneeds.New(settings.ShoppingNeeds, db, auth),
 		version.New(settings.Version),
 	} {
 		m.httpServices[s.Name()] = s
 	}
 
-	m.pricing.Run()
+	if err := m.auth.Start(); err != nil {
+		cancel()
+		return nil, fmt.Errorf("could not start auth manager: %v", err)
+	}
+
+	m.pricing.Start()
 
 	return m, nil
 }
@@ -159,6 +170,7 @@ func (m *Manager) Stop() error {
 	defer m.cancel()
 
 	m.pricing.Stop()
+	m.auth.Stop()
 
 	if err := m.db.Close(); err != nil {
 		return fmt.Errorf("could not close database: %v", err)

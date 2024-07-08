@@ -18,6 +18,11 @@ type DB interface {
 	SetUser(id string) error
 	DeleteUser(id string) error
 
+	LookupSession(id string) (dbtypes.Session, error)
+	SetSession(s dbtypes.Session) error
+	DeleteSession(id string) error
+	PurgeSessions() error
+
 	Products() ([]product.Product, error)
 	LookupProduct(ID product.ID) (product.Product, error)
 	SetProduct(p product.Product) (product.ID, error)

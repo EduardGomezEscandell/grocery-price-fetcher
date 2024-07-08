@@ -4,6 +4,7 @@ import (
 	"io/fs"
 	"slices"
 	"testing"
+	"time"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
@@ -74,6 +75,92 @@ func UsersTest(t *testing.T, openDB func() database.DB) {
 	require.ErrorIs(t, err, fs.ErrNotExist, "Menu should not exist after deleting User")
 	_, err = db.LookupShoppingList(user2, "Menu", "Pantry")
 	require.ErrorIs(t, err, fs.ErrNotExist, "ShoppingList should not exist after deleting User")
+}
+
+func SessionsTest(t *testing.T, openDB func() database.DB) {
+	t.Helper()
+
+	db := openDB()
+	defer db.Close()
+
+	const user = "test-user-123"
+	const anotherUser = "another-user-456"
+
+	_, err := db.LookupSession("AAAAAAAAAAAAAAAAAAAAA")
+	require.ErrorIs(t, err, fs.ErrNotExist)
+
+	session := dbtypes.Session{
+		ID:           "session123",
+		User:         user,
+		AccessToken:  "token123",
+		RefreshToken: "refresh123",
+		NotAfter:     time.Now().Add(time.Hour),
+	}
+
+	otherSession := dbtypes.Session{
+		ID:           "session456",
+		User:         user,
+		AccessToken:  "token456",
+		RefreshToken: "refresh456",
+		NotAfter:     time.Now().Add(10 * time.Hour),
+	}
+
+	err = db.SetSession(session)
+	require.Error(t, err, "Should not be able to set a session for a non-existent user")
+
+	err = db.SetUser(user)
+	require.NoError(t, err)
+
+	err = db.SetUser(anotherUser)
+	require.NoError(t, err)
+
+	err = db.SetSession(session)
+	require.NoError(t, err, "Could not set a new session")
+
+	err = db.SetSession(otherSession)
+	require.NoError(t, err, "Could not set a new session")
+
+	s, err := db.LookupSession(session.ID)
+	require.NoError(t, err, "Could not find Session just created")
+	require.Equal(t, session, s, "Session does not match the one just created")
+
+	session.NotAfter = time.Now().Add(10 * time.Hour)
+	err = db.SetSession(session)
+	require.NoError(t, err, "Could not re-set a session")
+
+	s, err = db.LookupSession(session.ID)
+	require.NoError(t, err, "Could not find Session just re-set")
+	require.Equal(t, session, s, "Session does not match the one just re-set")
+
+	session.User = anotherUser
+	err = db.SetSession(session)
+	require.Error(t, err, "Should not be able to reuse a session for a different user")
+
+	err = db.DeleteSession(session.ID)
+	require.NoError(t, err)
+
+	_, err = db.LookupSession(session.ID)
+	require.ErrorIs(t, err, fs.ErrNotExist, "Should not find Session after deleting it")
+
+	session.User = user
+	session.NotAfter = time.Now().Add(-time.Hour)
+	err = db.SetSession(session)
+	require.Error(t, err, "Should not be able to set an expired session")
+
+	session.NotAfter = time.Now().Add(5 * time.Second)
+	err = db.SetSession(session)
+	require.NoError(t, err, "Could not set a new session")
+
+	time.Sleep(10 * time.Second)
+
+	err = db.PurgeSessions()
+	require.NoError(t, err)
+
+	_, err = db.LookupSession(session.ID)
+	require.ErrorIs(t, err, fs.ErrNotExist, "Should not find expired Session after purging the database")
+
+	_, err = db.LookupSession(otherSession.ID)
+	require.NoError(t, err, "Should find non-expired Session after purging the database")
 }
 
 func ProductsTest(t *testing.T, openDB func() database.DB) {
