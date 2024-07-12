@@ -40,16 +40,16 @@ func (s Service) Path() string {
 }
 
 func (s Service) HandleHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		msg := fmt.Sprintf("Method %s not allowed", r.Method)
-		http.Error(w, msg, http.StatusMethodNotAllowed)
-		return
-	}
-
 	if p, ok := s.resolvePath(w, r.URL.Path); !ok {
 		return
 	} else {
 		r.URL.Path = p
+	}
+
+	if r.Method != http.MethodGet {
+		msg := fmt.Sprintf("Method %s not allowed", r.Method)
+		http.Error(w, msg, http.StatusMethodNotAllowed)
+		return
 	}
 
 	if err := httputils.ValidateAccepts(r, httputils.MediaTypeHTML); err != nil {
