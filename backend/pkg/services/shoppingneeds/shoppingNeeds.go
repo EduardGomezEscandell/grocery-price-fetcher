@@ -1,10 +1,12 @@
 package shoppingneeds
 
 import (
+	"cmp"
 	"encoding/json"
 	"errors"
 	"io/fs"
 	"net/http"
+	"slices"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/auth"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
@@ -106,6 +108,8 @@ func (s *Service) handleGet(log logger.Logger, w http.ResponseWriter, r *http.Re
 			Amount:    i.Amount,
 		})
 	}
+
+	slices.SortFunc(items, func(a, b Item) int { return cmp.Compare(a.ProductID, b.ProductID) })
 
 	if err := json.NewEncoder(w).Encode(map[string]any{
 		"menu":  m.Name,
