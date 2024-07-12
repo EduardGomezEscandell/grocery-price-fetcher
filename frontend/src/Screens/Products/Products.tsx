@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { createContext, useContext, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import TopBar from '../../TopBar/TopBar'
 import Sidebar from '../../SideBar/Sidebar'
@@ -30,7 +30,7 @@ export default function Products(props: Props) {
     const [currProduct, setCurrProduct] = useState<product | null>(null)
 
     if (!loaded) {
-        props.backend.Products(props.sessionName)
+        props.backend.Products()
             .GET()
             .then((d) => d.map(r => new product(r)))
             .then(p => p.sort((a, b) => a.comp.localeCompare(b.comp)))
@@ -98,7 +98,7 @@ export default function Products(props: Props) {
                     product={currProduct!}
                     onHide={() => { setHidden([...hidden, currProduct!.name]); setFocus(Dialog.None) }}
                     onChange={(p: Product) => {
-                        props.backend.Products(props.sessionName).POST(p)
+                        props.backend.Products().POST(p)
                         const idx = products.findIndex(r => r.id === currProduct!.id)
                         if (idx !== -1) {
                             products[idx] = new product(p)

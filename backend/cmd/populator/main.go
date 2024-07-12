@@ -142,7 +142,7 @@ func copyProducts(log logger.Logger, input, output database.DB) error {
 }
 
 func copyRecipes(log logger.Logger, input, output database.DB) error {
-	recipes, err := input.Recipes()
+	recipes, err := input.Recipes("default")
 	if err != nil {
 		return fmt.Errorf("could not get recipes: %w", err)
 	}
@@ -159,7 +159,7 @@ func copyRecipes(log logger.Logger, input, output database.DB) error {
 }
 
 func copyMenus(log logger.Logger, input, output database.DB) error {
-	menus, err := input.Menus()
+	menus, err := input.Menus("default")
 	if err != nil {
 		return fmt.Errorf("could not get menus: %w", err)
 	}
@@ -176,7 +176,7 @@ func copyMenus(log logger.Logger, input, output database.DB) error {
 }
 
 func copyPantries(log logger.Logger, input, output database.DB) error {
-	pantries, err := input.Pantries()
+	pantries, err := input.Pantries("default")
 	if err != nil {
 		return fmt.Errorf("could not get pantries: %w", err)
 	}
@@ -193,7 +193,7 @@ func copyPantries(log logger.Logger, input, output database.DB) error {
 }
 
 func copyShoppingLists(log logger.Logger, input, output database.DB) error {
-	shoppingLists, err := input.ShoppingLists()
+	shoppingLists, err := input.ShoppingLists("default")
 	if err != nil {
 		return fmt.Errorf("could not get shopping lists: %w", err)
 	}
@@ -217,28 +217,28 @@ func verifyEmpty(log logger.Logger, db database.DB) (bool, error) {
 		return false, nil
 	}
 
-	if recipes, err := db.Recipes(); err != nil {
+	if recipes, err := db.Recipes("default"); err != nil {
 		return false, fmt.Errorf("could not read output DB recipes: %v", err)
 	} else if len(recipes) != 0 {
 		log.Info("Output DB recipes not empty, exiting")
 		return false, nil
 	}
 
-	if menus, err := db.Menus(); err != nil {
+	if menus, err := db.Menus("default"); err != nil {
 		return false, fmt.Errorf("could not read output DB menus: %v", err)
 	} else if len(menus) != 0 {
 		log.Info("Output DB menus not empty, exiting")
 		return false, nil
 	}
 
-	if pantries, err := db.Pantries(); err != nil {
+	if pantries, err := db.Pantries("default"); err != nil {
 		return false, fmt.Errorf("could not read output DB pantries: %v", err)
 	} else if len(pantries) != 0 {
 		log.Info("Output DB pantries not empty, exiting")
 		return false, nil
 	}
 
-	if shoppingLists, err := db.ShoppingLists(); err != nil {
+	if shoppingLists, err := db.ShoppingLists("default"); err != nil {
 		return false, fmt.Errorf("could not read output DB shopping lists: %v", err)
 	} else if len(shoppingLists) != 0 {
 		log.Info("Output DB shopping lists not empty, exiting")

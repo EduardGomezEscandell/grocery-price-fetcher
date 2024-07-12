@@ -9,6 +9,7 @@ import (
 	"path"
 	"testing"
 
+	e2e "github.com/EduardGomezEscandell/grocery-price-fetcher/end-to-end"
 	"github.com/stretchr/testify/require"
 )
 
@@ -28,9 +29,17 @@ func TestVersion(t *testing.T) {
 	require.NotContains(t, resp.Body, "Dev", "Version was not properly set during build")
 }
 
+func TestRefreshLogin(t *testing.T) {
+	t.Parallel()
+	resp, err := request(t, http.MethodPost, "api/auth/refresh", nil, authHeader)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code %s", resp.Status)
+	require.NotEmpty(t, resp.Body, "Body should not be empty")
+}
+
 func TestRecipes(t *testing.T) {
 	t.Parallel()
-	resp, err := request(t, http.MethodGet, "api/recipes", nil)
+	resp, err := request(t, http.MethodGet, "api/recipes", nil, authHeader)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code %s", resp.Status)
 	require.NotEmpty(t, resp.Body, "Body should not be empty")
@@ -38,7 +47,7 @@ func TestRecipes(t *testing.T) {
 
 func TestMenu(t *testing.T) {
 	t.Parallel()
-	resp, err := request(t, http.MethodGet, "api/menu/default", nil)
+	resp, err := request(t, http.MethodGet, "api/menu/default", nil, authHeader)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code %s", resp.Status)
 	require.NotEmpty(t, resp.Body, "Body should not be empty")
@@ -75,6 +84,11 @@ var browserHeaders = []kv{
 		key:   "User-Agent",
 		value: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
 	},
+}
+
+var authHeader = kv{
+	key:   "Authorization",
+	value: fmt.Sprintf("Bearer %s", e2e.TestSessionID),
 }
 
 type kv struct {

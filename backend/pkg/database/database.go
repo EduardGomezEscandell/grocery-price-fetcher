@@ -14,30 +14,39 @@ import (
 )
 
 type DB interface {
+	LookupUser(id string) (bool, error)
+	SetUser(id string) error
+	DeleteUser(id string) error
+
+	LookupSession(id string) (dbtypes.Session, error)
+	SetSession(s dbtypes.Session) error
+	DeleteSession(id string) error
+	PurgeSessions() error
+
 	Products() ([]product.Product, error)
 	LookupProduct(ID product.ID) (product.Product, error)
 	SetProduct(p product.Product) (product.ID, error)
 	DeleteProduct(ID product.ID) error
 
-	Recipes() ([]recipe.Recipe, error)
-	LookupRecipe(name recipe.ID) (recipe.Recipe, error)
+	Recipes(asUser string) ([]recipe.Recipe, error)
+	LookupRecipe(asUser string, id recipe.ID) (recipe.Recipe, error)
 	SetRecipe(r recipe.Recipe) (recipe.ID, error)
-	DeleteRecipe(name recipe.ID) error
+	DeleteRecipe(asUser string, id recipe.ID) error
 
-	Menus() ([]dbtypes.Menu, error)
-	LookupMenu(name string) (dbtypes.Menu, bool)
+	Menus(user string) ([]dbtypes.Menu, error)
+	LookupMenu(user, name string) (dbtypes.Menu, error)
 	SetMenu(m dbtypes.Menu) error
-	DeleteMenu(name string) error
+	DeleteMenu(user, name string) error
 
-	Pantries() ([]dbtypes.Pantry, error)
-	LookupPantry(name string) (dbtypes.Pantry, bool)
+	Pantries(user string) ([]dbtypes.Pantry, error)
+	LookupPantry(user, name string) (dbtypes.Pantry, error)
 	SetPantry(p dbtypes.Pantry) error
-	DeletePantry(name string) error
+	DeletePantry(user, name string) error
 
-	ShoppingLists() ([]dbtypes.ShoppingList, error)
-	LookupShoppingList(menu, pantry string) (dbtypes.ShoppingList, bool)
+	ShoppingLists(user string) ([]dbtypes.ShoppingList, error)
+	LookupShoppingList(user, menu, pantry string) (dbtypes.ShoppingList, error)
 	SetShoppingList(m dbtypes.ShoppingList) error
-	DeleteShoppingList(menu, pantry string) error
+	DeleteShoppingList(user, menu, pantry string) error
 
 	Close() error
 }

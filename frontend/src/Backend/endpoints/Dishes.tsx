@@ -2,6 +2,11 @@ import { Dish } from "../../State/State"
 
 export class DishesEndpoint {
     protected static path = '/api/recipes'
+    private auth: string
+
+    constructor(auth: string) {
+        this.auth = auth
+    }
 
     Path(): string {
         return DishesEndpoint.path
@@ -11,6 +16,7 @@ export class DishesEndpoint {
         return fetch(DishesEndpoint.path, {
             method: 'GET',
             headers: {
+                'Authorization': this.auth,
                 'Content-Type': 'application/json'
             }
         })

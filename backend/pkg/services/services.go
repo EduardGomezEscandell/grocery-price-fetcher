@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/auth"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
@@ -22,6 +23,7 @@ import (
 	providersservice "github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/providers"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/recipe"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/recipes"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/session"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/shoppinglist"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/shoppingneeds"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/services/version"
@@ -33,6 +35,7 @@ type Manager struct {
 
 	log          logger.Logger
 	db           database.DB
+	auth         *auth.Manager
 	pricing      *pricing.Service
 	httpServices map[string]HTTPService
 	frontEnd     frontend.Service
@@ -40,7 +43,11 @@ type Manager struct {
 
 type Settings struct {
 	Database      database.Settings
+	Auth          auth.Settings
 	FrontEnd      frontend.Settings
+	AuthLogin     session.Settings
+	AuthLogout    session.Settings
+	AuthRefresh   session.Settings
 	HelloWorld    helloworld.Settings
 	IngredientUse ingredientuse.Settings
 	Menu          menu.Settings
@@ -57,8 +64,12 @@ type Settings struct {
 
 func (Settings) Defaults() Settings {
 	return Settings{
+		Auth:          auth.Settings{}.Defaults(),
 		Database:      database.Settings{}.Defaults(),
 		FrontEnd:      frontend.Settings{}.Defaults(),
+		AuthLogin:     session.Settings{}.Defaults(),
+		AuthLogout:    session.Settings{}.Defaults(),
+		AuthRefresh:   session.Settings{}.Defaults(),
 		HelloWorld:    helloworld.Settings{}.Defaults(),
 		IngredientUse: ingredientuse.Settings{}.Defaults(),
 		Menu:          menu.Settings{}.Defaults(),
@@ -94,11 +105,18 @@ func New(ctx context.Context, logger logger.Logger, settings Settings) (*Manager
 		return nil, fmt.Errorf("could not load database: %v", err)
 	}
 
+	auth, err := auth.NewManager(ctx, settings.Auth, logger, db)
+	if err != nil {
+		cancel()
+		return nil, fmt.Errorf("could not create auth manager: %v", err)
+	}
+
 	m := &Manager{
 		ctx:    ctx,
 		cancel: cancel,
 
 		db:      db,
+		auth:    auth,
 		log:     logger,
 		pricing: pricing.New(ctx, settings.Pricing, logger, db),
 
@@ -107,22 +125,30 @@ func New(ctx context.Context, logger logger.Logger, settings Settings) (*Manager
 	}
 
 	for _, s := range []HTTPService{
+		session.NewLogin(settings.AuthLogin, auth),
+		session.NewRefresh(settings.AuthRefresh, auth),
+		session.NewLogout(settings.AuthLogout, auth),
 		helloworld.New(settings.HelloWorld),
-		ingredientuse.New(settings.IngredientUse, db),
-		menu.New(settings.Menu, db),
-		pantry.New(settings.Pantry, db),
+		ingredientuse.New(settings.IngredientUse, db, auth),
+		menu.New(settings.Menu, db, auth),
+		pantry.New(settings.Pantry, db, auth),
 		products.New(settings.Products, db),
 		providersservice.New(settings.Providers),
-		recipe.New(settings.Recipe, db),
-		recipes.New(settings.Recipes, db),
-		shoppinglist.New(settings.ShoppingList, db),
-		shoppingneeds.New(settings.ShoppingNeeds, db),
+		recipe.New(settings.Recipe, db, auth),
+		recipes.New(settings.Recipes, db, auth),
+		shoppinglist.New(settings.ShoppingList, db, auth),
+		shoppingneeds.New(settings.ShoppingNeeds, db, auth),
 		version.New(settings.Version),
 	} {
 		m.httpServices[s.Name()] = s
 	}
 
-	m.pricing.Run()
+	if err := m.auth.Start(); err != nil {
+		cancel()
+		return nil, fmt.Errorf("could not start auth manager: %v", err)
+	}
+
+	m.pricing.Start()
 
 	return m, nil
 }
@@ -144,6 +170,7 @@ func (m *Manager) Stop() error {
 	defer m.cancel()
 
 	m.pricing.Stop()
+	m.auth.Stop()
 
 	if err := m.db.Close(); err != nil {
 		return fmt.Errorf("could not close database: %v", err)

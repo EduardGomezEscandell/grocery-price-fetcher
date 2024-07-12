@@ -1,4 +1,5 @@
 [{
+    "user": "test-user-123",
     "menu": "testmenu1",
     "pantry": "testpantry1",
     "contents": [2]

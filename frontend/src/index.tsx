@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import Root from './Screens/Root';
+import { GoogleOAuthProvider } from '@react-oauth/google';
+import Root from './Screens/Root';  
 import './index.css';
 
 const root = document.getElementById('root')
@@ -9,8 +10,12 @@ if (!root) {
 }
 
 ReactDOM.createRoot(root).render(
-  <React.StrictMode>
-    <Root />
-  </React.StrictMode>
+  <GoogleOAuthProvider
+    clientId={import.meta.env.VITE_APP_GOOGLE_CLIENT_ID}
+  >
+    <React.StrictMode>
+      <Root />
+    </React.StrictMode>
+  </GoogleOAuthProvider>
 );
 

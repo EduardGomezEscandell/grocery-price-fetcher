@@ -64,7 +64,7 @@ func (s *Service) Stop() {
 	s.cancel()
 }
 
-func (s *Service) Run() {
+func (s *Service) Start() {
 	if !s.settings.Enable {
 		return
 	}

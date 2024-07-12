@@ -3,103 +3,83 @@ package mysql
 import (
 	"database/sql"
 	"fmt"
+	"io/fs"
 	"slices"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/recipe"
 )
 
-func (s *SQL) clearMenus(tx *sql.Tx) error {
-	tables := []string{"menus", "menu_days", "menu_meals", "menu_dishes"}
-
-	// Remove tables from bottom to top to avoid foreign key constraints
-	for i := range tables {
-		table := tables[len(tables)-i-1]
-		q := fmt.Sprintf("DROP TABLE %s", table)
-		s.log.Tracef(q)
-
-		_, err := tx.ExecContext(s.ctx, q)
-		if err != nil {
-			return fmt.Errorf("could not drop table: %v", err)
-		}
-	}
-
-	return nil
+var menuTables = []tableDef{
+	{
+		name: "menus",
+		columns: []string{
+			"user VARCHAR(255)",
+			"name VARCHAR(255)",
+			"FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE",
+			"PRIMARY KEY (user, name)",
+		},
+	},
+	{
+		name: "menu_days",
+		columns: []string{
+			"user VARCHAR(255) NOT NULL",
+			"menu VARCHAR(255) NOT NULL",
+			"pos INT NOT NULL",
+			"name VARCHAR(255) NOT NULL",
+			"FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE",
+			"FOREIGN KEY (user, menu) REFERENCES menus(user, name) ON DELETE CASCADE",
+			"PRIMARY KEY (user, menu, pos)",
+		},
+	},
+	{
+		name: "menu_meals",
+		columns: []string{
+			"user VARCHAR(255) NOT NULL",
+			"menu VARCHAR(255) NOT NULL",
+			"day INT NOT NULL",
+			"pos INT NOT NULL",
+			"name VARCHAR(255) NOT NULL",
+			"FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE",
+			"FOREIGN KEY (user, menu, day) REFERENCES menu_days(user, menu, pos) ON DELETE CASCADE",
+			"PRIMARY KEY (user, menu, day, pos)",
+		},
+	},
+	{
+		name: "menu_dishes",
+		columns: []string{
+			"user VARCHAR(255)",
+			"menu VARCHAR(255)",
+			"day INT NOT NULL",
+			"meal INT NOT NULL",
+			"pos INT NOT NULL",
+			"recipe INT UNSIGNED NOT NULL",
+			"amount FLOAT NOT NULL",
+			"FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE",
+			"FOREIGN KEY (user, menu, day, meal) REFERENCES menu_meals(user, menu, day, pos) ON DELETE CASCADE",
+			"FOREIGN KEY (recipe) REFERENCES recipes(id) ON DELETE CASCADE",
+			"PRIMARY KEY (user, menu, day, meal, pos)",
+		},
+	},
 }
 
-func (s *SQL) createMenus(tx *sql.Tx) error {
-	queries := []struct {
-		name  string
-		query string
-	}{
-		{
-			"menus",
-			`CREATE TABLE menus (
-				name VARCHAR(255) PRIMARY KEY
-			)`,
-		},
-		{
-			"menu_days",
-			`CREATE TABLE menu_days (
-				menu VARCHAR(255) NOT NULL,
-				pos INT NOT NULL,
-				name VARCHAR(255) NOT NULL,
-				FOREIGN KEY (menu) REFERENCES menus(name) ON DELETE CASCADE,
-				PRIMARY KEY (menu, pos)
-			)`,
-		},
-		{
-			"menu_meals",
-			`CREATE TABLE menu_meals (
-				menu VARCHAR(255) NOT NULL,
-				day INT NOT NULL,
-				pos INT NOT NULL,
-				name VARCHAR(255) NOT NULL,
-				FOREIGN KEY (menu, day) REFERENCES menu_days(menu, pos) ON DELETE CASCADE,
-				PRIMARY KEY (menu, day, pos)
-			)`,
-		},
-		{
-			"menu_dishes",
-			`CREATE TABLE menu_dishes (
-				menu VARCHAR(255),
-				day INT NOT NULL,
-				meal INT NOT NULL,
-				pos INT NOT NULL,
-				recipe INT UNSIGNED NOT NULL,
-				amount FLOAT NOT NULL,
-				FOREIGN KEY (menu, day, meal) REFERENCES menu_meals(menu, day, pos) ON DELETE CASCADE,
-				FOREIGN KEY (recipe) REFERENCES recipes(id) ON DELETE CASCADE,
-				PRIMARY KEY (menu, day, meal, pos)
-			)`,
-		},
+func (s *SQL) Menus(user string) ([]dbtypes.Menu, error) {
+	if user == "" {
+		return nil, nil
 	}
 
-	for _, q := range queries {
-		s.log.Trace(q.query)
-
-		_, err := tx.ExecContext(s.ctx, q.query)
-		if err != nil && !errorIs(err, errTableExists) {
-			return fmt.Errorf("could not create table %s: %v", q.name, err)
-		}
-	}
-
-	return nil
-}
-
-func (s *SQL) Menus() ([]dbtypes.Menu, error) {
 	tx, err := s.db.BeginTx(s.ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("could not begin transaction: %v", err)
 	}
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
-	menus, err := s.queryMenus(tx)
+	menus, err := s.queryMenus(tx, user)
 	if err != nil {
 		return nil, fmt.Errorf("could not query menus: %v", err)
 	}
 
-	m, err := s.queryMenuContents(tx, menus)
+	m, err := s.queryMenuContents(tx, user, menus)
 	if err != nil {
 		return nil, fmt.Errorf("could not query menu contents: %v", err)
 	}
@@ -111,8 +91,8 @@ func (s *SQL) Menus() ([]dbtypes.Menu, error) {
 	return m, nil
 }
 
-func (s *SQL) queryMenus(tx *sql.Tx) ([]string, error) {
-	rows, err := tx.QueryContext(s.ctx, "SELECT name FROM menus")
+func (s *SQL) queryMenus(tx *sql.Tx, user string) ([]string, error) {
+	rows, err := tx.QueryContext(s.ctx, "SELECT name FROM menus WHERE user = ?", user)
 	if err != nil {
 		return nil, fmt.Errorf("could not query menus: %v", err)
 	}
@@ -134,26 +114,26 @@ func (s *SQL) queryMenus(tx *sql.Tx) ([]string, error) {
 	return menus, nil
 }
 
-func (s *SQL) queryMenuContents(tx *sql.Tx, names []string) ([]dbtypes.Menu, error) {
+func (s *SQL) queryMenuContents(tx *sql.Tx, user string, names []string) ([]dbtypes.Menu, error) {
 	if len(names) == 0 {
 		return nil, nil
 	}
 
-	builder := newMenuBuilder(names)
+	builder := newMenuBuilder(user, names)
 
-	days, err := s.queryMenuDays(tx)
+	days, err := s.queryMenuDays(tx, user)
 	if err != nil {
 		return nil, fmt.Errorf("could not query menu days: %v", err)
 	}
 	builder.setDays(days)
 
-	meals, err := s.queryMenuMeals(tx)
+	meals, err := s.queryMenuMeals(tx, user)
 	if err != nil {
 		return nil, fmt.Errorf("could not query menu meals: %v", err)
 	}
 	builder.setMeals(meals)
 
-	items, err := s.queryMealItems(tx)
+	items, err := s.queryMealItems(tx, user)
 	if err != nil {
 		return nil, fmt.Errorf("could not query meal items: %v", err)
 	}
@@ -163,13 +143,14 @@ func (s *SQL) queryMenuContents(tx *sql.Tx, names []string) ([]dbtypes.Menu, err
 }
 
 type menuDayRow struct {
+	User string
 	Menu string
 	Pos  int
 	Name string
 }
 
-func (s *SQL) queryMenuDays(tx *sql.Tx) ([]menuDayRow, error) {
-	rows, err := tx.QueryContext(s.ctx, "SELECT menu, pos, name FROM menu_days")
+func (s *SQL) queryMenuDays(tx *sql.Tx, user string) ([]menuDayRow, error) {
+	rows, err := tx.QueryContext(s.ctx, "SELECT menu, pos, name FROM menu_days WHERE user = ?", user)
 	if err != nil {
 		return nil, fmt.Errorf("could not query menu days: %v", err)
 	}
@@ -192,21 +173,23 @@ func (s *SQL) queryMenuDays(tx *sql.Tx) ([]menuDayRow, error) {
 }
 
 type menuMealRow struct {
+	User string
 	Menu string
 	Day  int
 	Pos  int
 	Name string
 }
 
-func (s *SQL) queryMenuMeals(tx *sql.Tx) ([]menuMealRow, error) {
+func (s *SQL) queryMenuMeals(tx *sql.Tx, user string) ([]menuMealRow, error) {
 	query := `
 		SELECT
 			menu, day, pos, name
 		FROM
 			menu_meals
-		`
+		WHERE
+			user = ?`
 
-	rows, err := tx.QueryContext(s.ctx, query)
+	rows, err := tx.QueryContext(s.ctx, query, user)
 	if err != nil {
 		return nil, fmt.Errorf("could not query menu meals: %v", err)
 	}
@@ -229,6 +212,7 @@ func (s *SQL) queryMenuMeals(tx *sql.Tx) ([]menuMealRow, error) {
 }
 
 type menuDishRow struct {
+	User   string
 	Menu   string
 	Day    int
 	Meal   int
@@ -237,15 +221,15 @@ type menuDishRow struct {
 	Amount float32
 }
 
-func (s *SQL) queryMealItems(tx *sql.Tx) ([]menuDishRow, error) {
+func (s *SQL) queryMealItems(tx *sql.Tx, user string) ([]menuDishRow, error) {
 	query := `
-		SELECT
-			menu, day, meal, pos, recipe, amount
-		FROM 
-			menu_dishes
-		`
+	SELECT
+		menu, day, meal, pos, recipe, amount 
+	FROM 
+		menu_dishes
+	WHERE user = ?`
 
-	r, err := tx.QueryContext(s.ctx, query)
+	r, err := tx.QueryContext(s.ctx, query, user)
 	if err != nil {
 		return nil, fmt.Errorf("could not query meal items: %v", err)
 	}
@@ -271,12 +255,15 @@ type menuBuilder struct {
 	menus []dbtypes.Menu
 }
 
-func newMenuBuilder(names []string) menuBuilder {
+func newMenuBuilder(user string, names []string) menuBuilder {
 	p := menuBuilder{
 		menus: make([]dbtypes.Menu, 0, len(names)),
 	}
 	for _, n := range names {
-		p.menus = append(p.menus, dbtypes.Menu{Name: n})
+		p.menus = append(p.menus, dbtypes.Menu{
+			User: user,
+			Name: n,
+		})
 	}
 	return p
 }
@@ -345,47 +332,56 @@ func at[T any](slice *[]T, i int) *T {
 	return &(*slice)[i]
 }
 
-func (s *SQL) LookupMenu(name string) (dbtypes.Menu, bool) {
+func (s *SQL) LookupMenu(user, name string) (dbtypes.Menu, error) {
+	if user == "" {
+		return dbtypes.Menu{}, fs.ErrNotExist
+	}
+
 	tx, err := s.db.BeginTx(s.ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
-		s.log.Warnf("could not begin transaction: %v", err)
-		return dbtypes.Menu{}, false
+		return dbtypes.Menu{}, fmt.Errorf("could not begin transaction: %v", err)
 	}
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
-	q := `SELECT name FROM menus WHERE name = ?`
+	q := `SELECT name FROM menus WHERE name = ? AND user = ?`
 	s.log.Trace(q)
 
-	row := tx.QueryRowContext(s.ctx, q, name)
-	if err := row.Scan(&name); err != nil {
-		s.log.Warnf("could not scan menu name: %v", err)
-		return dbtypes.Menu{}, false
+	row := tx.QueryRowContext(s.ctx, q, name, user)
+	if err := row.Scan(&name); errorIs(err, errKeyNotFound) {
+		return dbtypes.Menu{}, fs.ErrNotExist
+	} else if err != nil {
+		return dbtypes.Menu{}, fmt.Errorf("could not scan menu name: %v", err)
 	}
 
 	if err := row.Err(); err != nil {
-		s.log.Warnf("could not scan menu name: %v", err)
-		return dbtypes.Menu{}, false
+		return dbtypes.Menu{}, fmt.Errorf("could not scan menu name: %v", err)
 	}
 
-	m, err := s.queryMenuContents(tx, []string{name})
+	m, err := s.queryMenuContents(tx, user, []string{name})
 	if err != nil {
-		s.log.Warnf("could not query menu contents: %v", err)
-		return dbtypes.Menu{}, false
+		return dbtypes.Menu{}, fmt.Errorf("could not query menu contents: %v", err)
 	}
 
 	if len(m) == 0 {
-		return dbtypes.Menu{}, false
+		return dbtypes.Menu{}, fs.ErrNotExist
 	}
 
 	if err := tx.Commit(); err != nil {
-		s.log.Warnf("could not commit transaction: %v", err)
-		return dbtypes.Menu{}, false
+		return dbtypes.Menu{}, fmt.Errorf("could not commit transaction: %v", err)
 	}
 
-	return m[0], true
+	return m[0], nil
 }
 
 func (s *SQL) SetMenu(m dbtypes.Menu) error {
+	if m.User == "" {
+		return fmt.Errorf("user cannot be empty")
+	}
+
+	if m.Name == "" {
+		return fmt.Errorf("name cannot be empty")
+	}
+
 	var dc struct {
 		days  []menuDayRow
 		meals []menuMealRow
@@ -394,6 +390,7 @@ func (s *SQL) SetMenu(m dbtypes.Menu) error {
 
 	for dayIdx, day := range m.Days {
 		dc.days = append(dc.days, menuDayRow{
+			User: m.User,
 			Menu: m.Name,
 			Pos:  dayIdx,
 			Name: day.Name,
@@ -401,6 +398,7 @@ func (s *SQL) SetMenu(m dbtypes.Menu) error {
 
 		for mealIdx, meal := range day.Meals {
 			dc.meals = append(dc.meals, menuMealRow{
+				User: m.User,
 				Menu: m.Name,
 				Day:  dayIdx,
 				Pos:  mealIdx,
@@ -409,6 +407,7 @@ func (s *SQL) SetMenu(m dbtypes.Menu) error {
 
 			for k, dish := range meal.Dishes {
 				dc.items = append(dc.items, menuDishRow{
+					User:   m.User,
 					Menu:   m.Name,
 					Day:    dayIdx,
 					Meal:   mealIdx,
@@ -427,12 +426,17 @@ func (s *SQL) SetMenu(m dbtypes.Menu) error {
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
 	// Delete old menu dependencies via cascade
-	if _, err := tx.ExecContext(s.ctx, `DELETE FROM menu_days WHERE menu = ?`, m.Name); err != nil {
+	if _, err := tx.ExecContext(s.ctx, `
+		DELETE FROM
+			menu_days
+		WHERE 
+			menu = ? AND user = ?
+		`, m.Name, m.User); err != nil {
 		return fmt.Errorf("could not delete extra meal items: %v", err)
 	}
 
 	// Insert new menu from top to bottom
-	if err := s.setMenu(tx, m.Name); err != nil {
+	if err := s.setMenu(tx, m.User, m.Name); err != nil {
 		return fmt.Errorf("could not set menu: %v", err)
 	}
 
@@ -451,14 +455,22 @@ func (s *SQL) SetMenu(m dbtypes.Menu) error {
 	return tx.Commit()
 }
 
-func (s *SQL) DeleteMenu(name string) error {
+func (s *SQL) DeleteMenu(user, name string) error {
+	if user == "" {
+		return nil
+	}
+
 	tx, err := s.db.BeginTx(s.ctx, nil)
 	if err != nil {
 		return fmt.Errorf("could not begin transaction: %v", err)
 	}
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
-	if _, err := tx.ExecContext(s.ctx, `DELETE FROM menus WHERE name = ?`, name); err != nil {
+	if _, err := tx.ExecContext(s.ctx, `
+		DELETE FROM
+			menus
+		WHERE
+			name = ? AND user = ?`, name, user); err != nil {
 		return fmt.Errorf("could not delete menu: %v", err)
 	}
 
@@ -469,9 +481,12 @@ func (s *SQL) DeleteMenu(name string) error {
 	return nil
 }
 
-func (s *SQL) setMenu(tx *sql.Tx, name string) error {
+func (s *SQL) setMenu(tx *sql.Tx, user, name string) error {
 	// Insert new menu
-	_, err := tx.ExecContext(s.ctx, "REPLACE INTO menus (name) VALUES (?)", name)
+	_, err := tx.ExecContext(s.ctx, `
+		REPLACE INTO
+			menus (user, name)
+		VALUES (?, ?)`, user, name)
 	if err != nil {
 		return fmt.Errorf("could not insert menu: %v", err)
 	}
@@ -481,24 +496,24 @@ func (s *SQL) setMenu(tx *sql.Tx, name string) error {
 
 func (s *SQL) setDays(tx *sql.Tx, rows []menuDayRow) error {
 	return bulkInsert(s, tx,
-		"menu_days (menu, pos, name)", rows,
+		"menu_days (user, menu, pos, name)", rows,
 		func(row menuDayRow) []any {
-			return []any{row.Menu, row.Pos, row.Name}
+			return []any{row.User, row.Menu, row.Pos, row.Name}
 		})
 }
 
 func (s *SQL) setMeals(tx *sql.Tx, rows []menuMealRow) error {
 	return bulkInsert(s, tx,
-		"menu_meals (menu, day, pos, name)", rows,
+		"menu_meals (user, menu, day, pos, name)", rows,
 		func(row menuMealRow) []any {
-			return []any{row.Menu, row.Day, row.Pos, row.Name}
+			return []any{row.User, row.Menu, row.Day, row.Pos, row.Name}
 		})
 }
 
 func (s *SQL) setItems(tx *sql.Tx, rows []menuDishRow) error {
 	return bulkInsert(s, tx,
-		"menu_dishes (menu, day, meal, pos, recipe, amount)", rows,
+		"menu_dishes (user, menu, day, meal, pos, recipe, amount)", rows,
 		func(row menuDishRow) []any {
-			return []any{row.Menu, row.Day, row.Meal, row.Pos, row.Recipe, row.Amount}
+			return []any{row.User, row.Menu, row.Day, row.Meal, row.Pos, row.Recipe, row.Amount}
 		})
 }

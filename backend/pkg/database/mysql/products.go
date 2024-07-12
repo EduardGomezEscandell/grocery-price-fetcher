@@ -1,7 +1,6 @@
 package mysql
 
 import (
-	"database/sql"
 	"fmt"
 	"io/fs"
 
@@ -11,47 +10,20 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/providers/blank"
 )
 
-func (s *SQL) clearProducts(tx *sql.Tx) error {
-	query := "DROP TABLE products"
-	s.log.Trace(query)
-
-	stmt, err := tx.PrepareContext(s.ctx, query)
-	if err != nil {
-		return fmt.Errorf("could not prepare deletion of products: %v", err)
-	}
-
-	if _, err = stmt.ExecContext(s.ctx); err != nil {
-		return fmt.Errorf("could not delete table products: %v", err)
-	}
-
-	return nil
-}
-
-func (s *SQL) createProducts(tx *sql.Tx) error {
-	query := `
-	CREATE TABLE products (
-		id INT UNSIGNED PRIMARY KEY,
-		name VARCHAR(255),
-		batch_size FLOAT NOT NULL,
-		price FLOAT NOT NULL,
-		provider VARCHAR(255) NOT NULL,
-		provider_id0 VARCHAR(255) NOT NULL,
-		provider_id1 VARCHAR(255) NOT NULL,
-		provider_id2 VARCHAR(255) NOT NULL
-	)`
-	s.log.Trace(query)
-
-	stmt, err := tx.PrepareContext(s.ctx, query)
-	if err != nil {
-		return fmt.Errorf("could not prepare creation of products: %v", err)
-	}
-
-	_, err = stmt.ExecContext(s.ctx)
-	if err != nil && !errorIs(err, errTableExists) {
-		return fmt.Errorf("could not create table products: %v", err)
-	}
-
-	return nil
+var productTables = []tableDef{
+	{
+		name: "products",
+		columns: []string{
+			"id INT UNSIGNED PRIMARY KEY",
+			"name VARCHAR(255)",
+			"batch_size FLOAT NOT NULL",
+			"price FLOAT NOT NULL",
+			"provider VARCHAR(255) NOT NULL",
+			"provider_id0 VARCHAR(255) NOT NULL",
+			"provider_id1 VARCHAR(255) NOT NULL",
+			"provider_id2 VARCHAR(255) NOT NULL",
+		},
+	},
 }
 
 func (s *SQL) Products() ([]product.Product, error) {

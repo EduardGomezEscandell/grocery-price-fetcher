@@ -1,4 +1,5 @@
 [{
+    "user": "test-user-123",
     "name": "testmenu1",
     "days": [
         {

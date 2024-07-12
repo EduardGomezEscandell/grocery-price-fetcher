@@ -5,6 +5,8 @@ SERVICE := /etc/systemd/system/$(PKG).service
 NOW := $(shell date +"%Y-%m-%d %H:%M:%S")
 NOW_UTC := $(shell date +"%Y-%m-%d %H:%M:%S" --utc)
 
+FQDN ?= https://localhost
+
 .PHONY: install start stop purge help
 
 help: ## Show this help message
@@ -13,7 +15,7 @@ help: ## Show this help message
 	@echo "COMMANDS"
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-install: ## Install the service
+install: ## Install the service. Set environment variable FQDN to configure the service. This FQDN must be a valid redirect URI for Google OAuth.
 	sudo mkdir -p "$(ETC)"
 
 	sudo cp ./service/$(PKG).service "$(SERVICE)"
@@ -31,6 +33,14 @@ install: ## Install the service
 			&& echo "Root password file created"                      \
 		)
 	
+	[ -f "$(ETC)/google_client_secret.txt" ]                             \
+		&& echo "Google client secret file already exists"               \
+		|| (                                                             \
+			sudo touch         "$(ETC)/google_client_secret.txt"         \
+			&& sudo chmod 0600 "$(ETC)/google_client_secret.txt"         \
+			&& echo "Empty Google client secret file created"            \
+		)
+	
 	[ -d "$(ETC)/certificates" ]                              		  \
 		&& echo "Certificate directory already exists"                \
 		|| (                                                          \
@@ -40,15 +50,18 @@ install: ## Install the service
 			&& echo "Self-signed certificates used"                   \
 		)
 
+	sudo sed -i 's#redirect-uri: .*$$#redirect-uri: $(FQDN)#' '$(ETC)/config.yaml'
+
 	sudo systemctl daemon-reload
 
 	@echo ""
 	@echo "Service installed. To start:"
 	@echo "  1. Set your password in $(ETC)/db_root_password.txt"
-	@echo "  2. Set your certificates in $(ETC)/certificates"
-	@echo "  3. Validate or change the configuration in $(ETC)/config.yaml and $(ETC)/compose.yaml"
+	@echo "  2. Set your Google client secret in $(ETC)/google_client_secret.txt"
+	@echo "  3. Set your certificates in $(ETC)/certificates"
+	@echo "  4. Validate or change the configuration in $(ETC)/config.yaml and $(ETC)/compose.yaml"
 	@echo "     You may also do this after starting the service, but changes will not take effect until the service is restarted"
-	@echo "  4. Run command 'make start' to start the service"
+	@echo "  5. Run command 'make start' to start the service"
 	@echo ""
 
 start: ## Start the service

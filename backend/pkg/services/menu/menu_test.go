@@ -43,7 +43,7 @@ func TestMenuEndpoint(t *testing.T) {
 
 			db := testutils.Database(t, testutils.FixturePath(t, "database"))
 
-			sv := menu.New(menu.Settings{}.Defaults(), db)
+			sv := menu.New(menu.Settings{}.Defaults(), db, testutils.MockAuthGetter())
 			require.True(t, sv.Enabled())
 
 			fixture := testutils.FixturePath(t, "message", "body.json")

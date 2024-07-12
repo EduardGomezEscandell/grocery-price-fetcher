@@ -2,8 +2,9 @@ package mysql
 
 import (
 	"cmp"
-	"database/sql"
+	"errors"
 	"fmt"
+	"io/fs"
 	"slices"
 	"strings"
 
@@ -11,58 +12,32 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
 )
 
-func (s *SQL) clearShoppingLists(tx *sql.Tx) error {
-	tables := []string{"shopping_list_items"}
-
-	// Remove tables from bottom to top to avoid foreign key constraints
-	for i := range tables {
-		table := tables[len(tables)-i-1]
-		q := fmt.Sprintf("DROP TABLE %s", table)
-		s.log.Trace(q)
-
-		_, err := tx.ExecContext(s.ctx, q)
-		if err != nil {
-			return fmt.Errorf("could not drop table: %v", err)
-		}
-	}
-
-	return nil
-}
-
-func (s *SQL) createShoppingLists(tx *sql.Tx) error {
-	queries := []struct {
-		name  string
-		query string
-	}{
-		{
-			name: "shopping_list_items",
-			query: `
-			CREATE TABLE shopping_list_items (
-				menu_name VARCHAR(255) REFERENCES menus(name) ON DELETE CASCADE,
-				pantry_name VARCHAR(255) REFERENCES pantries(name) ON DELETE CASCADE,
-				product INT UNSIGNED REFERENCES products(id) ON DELETE CASCADE,
-				PRIMARY KEY (menu_name, pantry_name, product)
-			)`,
+var shoppingListTables = []tableDef{
+	{
+		name: "shopping_list_items",
+		columns: []string{
+			"user VARCHAR(255) NOT NULL",
+			"menu VARCHAR(255) NOT NULL",
+			"pantry VARCHAR(255) NOT NULL",
+			"product INT UNSIGNED NOT NULL",
+			"FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE",
+			"FOREIGN KEY (product) REFERENCES products(id) ON DELETE CASCADE",
+			"FOREIGN KEY (user, menu) REFERENCES menus(user, name) ON DELETE CASCADE",
+			"FOREIGN KEY (user, pantry) REFERENCES pantries(user, name) ON DELETE CASCADE",
+			"PRIMARY KEY (user, menu, pantry, product)",
 		},
-	}
-
-	for _, q := range queries {
-		s.log.Trace(q.query)
-
-		_, err := tx.ExecContext(s.ctx, q.query)
-		if err != nil && !errorIs(err, errTableExists) {
-			return fmt.Errorf("could not create table %s: %v", q.name, err)
-		}
-	}
-
-	return nil
+	},
 }
 
-func (s *SQL) ShoppingLists() ([]dbtypes.ShoppingList, error) {
-	query := `SELECT * FROM shopping_list_items`
+func (s *SQL) ShoppingLists(user string) ([]dbtypes.ShoppingList, error) {
+	if user == "" {
+		return nil, errors.New("user cannot be empty")
+	}
+
+	query := `SELECT menu, pantry, product FROM shopping_list_items WHERE user = ?`
 	s.log.Trace(query)
 
-	r, err := s.db.QueryContext(s.ctx, query)
+	r, err := s.db.QueryContext(s.ctx, query, user)
 	if err != nil {
 		return nil, fmt.Errorf("could not query shopping lists: %v", err)
 	}
@@ -102,6 +77,7 @@ func (s *SQL) ShoppingLists() ([]dbtypes.ShoppingList, error) {
 
 	lists := []dbtypes.ShoppingList{
 		{
+			User:     user,
 			Menu:     items[0].Menu,
 			Pantry:   items[0].Pantry,
 			Contents: []product.ID{items[0].ProductID},
@@ -115,6 +91,7 @@ func (s *SQL) ShoppingLists() ([]dbtypes.ShoppingList, error) {
 		}
 
 		lists = append(lists, dbtypes.ShoppingList{
+			User:     user,
 			Menu:     items[i].Menu,
 			Pantry:   items[i].Pantry,
 			Contents: []product.ID{items[i].ProductID},
@@ -124,8 +101,17 @@ func (s *SQL) ShoppingLists() ([]dbtypes.ShoppingList, error) {
 	return lists, nil
 }
 
-func (s *SQL) LookupShoppingList(menu, pantry string) (dbtypes.ShoppingList, bool) {
+func (s *SQL) LookupShoppingList(user, menu, pantry string) (dbtypes.ShoppingList, error) {
+	if user == "" {
+		return dbtypes.ShoppingList{}, errors.New("user cannot be empty")
+	} else if menu == "" {
+		return dbtypes.ShoppingList{}, errors.New("menu cannot be empty")
+	} else if pantry == "" {
+		return dbtypes.ShoppingList{}, errors.New("pantry cannot be empty")
+	}
+
 	sl := dbtypes.ShoppingList{
+		User:     user,
 		Menu:     menu,
 		Pantry:   pantry,
 		Contents: make([]product.ID, 0),
@@ -133,51 +119,60 @@ func (s *SQL) LookupShoppingList(menu, pantry string) (dbtypes.ShoppingList, boo
 
 	tx, err := s.db.BeginTx(s.ctx, nil)
 	if err != nil {
-		s.log.Warningf("could not begin transaction: %v", err)
-		return sl, false
+		return sl, fmt.Errorf("could not start transaction: %v", err)
 	}
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
 	query := `
-	SELECT product
-	FROM shopping_list_items
-	WHERE menu_name = ? AND pantry_name = ?
+	SELECT
+		product
+	FROM
+		shopping_list_items
+	WHERE 
+		user = ?
+		AND menu = ? 
+		AND pantry = ?
 	`
 	s.log.Trace(query)
 
-	r, err := tx.QueryContext(s.ctx, query, menu, pantry)
+	r, err := tx.QueryContext(s.ctx, query, user, menu, pantry)
 	if err != nil {
-		s.log.Warningf("could not query shopping list items: %v", err)
-		return sl, false
+		return sl, fmt.Errorf("could not query shopping list items: %v", err)
 	}
 
 	for r.Next() {
 		var ID product.ID
 		if err := r.Scan(&ID); err != nil {
-			s.log.Warningf("could not scan: %v", err)
-			return sl, false
+			return sl, fmt.Errorf("could not scan shopping list item: %v", err)
 		}
 
 		sl.Contents = append(sl.Contents, ID)
 	}
 
 	if err := r.Err(); err != nil {
-		s.log.Warningf("could not get shopping list items: %v", err)
-		return sl, false
+		return sl, fmt.Errorf("could not get shopping list items: %v", err)
 	}
 
 	if len(sl.Contents) == 0 {
-		return sl, false
+		return sl, fs.ErrNotExist
 	}
 
 	if err := tx.Commit(); err != nil {
-		return sl, false
+		return sl, fmt.Errorf("could not commit transaction: %v", err)
 	}
 
-	return sl, true
+	return sl, nil
 }
 
 func (s *SQL) SetShoppingList(list dbtypes.ShoppingList) error {
+	if list.User == "" {
+		return errors.New("user cannot be empty")
+	} else if list.Menu == "" {
+		return errors.New("menu cannot be empty")
+	} else if list.Pantry == "" {
+		return errors.New("pantry cannot be empty")
+	}
+
 	tx, err := s.db.BeginTx(s.ctx, nil)
 	if err != nil {
 		return fmt.Errorf("could not start transaction: %v", err)
@@ -188,15 +183,16 @@ func (s *SQL) SetShoppingList(list dbtypes.ShoppingList) error {
 		DELETE FROM
 			shopping_list_items
 		WHERE 
-			menu_name = ? 
-			AND pantry_name = ?
-	`, list.Menu, list.Pantry)
+			user = ?
+			AND menu = ? 
+			AND pantry = ?
+	`, list.User, list.Menu, list.Pantry)
 	if err != nil {
 		return fmt.Errorf("could not delete old shopping list items: %v", err)
 	}
 
-	err = bulkInsert(s, tx, "shopping_list_items(menu_name, pantry_name, product)", list.Contents, func(ID product.ID) []any {
-		return []any{list.Menu, list.Pantry, ID}
+	err = bulkInsert(s, tx, "shopping_list_items(user, menu, pantry, product)", list.Contents, func(ID product.ID) []any {
+		return []any{list.User, list.Menu, list.Pantry, ID}
 	})
 	if err != nil {
 		return fmt.Errorf("could not insert shopping list items: %v", err)
@@ -209,11 +205,25 @@ func (s *SQL) SetShoppingList(list dbtypes.ShoppingList) error {
 	return nil
 }
 
-func (s *SQL) DeleteShoppingList(menu, pantry string) error {
-	query := `DELETE FROM shopping_list_items WHERE menu_name = ? AND pantry_name = ?`
+func (s *SQL) DeleteShoppingList(user, menu, pantry string) error {
+	if user == "" {
+		return errors.New("user cannot be empty")
+	} else if menu == "" {
+		return errors.New("menu cannot be empty")
+	} else if pantry == "" {
+		return errors.New("pantry cannot be empty")
+	}
+
+	query := `DELETE 
+		FROM
+			shopping_list_items
+		WHERE 
+			user = ?
+			AND menu = ?
+			AND pantry = ?`
 	s.log.Trace(query)
 
-	if _, err := s.db.ExecContext(s.ctx, query, menu, pantry); err != nil {
+	if _, err := s.db.ExecContext(s.ctx, query, user, menu, pantry); err != nil {
 		return fmt.Errorf("could not delete shopping list items: %v", err)
 	}
 

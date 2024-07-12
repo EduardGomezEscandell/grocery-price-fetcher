@@ -60,7 +60,7 @@ func TestUnmarshal(t *testing.T) {
 type: mysql
 options:
   user: joe
-  passwordfile: /etc/secret
+  password-file: /etc/secret
   host: hostboy
   port: 1234
 `)
@@ -99,7 +99,7 @@ func TestMySQL(t *testing.T) {
 			defer cancel()
 
 			log := testutils.NewLogger(t)
-			log.SetLevel(int(logrus.TraceLevel))
+			log.SetLevel(int(logrus.DebugLevel))
 
 			options := mysql.DefaultSettings()
 			options.PasswordFile = "./testdata/db_root_password.txt"
@@ -170,7 +170,7 @@ func TestMySQLRecipes(t *testing.T) {
 	defer cancel()
 
 	log := testutils.NewLogger(t)
-	log.SetLevel(int(logrus.TraceLevel))
+	log.SetLevel(int(logrus.DebugLevel))
 
 	options := mysql.DefaultSettings()
 	options.PasswordFile = "./testdata/db_root_password.txt"
@@ -179,6 +179,8 @@ func TestMySQLRecipes(t *testing.T) {
 	db, err := mysql.New(ctx, log, options)
 	require.NoError(t, err)
 	defer db.Close()
+
+	const user = "test-user-123"
 
 	hydrogen := product.Product{
 		Name:      "Hydrogen",
@@ -194,6 +196,9 @@ func TestMySQLRecipes(t *testing.T) {
 		Provider:  blank.Provider{},
 	}
 
+	err = db.SetUser(user)
+	require.NoError(t, err)
+
 	pID, err := db.SetProduct(hydrogen)
 	require.NoError(t, err)
 	hydrogen.ID = pID
@@ -203,6 +208,7 @@ func TestMySQLRecipes(t *testing.T) {
 	oxygen.ID = pID
 
 	rec := recipe.Recipe{
+		User: user,
 		Name: "Water",
 		Ingredients: []recipe.Ingredient{
 			{ProductID: hydrogen.ID, Amount: 2},
@@ -210,11 +216,11 @@ func TestMySQLRecipes(t *testing.T) {
 		},
 	}
 
-	recs, err := db.Recipes()
+	recs, err := db.Recipes(user)
 	require.NoError(t, err)
 	require.Empty(t, recs)
 
-	_, err = db.LookupRecipe(555)
+	_, err = db.LookupRecipe(user, 555)
 	require.ErrorIs(t, err, fs.ErrNotExist)
 
 	rID, err := db.SetRecipe(rec)
@@ -222,11 +228,11 @@ func TestMySQLRecipes(t *testing.T) {
 	require.NotZero(t, rID, "expected non-zero ID")
 	rec.ID = rID
 
-	got, err := db.LookupRecipe(rec.ID)
+	got, err := db.LookupRecipe(user, rec.ID)
 	require.NoError(t, err)
 	requireSameRecipe(t, rec, got)
 
-	recs, err = db.Recipes()
+	recs, err = db.Recipes(user)
 	require.NoError(t, err)
 	require.Len(t, recs, 1)
 	requireSameRecipe(t, rec, recs[0])
@@ -237,15 +243,15 @@ func TestMySQLRecipes(t *testing.T) {
 	_, err = db.SetRecipe(rec)
 	require.NoError(t, err)
 
-	recs, err = db.Recipes()
+	recs, err = db.Recipes(user)
 	require.NoError(t, err)
 	require.Len(t, recs, 1)
 	requireSameRecipe(t, rec, recs[0])
 
-	err = db.DeleteRecipe(rec.ID)
+	err = db.DeleteRecipe(user, rec.ID)
 	require.NoError(t, err)
 
-	recs, err = db.Recipes()
+	recs, err = db.Recipes(user)
 	require.NoError(t, err)
 	require.Empty(t, recs)
 }
@@ -272,6 +278,8 @@ func TestMySQLMenus(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
+	user := "user_id_123"
+
 	H := product.Product{
 		Name:      "Hydrogen",
 		BatchSize: 1,
@@ -285,6 +293,9 @@ func TestMySQLMenus(t *testing.T) {
 		Provider:  blank.Provider{},
 	}
 
+	err = db.SetUser(user)
+	require.NoError(t, err)
+
 	id, err := db.SetProduct(H)
 	require.NoErrorf(t, err, "could not set product %s", H.Name)
 	H.ID = id
@@ -294,6 +305,7 @@ func TestMySQLMenus(t *testing.T) {
 	O.ID = id
 
 	H2O := recipe.Recipe{
+		User: user,
 		Name: "Water",
 		Ingredients: []recipe.Ingredient{
 			{ProductID: H.ID, Amount: 2},
@@ -301,6 +313,7 @@ func TestMySQLMenus(t *testing.T) {
 		},
 	}
 	H2O2 := recipe.Recipe{
+		User: user,
 		Name: "Hydrogen Peroxide",
 		Ingredients: []recipe.Ingredient{
 			{ProductID: H.ID, Amount: 2},
@@ -308,6 +321,7 @@ func TestMySQLMenus(t *testing.T) {
 		},
 	}
 	O2 := recipe.Recipe{
+		User: user,
 		Name: "Oxygen Gas",
 		Ingredients: []recipe.Ingredient{
 			{ProductID: O.ID, Amount: 2},
@@ -326,11 +340,12 @@ func TestMySQLMenus(t *testing.T) {
 	require.NoErrorf(t, err, "could not set recipe %s", O2.Name)
 	O2.ID = rID
 
-	menus, err := db.Menus()
+	menus, err := db.Menus(user)
 	require.NoError(t, err)
 	require.Empty(t, menus)
 
 	m := dbtypes.Menu{
+		User: user,
 		Name: "Test Menu",
 		Days: []dbtypes.Day{
 			{
@@ -356,17 +371,17 @@ func TestMySQLMenus(t *testing.T) {
 		},
 	}
 
-	_, ok := db.LookupMenu(m.Name)
-	require.False(t, ok)
+	_, err = db.LookupMenu(user, m.Name)
+	require.Error(t, err)
 
 	err = db.SetMenu(m)
 	require.NoError(t, err)
 
-	got, ok := db.LookupMenu(m.Name)
-	require.True(t, ok)
+	got, err := db.LookupMenu(user, m.Name)
+	require.NoError(t, err)
 	require.Equal(t, m, got)
 
-	menus, err = db.Menus()
+	menus, err = db.Menus(user)
 	require.NoError(t, err)
 	require.ElementsMatch(t, []dbtypes.Menu{m}, menus)
 
@@ -374,14 +389,14 @@ func TestMySQLMenus(t *testing.T) {
 	err = db.SetMenu(m)
 	require.NoError(t, err)
 
-	menus, err = db.Menus()
+	menus, err = db.Menus(user)
 	require.NoError(t, err)
 	require.ElementsMatch(t, []dbtypes.Menu{m}, menus)
 
-	err = db.DeleteMenu(m.Name)
+	err = db.DeleteMenu(user, m.Name)
 	require.NoError(t, err)
 
-	menus, err = db.Menus()
+	menus, err = db.Menus(user)
 	require.NoError(t, err)
 	require.Empty(t, menus)
 }
@@ -401,6 +416,8 @@ func TestMySQLPantries(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
+	const user = "test-user-123"
+
 	p := []product.Product{
 		{
 			Name:      "Hydrogen",
@@ -416,6 +433,9 @@ func TestMySQLPantries(t *testing.T) {
 		},
 	}
 
+	err = db.SetUser(user)
+	require.NoError(t, err)
+
 	id, err := db.SetProduct(p[0])
 	require.NoError(t, err)
 	p[0].ID = id
@@ -425,6 +445,7 @@ func TestMySQLPantries(t *testing.T) {
 	p[1].ID = id
 
 	pantry := dbtypes.Pantry{
+		User: user,
 		Name: "Test Pantry",
 		Contents: []recipe.Ingredient{
 			{ProductID: p[0].ID, Amount: 2165},
@@ -432,21 +453,21 @@ func TestMySQLPantries(t *testing.T) {
 		},
 	}
 
-	pantries, err := db.Pantries()
+	pantries, err := db.Pantries(user)
 	require.NoError(t, err)
 	require.Empty(t, pantries)
 
-	_, ok := db.LookupPantry(pantry.Name)
-	require.False(t, ok)
+	_, err = db.LookupPantry(user, pantry.Name)
+	require.ErrorIs(t, err, fs.ErrNotExist)
 
 	err = db.SetPantry(pantry)
 	require.NoError(t, err)
 
-	got, ok := db.LookupPantry(pantry.Name)
-	require.True(t, ok)
+	got, err := db.LookupPantry(user, pantry.Name)
+	require.NoError(t, err)
 	requireSamePantry(t, pantry, got)
 
-	pantries, err = db.Pantries()
+	pantries, err = db.Pantries(user)
 	require.NoError(t, err)
 	require.Len(t, pantries, 1)
 	requireSamePantry(t, pantry, pantries[0])
@@ -455,15 +476,15 @@ func TestMySQLPantries(t *testing.T) {
 	err = db.SetPantry(pantry)
 	require.NoError(t, err)
 
-	pantries, err = db.Pantries()
+	pantries, err = db.Pantries(user)
 	require.NoError(t, err)
 	require.Len(t, pantries, 1)
 	requireSamePantry(t, pantry, pantries[0])
 
-	err = db.DeletePantry(pantry.Name)
+	err = db.DeletePantry(user, pantry.Name)
 	require.NoError(t, err)
 
-	pantries, err = db.Pantries()
+	pantries, err = db.Pantries(user)
 	require.NoError(t, err)
 	require.Empty(t, pantries)
 }
@@ -489,6 +510,9 @@ func TestMySQLShoopingLists(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
+	const user = "user_id_123"
+	const anotherUser = "user_id_456"
+
 	p := []product.Product{
 		{
 			Name:      "Hydrogen",
@@ -504,6 +528,9 @@ func TestMySQLShoopingLists(t *testing.T) {
 		},
 	}
 
+	err = db.SetUser(user)
+	require.NoError(t, err)
+
 	id, err := db.SetProduct(p[0])
 	require.NoError(t, err)
 	p[0].ID = id
@@ -512,52 +539,60 @@ func TestMySQLShoopingLists(t *testing.T) {
 	require.NoError(t, err)
 	p[1].ID = id
 
-	err = db.SetMenu(dbtypes.Menu{Name: "My test menu"})
+	err = db.SetMenu(dbtypes.Menu{User: user, Name: "My test menu"})
 	require.NoError(t, err)
 
-	err = db.SetPantry(dbtypes.Pantry{Name: "My test pantry"})
+	err = db.SetPantry(dbtypes.Pantry{User: user, Name: "My test pantry"})
 	require.NoError(t, err)
 
 	sl := dbtypes.ShoppingList{
+		User:     user,
 		Menu:     "My test menu",
 		Pantry:   "My test pantry",
 		Contents: []product.ID{p[0].ID},
 	}
 
-	pantries, err := db.ShoppingLists()
+	sLists, err := db.ShoppingLists(user)
 	require.NoError(t, err)
-	require.Empty(t, pantries)
+	require.Empty(t, sLists)
 
-	_, ok := db.LookupShoppingList(sl.Menu, sl.Pantry)
-	require.False(t, ok)
+	_, err = db.LookupShoppingList(user, sl.Menu, sl.Pantry)
+	require.ErrorIs(t, err, fs.ErrNotExist)
 
 	err = db.SetShoppingList(sl)
 	require.NoError(t, err)
 
-	got, ok := db.LookupShoppingList(sl.Menu, sl.Pantry)
-	require.True(t, ok)
+	got, err := db.LookupShoppingList(user, sl.Menu, sl.Pantry)
+	require.NoError(t, err)
 	requireSameShoppingList(t, sl, got)
 
-	pantries, err = db.ShoppingLists()
+	_, err = db.LookupShoppingList(anotherUser, sl.Menu, sl.Pantry)
+	require.ErrorIs(t, err, fs.ErrNotExist, "expected not to find shopping list for another user")
+
+	sLists, err = db.ShoppingLists(user)
 	require.NoError(t, err)
-	require.Len(t, pantries, 1)
-	requireSameShoppingList(t, sl, pantries[0])
+	require.Len(t, sLists, 1)
+	requireSameShoppingList(t, sl, sLists[0])
+
+	sLists, err = db.ShoppingLists(anotherUser)
+	require.NoError(t, err)
+	require.Empty(t, sLists, "expected no shopping lists for another user")
 
 	sl.Contents = append(sl.Contents, p[1].ID)
 	err = db.SetShoppingList(sl)
 	require.NoError(t, err)
 
-	pantries, err = db.ShoppingLists()
+	sLists, err = db.ShoppingLists(user)
 	require.NoError(t, err)
-	require.Len(t, pantries, 1)
-	requireSameShoppingList(t, sl, pantries[0])
+	require.Len(t, sLists, 1)
+	requireSameShoppingList(t, sl, sLists[0])
 
-	err = db.DeleteShoppingList(sl.Menu, sl.Pantry)
+	err = db.DeleteShoppingList(user, sl.Menu, sl.Pantry)
 	require.NoError(t, err)
 
-	pantries, err = db.ShoppingLists()
+	sLists, err = db.ShoppingLists(user)
 	require.NoError(t, err)
-	require.Empty(t, pantries)
+	require.Empty(t, sLists)
 }
 
 func requireSameShoppingList(t *testing.T, want, got dbtypes.ShoppingList) {

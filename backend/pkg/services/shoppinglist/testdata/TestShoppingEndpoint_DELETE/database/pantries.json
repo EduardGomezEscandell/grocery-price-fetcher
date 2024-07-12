@@ -1,6 +1,7 @@
 [
     {
         "name": "testpantry1",
+        "user": "test-user-123",
         "contents": [
             {
                 "product_id": 1,

@@ -42,7 +42,7 @@ func (s Service) Name() string {
 }
 
 func (s Service) Path() string {
-	return "/api/products/{namespace}/{id}"
+	return "/api/products/{id}"
 }
 
 func (s Service) Enabled() bool {
@@ -65,14 +65,6 @@ func (s Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Reques
 func (s Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Request) error {
 	if err := httputils.ValidateAccepts(r, httputils.MediaTypeJSON); err != nil {
 		return err
-	}
-
-	ns := r.PathValue("namespace")
-	if ns == "" {
-		return httputils.Error(http.StatusBadRequest, "missing namespace")
-	} else if ns != "default" {
-		// Only the default namespace is supported for now
-		return httputils.Errorf(http.StatusNotFound, "namespace %s not found", ns)
 	}
 
 	nm := r.PathValue("id")
@@ -115,7 +107,7 @@ func (s Service) handlePost(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 		return err
 	}
 
-	namespace, urlID, err := parseEndpoint(r)
+	urlID, err := parseEndpoint(r)
 	if err != nil {
 		return err
 	}
@@ -138,7 +130,7 @@ func (s Service) handlePost(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 		w.WriteHeader(http.StatusAccepted)
 	} else {
 		w.WriteHeader(http.StatusCreated)
-		w.Header().Set("Location", path.Join("/api/recipe/", namespace, fmt.Sprint(newID)))
+		w.Header().Set("Location", path.Join("/api/recipe/", fmt.Sprint(newID)))
 	}
 
 	if err := json.NewEncoder(w).Encode(map[string]interface{}{"id": newID}); err != nil {
@@ -149,7 +141,7 @@ func (s Service) handlePost(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 }
 
 func (s Service) handleDelete(_ logger.Logger, w http.ResponseWriter, r *http.Request) error {
-	_, id, err := parseEndpoint(r)
+	id, err := parseEndpoint(r)
 	if err != nil {
 		return err
 	}
@@ -162,24 +154,16 @@ func (s Service) handleDelete(_ logger.Logger, w http.ResponseWriter, r *http.Re
 	return nil
 }
 
-func parseEndpoint(r *http.Request) (namespace string, id product.ID, err error) {
-	n := r.PathValue("namespace")
-	if n == "" {
-		return "", 0, httputils.Error(http.StatusBadRequest, "missing namespace")
-	} else if n != "default" {
-		// Only the default namespace is supported for now
-		return "", 0, httputils.Errorf(http.StatusNotFound, "namespace %s not found", n)
-	}
-
+func parseEndpoint(r *http.Request) (id product.ID, err error) {
 	sid := r.PathValue("id")
 	if sid == "" {
-		return "", 0, httputils.Error(http.StatusBadRequest, "missing id")
+		return 0, httputils.Error(http.StatusBadRequest, "missing id")
 	}
 
 	idURL, err := strconv.ParseUint(sid, 10, product.IDSize)
 	if err != nil {
-		return "", 0, httputils.Errorf(http.StatusBadRequest, "invalid id: %v", err)
+		return 0, httputils.Errorf(http.StatusBadRequest, "invalid id: %v", err)
 	}
 
-	return n, product.ID(idURL), nil
+	return product.ID(idURL), nil
 }

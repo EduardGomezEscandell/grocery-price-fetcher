@@ -22,7 +22,7 @@ func ComputeNeeds(log logger.Logger, db database.DB, m dbtypes.Menu) []recipe.In
 	// Compute the amount of each recipe needed
 	recipes := make(map[recipe.ID]recipeAmount)
 
-	cached := database.NewCachedLookup(db.LookupRecipe)
+	cached := database.NewCachedUserLookup(m.User, db.LookupRecipe)
 	for _, day := range m.Days {
 		for _, meal := range day.Meals {
 			for _, dish := range meal.Dishes {

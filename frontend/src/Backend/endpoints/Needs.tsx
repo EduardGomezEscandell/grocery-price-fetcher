@@ -2,9 +2,11 @@ import { ShoppingNeeds } from '../../State/State'
 
 export class NeedsEndpoint {
     protected path: string
+    private auth: string
 
-    constructor(which: string) {
+    constructor(auth: string, which: string) {
         this.path = '/api/shopping-needs/' + which
+        this.auth = auth
     }
 
     Path(): string {
@@ -15,6 +17,7 @@ export class NeedsEndpoint {
         return fetch(this.path, {
             method: 'GET',
             headers: {
+                'Authorization': this.auth,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             }
@@ -27,8 +30,8 @@ export class NeedsEndpoint {
 
 export class MockNeedsEndpoint extends NeedsEndpoint {
     which: string
-    constructor(which: string) {
-        super(which)
+    constructor(auth: string, which: string) {
+        super(auth, which)
         this.which = which
     }
 

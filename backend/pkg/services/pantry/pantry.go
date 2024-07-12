@@ -2,9 +2,12 @@ package pantry
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
+	"io/fs"
 	"net/http"
 
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/auth"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database/dbtypes"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
@@ -15,6 +18,7 @@ import (
 type Service struct {
 	settings Settings
 	db       database.DB
+	auth     auth.Getter
 }
 
 type Settings struct {
@@ -27,14 +31,11 @@ func (Settings) Defaults() Settings {
 	}
 }
 
-func New(s Settings, db database.DB) *Service {
-	if !s.Enable {
-		return nil
-	}
-
-	return &Service{
+func New(s Settings, db database.DB, auth auth.Getter) Service {
+	return Service{
 		settings: s,
 		db:       db,
+		auth:     auth,
 	}
 }
 
@@ -50,7 +51,7 @@ func (s Service) Enabled() bool {
 	return s.settings.Enable
 }
 
-func (s *Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Request) error {
+func (s Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Request) error {
 	switch r.Method {
 	case http.MethodGet:
 		return s.handleGet(log, w, r)
@@ -73,9 +74,16 @@ func (s *Service) handleGet(log logger.Logger, w http.ResponseWriter, r *http.Re
 		return httputils.Error(http.StatusBadRequest, "missing pantry")
 	}
 
-	pantry, ok := s.db.LookupPantry(p)
-	if !ok {
+	user, err := s.auth.GetUserID(r)
+	if err != nil {
+		return httputils.Errorf(http.StatusUnauthorized, "could not get user: %w", err)
+	}
+
+	pantry, err := s.db.LookupPantry(user, p)
+	if errors.Is(err, fs.ErrNotExist) {
 		return httputils.Error(http.StatusNotFound, "pantry not found")
+	} else if err != nil {
+		return httputils.Errorf(http.StatusInternalServerError, "could not lookup pantry: %w", err)
 	}
 
 	type Item struct {
@@ -112,24 +120,31 @@ func (s *Service) handlePut(log logger.Logger, w http.ResponseWriter, r *http.Re
 		return err
 	}
 
+	p := r.PathValue("pantry")
+	if p == "" {
+		return httputils.Error(http.StatusBadRequest, "missing pantry")
+	}
+
+	user, err := s.auth.GetUserID(r)
+	if err != nil {
+		return httputils.Errorf(http.StatusUnauthorized, "could not get user: %w", err)
+	}
+
 	out, err := io.ReadAll(r.Body)
 	if err != nil {
 		return httputils.Error(http.StatusBadRequest, "failed to read request")
 	}
 	r.Body.Close()
 
-	p := r.PathValue("pantry")
-	if p == "" {
-		return httputils.Error(http.StatusBadRequest, "missing pantry")
-	}
-
-	pantry := dbtypes.Pantry{
-		Name: p,
-	}
+	var pantry dbtypes.Pantry
 
 	if err := json.Unmarshal(out, &pantry); err != nil {
 		return httputils.Errorf(http.StatusBadRequest, "could not unmarshal pantry: %w", err)
 	}
+
+	// Overwrite the pantry name and user with the values from the request
+	pantry.Name = p
+	pantry.User = user
 
 	log.Debugf("Received pantry with %d items", len(pantry.Contents))
 
@@ -147,7 +162,12 @@ func (s *Service) handleDelete(_ logger.Logger, w http.ResponseWriter, r *http.R
 		return httputils.Error(http.StatusBadRequest, "missing pantry")
 	}
 
-	if err := s.db.DeletePantry(p); err != nil {
+	user, err := s.auth.GetUserID(r)
+	if err != nil {
+		return httputils.Errorf(http.StatusUnauthorized, "could not get user: %w", err)
+	}
+
+	if err := s.db.DeletePantry(user, p); err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "could not delete pantry: %w", err)
 	}
 

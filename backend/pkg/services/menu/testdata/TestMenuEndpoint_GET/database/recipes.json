@@ -1,6 +1,7 @@
 [
     {
         "ID": 1,
+        "user": "test-user-123",
         "Name": "Cereal",
         "Ingredients": [
             {
@@ -15,6 +16,7 @@
     },
     {
         "ID": 2,
+        "user": "test-user-123",
         "Name": "OJ",
         "Ingredients": [
             {
@@ -25,11 +27,13 @@
     },
     {
         "ID": 3,
+        "user": "test-user-123",
         "Name": "Sandwich",
         "Ingredients": []
     },
     {
         "ID": 4,
+        "user": "test-user-123",
         "Name": "Apple",
         "Ingredients": []
     }

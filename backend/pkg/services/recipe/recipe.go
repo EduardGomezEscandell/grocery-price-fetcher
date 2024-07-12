@@ -9,6 +9,7 @@ import (
 	"path"
 	"strconv"
 
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/auth"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
@@ -19,6 +20,7 @@ import (
 type Service struct {
 	settings Settings
 	db       database.DB
+	auth     auth.Getter
 }
 
 type Settings struct {
@@ -31,10 +33,11 @@ func (s Settings) Defaults() Settings {
 	}
 }
 
-func New(s Settings, db database.DB) Service {
+func New(s Settings, db database.DB, auth auth.Getter) Service {
 	return Service{
 		settings: s,
 		db:       db,
+		auth:     auth,
 	}
 }
 
@@ -43,7 +46,7 @@ func (s Service) Name() string {
 }
 
 func (s Service) Path() string {
-	return "/api/recipe/{namespace}/{id}"
+	return "/api/recipe/{id}"
 }
 
 func (s Service) Enabled() bool {
@@ -68,12 +71,17 @@ func (s Service) handleGet(log logger.Logger, w http.ResponseWriter, r *http.Req
 		return err
 	}
 
-	_, id, err := parseEndpoint(r)
+	id, err := parseEndpoint(r)
 	if err != nil {
 		return err
 	}
 
-	rec, err := s.db.LookupRecipe(id)
+	user, err := s.auth.GetUserID(r)
+	if err != nil {
+		return httputils.Errorf(http.StatusUnauthorized, "could not get user: %v", err)
+	}
+
+	rec, err := s.db.LookupRecipe(user, id)
 	if errors.Is(err, fs.ErrNotExist) {
 		return httputils.Errorf(http.StatusNotFound, "recipe %d not found", id)
 	} else if err != nil {
@@ -113,9 +121,14 @@ func (s Service) handlePost(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 		return err
 	}
 
-	namespace, urlID, err := parseEndpoint(r)
+	urlID, err := parseEndpoint(r)
 	if err != nil {
 		return err
+	}
+
+	user, err := s.auth.GetUserID(r)
+	if err != nil {
+		return httputils.Errorf(http.StatusUnauthorized, "could not get user: %v", err)
 	}
 
 	var body recipeMsg
@@ -128,6 +141,7 @@ func (s Service) handlePost(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 	}
 
 	dbRecipe := recipe.Recipe{
+		User:        user,
 		ID:          body.ID,
 		Name:        body.Name,
 		Ingredients: make([]recipe.Ingredient, 0, len(body.Ingredients)),
@@ -157,7 +171,7 @@ func (s Service) handlePost(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 		w.WriteHeader(http.StatusAccepted)
 	} else {
 		w.WriteHeader(http.StatusCreated)
-		w.Header().Set("Location", path.Join("/api/recipe/", namespace, fmt.Sprint(newID)))
+		w.Header().Set("Location", path.Join("/api/recipe/", fmt.Sprint(newID)))
 	}
 
 	if err := json.NewEncoder(w).Encode(map[string]interface{}{"id": newID}); err != nil {
@@ -168,12 +182,17 @@ func (s Service) handlePost(_ logger.Logger, w http.ResponseWriter, r *http.Requ
 }
 
 func (s Service) handleDelete(_ logger.Logger, w http.ResponseWriter, r *http.Request) error {
-	_, id, err := parseEndpoint(r)
+	id, err := parseEndpoint(r)
 	if err != nil {
 		return err
 	}
 
-	if err := s.db.DeleteRecipe(id); err != nil {
+	user, err := s.auth.GetUserID(r)
+	if err != nil {
+		return httputils.Errorf(http.StatusUnauthorized, "could not get user: %v", err)
+	}
+
+	if err := s.db.DeleteRecipe(user, id); err != nil {
 		return httputils.Errorf(http.StatusInternalServerError, "failed to delete recipe: %v", err)
 	}
 
@@ -194,24 +213,16 @@ type recipeMsg struct {
 	Ingredients []ingredient `json:"ingredients"`
 }
 
-func parseEndpoint(r *http.Request) (namespace string, id recipe.ID, err error) {
-	n := r.PathValue("namespace")
-	if n == "" {
-		return "", 0, httputils.Error(http.StatusBadRequest, "missing namespace")
-	} else if n != "default" {
-		// Only the default namespace is supported for now
-		return "", 0, httputils.Errorf(http.StatusNotFound, "namespace %s not found", n)
-	}
-
+func parseEndpoint(r *http.Request) (id recipe.ID, err error) {
 	sid := r.PathValue("id")
 	if sid == "" {
-		return "", 0, httputils.Error(http.StatusBadRequest, "missing id")
+		return 0, httputils.Error(http.StatusBadRequest, "missing id")
 	}
 
 	idURL, err := strconv.ParseUint(sid, 10, recipe.IDSize)
 	if err != nil {
-		return "", 0, httputils.Errorf(http.StatusBadRequest, "invalid id: %v", err)
+		return 0, httputils.Errorf(http.StatusBadRequest, "invalid id: %v", err)
 	}
 
-	return n, recipe.ID(idURL), nil
+	return recipe.ID(idURL), nil
 }

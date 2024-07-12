@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -29,11 +30,11 @@ type SQL struct {
 
 type Settings struct {
 	User            string
-	PasswordFile    string
+	PasswordFile    string `yaml:"password-file"`
 	Host            string
 	Port            string
-	ConnectTimeout  time.Duration
-	ConnectCooldown time.Duration
+	ConnectTimeout  time.Duration `yaml:"connect-timeout"`
+	ConnectCooldown time.Duration `yaml:"connect-cooldown"`
 
 	// AllowInsertNewID allows the Set* functions to insert new objects with a user-provided ID.
 	AllowInsertNewID bool
@@ -78,7 +79,7 @@ func New(ctx context.Context, log logger.Logger, sett Settings) (*SQL, error) {
 		return nil, fmt.Errorf("could not connect to database: %w", err)
 	}
 
-	if err := sql.createTables(); err != nil {
+	if err := sql.createAllTables(); err != nil {
 		sql.Close()
 		return nil, fmt.Errorf("could not create tables: %v", err)
 	}
@@ -86,23 +87,44 @@ func New(ctx context.Context, log logger.Logger, sett Settings) (*SQL, error) {
 	return sql, nil
 }
 
-func (s *SQL) createTables() error {
+func allTables() []tableDef {
+	return slices.Concat(
+		userTables,
+		productTables,
+		recipeTables,
+		menuTables,
+		pantryTables,
+		shoppingListTables,
+	)
+}
+
+func (s *SQL) createAllTables() error {
 	tx, err := s.db.BeginTx(s.ctx, nil)
 	if err != nil {
 		return fmt.Errorf("could not begin transaction: %w", err)
 	}
 	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
 
-	err = errors.Join(
-		s.createProducts(tx),
-		s.createRecipes(tx),
-		s.createMenus(tx),
-		s.createPantries(tx),
-		s.createShoppingLists(tx),
-	)
+	if err := s.createTables(tx, allTables()...); err != nil {
+		return fmt.Errorf("could not ensure tables exist: %w", err)
+	}
 
+	err = tx.Commit()
 	if err != nil {
-		defer s.Close()
+		return fmt.Errorf("could not commit transaction: %w", err)
+	}
+
+	return nil
+}
+
+func (s *SQL) dropAllTables() error {
+	tx, err := s.db.BeginTx(s.ctx, nil)
+	if err != nil {
+		return fmt.Errorf("could not begin transaction: %w", err)
+	}
+	defer tx.Rollback() //nolint:errcheck // The error is irrelevant
+
+	if err := s.dropTables(tx, allTables()...); err != nil {
 		return fmt.Errorf("could not ensure tables exist: %w", err)
 	}
 
@@ -251,4 +273,54 @@ func repeatStringWithSeparator(str string, sep string, n int) string {
 	}
 
 	return b.String()
+}
+
+type tableDef struct {
+	name    string
+	columns []string
+}
+
+// createTables ensures all specified tables exist.
+// If a table already exists, it is not modified.
+// The tables are created in the order they are defined; arrange them so that dependencies are satisfied.
+func (s *SQL) createTables(tx *sql.Tx, tables ...tableDef) error {
+	for _, t := range tables {
+		if t.name == "" {
+			return errors.New("table has no name")
+		}
+
+		if len(t.columns) == 0 {
+			return fmt.Errorf("table %s has no columns", t.name)
+		}
+
+		q := fmt.Sprintf("CREATE TABLE %s (%s)", t.name, strings.Join(t.columns, ", "))
+		s.log.Trace(q)
+
+		_, err := tx.ExecContext(s.ctx, q)
+		if err != nil && !errorIs(err, errTableExists) {
+			return fmt.Errorf("could not create table %s: %v", t.name, err)
+		}
+	}
+
+	return nil
+}
+
+// dropTables drops all specified tables.
+// If a table does not exist, it is not modified.
+//
+// The tables are dropped in the reverse order they are defined; arrange them so that dependencies are satisfied.
+// Use the same order as createTables to drop the tables in the correct order.
+func (s *SQL) dropTables(tx *sql.Tx, tables ...tableDef) error {
+	for i := range tables {
+		t := tables[len(tables)-1-i]
+		q := fmt.Sprintf("DROP TABLE %s", t.name)
+		s.log.Trace(q)
+
+		_, err := tx.ExecContext(s.ctx, q)
+		if err != nil && !errorIs(err, errTableNotFound) {
+			return fmt.Errorf("could not drop table: %v", err)
+		}
+	}
+
+	return nil
 }

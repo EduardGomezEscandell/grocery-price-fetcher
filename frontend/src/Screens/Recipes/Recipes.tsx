@@ -89,7 +89,7 @@ export default function Recipes(props: Props) {
                                     })()
 
                                     props.backend
-                                        .Recipe(props.sessionName, 0)
+                                        .Recipe(0)
                                         .POST(new Recipe(0, name, []))
                                         .then((id: number) => {
                                             setRecipes([

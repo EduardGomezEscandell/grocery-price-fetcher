@@ -49,12 +49,15 @@ services:
       - db_root_password
       - cert
       - key
+      - google_client_secret
 volumes:
   data:
     driver: local
 secrets:
   db_root_password:
     file: /etc/grocery-price-fetcher/db_root_password.txt
+  google_client_secret:
+    file: /etc/grocery-price-fetcher/google_client_secret.txt
   cert:
     file: /etc/grocery-price-fetcher/certificates/cert.pem
   key:

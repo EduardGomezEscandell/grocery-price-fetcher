@@ -51,8 +51,8 @@ export default function RecipeEditor(props: Props): JSX.Element {
             id='expanded'
         >
             <RecipeCard
-                recipeEP={props.backend.Recipe(props.sessionName, props.dish.id)}
-                productsEP={props.backend.Products(props.sessionName)}
+                recipeEP={props.backend.Recipe(props.dish.id)}
+                productsEP={props.backend.Products()}
                 dish={{id: props.dish.id, name: title}}
                 key={title}
                 setTitle={setTitle}

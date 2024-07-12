@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/auth"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/database"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
@@ -13,6 +14,7 @@ import (
 type Service struct {
 	settings Settings
 	db       database.DB
+	auth     auth.Getter
 }
 
 type Settings struct {
@@ -25,7 +27,7 @@ func (s Settings) Defaults() Settings {
 	}
 }
 
-func New(s Settings, db database.DB) *Service {
+func New(s Settings, db database.DB, auth auth.Getter) *Service {
 	if !s.Enable {
 		return nil
 	}
@@ -33,6 +35,7 @@ func New(s Settings, db database.DB) *Service {
 	return &Service{
 		settings: s,
 		db:       db,
+		auth:     auth,
 	}
 }
 
@@ -57,9 +60,14 @@ func (s *Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Reque
 		return err
 	}
 
-	recs, err := s.db.Recipes()
+	user, err := s.auth.GetUserID(r)
 	if err != nil {
-		return httputils.Errorf(http.StatusInternalServerError, "failed to get recipes: %v", err)
+		return httputils.Errorf(http.StatusUnauthorized, "could not get user: %v", err)
+	}
+
+	recs, err := s.db.Recipes(user)
+	if err != nil {
+		return httputils.Errorf(http.StatusInternalServerError, "could not get recipes: %v", err)
 	}
 
 	type item struct {
@@ -76,7 +84,7 @@ func (s *Service) Handle(log logger.Logger, w http.ResponseWriter, r *http.Reque
 	}
 
 	if err := json.NewEncoder(w).Encode(items); err != nil {
-		return httputils.Errorf(http.StatusInternalServerError, "failed to encode recipes: %v", err)
+		return httputils.Errorf(http.StatusInternalServerError, "could not encode recipes: %v", err)
 	}
 
 	log.Debugf("Responded with %d items", len(items))
