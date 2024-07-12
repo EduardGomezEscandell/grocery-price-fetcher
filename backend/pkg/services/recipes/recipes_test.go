@@ -43,6 +43,7 @@ func TestRecipes(t *testing.T) {
 			if !tc.emptyDB {
 				_, err := db.SetRecipe(recipe.Recipe{
 					ID:   1,
+					User: "test-user-123",
 					Name: "Water",
 					Ingredients: []recipe.Ingredient{
 						{ProductID: 1, Amount: 2},
@@ -52,6 +53,7 @@ func TestRecipes(t *testing.T) {
 
 				_, err = db.SetRecipe(recipe.Recipe{
 					ID:   2,
+					User: "test-user-123",
 					Name: "Juice",
 					Ingredients: []recipe.Ingredient{
 						{ProductID: 3, Amount: 2.12},

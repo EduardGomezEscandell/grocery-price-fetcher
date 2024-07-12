@@ -1,6 +1,7 @@
 [
     {
         "ID": 3,
+        "user": "test-user-123",
         "Name": "Fruit salad",
         "Ingredients": [
             {
