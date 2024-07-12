@@ -1,6 +1,7 @@
 package jsondb
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
@@ -9,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -69,6 +71,7 @@ func New(ctx context.Context, log logger.Logger, s Settings) (*JSON, error) {
 	db := &JSON{
 		log:               log,
 		usersPath:         s.Users,
+		sesionsPath:       s.Sessions,
 		productsPath:      s.Products,
 		recipesPath:       s.Recipes,
 		menusPath:         s.Menus,
@@ -651,7 +654,19 @@ func load(path string, ptr interface{}) error {
 }
 
 func (db *JSON) save() error {
+	slices.SortFunc(db.users, strings.Compare)
+	slices.SortFunc(db.sessions, func(a, b dbtypes.Session) int { return cmp.Compare(a.ID, b.ID) })
+	slices.SortFunc(db.products, func(a, b product.Product) int { return cmp.Compare(a.ID, b.ID) })
+	slices.SortFunc(db.recipes, func(a, b recipe.Recipe) int { return cmp.Compare(a.ID, b.ID) })
+	slices.SortFunc(db.menus, func(a, b dbtypes.Menu) int { return multiCompare(c(a.User, b.User), c(a.Name, b.Name)) })
+	slices.SortFunc(db.pantries, func(a, b dbtypes.Pantry) int { return multiCompare(c(a.User, b.User), c(a.Name, b.Name)) })
+	slices.SortFunc(db.shoppingLists, func(a, b dbtypes.ShoppingList) int {
+		return multiCompare(c(a.User, b.User), c(a.Menu, b.Menu), c(a.Pantry, b.Pantry))
+	})
+
 	return errors.Join(
+		save(db.log, db.usersPath, db.users),
+		save(db.log, db.sesionsPath, db.sessions),
 		save(db.log, db.productsPath, db.products),
 		save(db.log, db.recipesPath, db.recipes),
 		save(db.log, db.menusPath, db.menus),
@@ -750,4 +765,22 @@ func partition[T any](slice []T, predicate func(T) bool) (p int) {
 		p++
 	}
 	return p
+}
+
+type comparison func() int
+
+func c[T cmp.Ordered](x, y T) comparison {
+	return func() int {
+		return cmp.Compare(x, y)
+	}
+}
+
+func multiCompare(c ...comparison) int {
+	for _, f := range c {
+		if c := f(); c != 0 {
+			return c
+		}
+	}
+
+	return 0
 }
