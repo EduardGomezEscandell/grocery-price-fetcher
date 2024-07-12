@@ -69,6 +69,7 @@ func New(ctx context.Context, log logger.Logger, s Settings) (*JSON, error) {
 	db := &JSON{
 		log:               log,
 		usersPath:         s.Users,
+		sesionsPath:       s.Sessions,
 		productsPath:      s.Products,
 		recipesPath:       s.Recipes,
 		menusPath:         s.Menus,
@@ -652,6 +653,8 @@ func load(path string, ptr interface{}) error {
 
 func (db *JSON) save() error {
 	return errors.Join(
+		save(db.log, db.usersPath, db.users),
+		save(db.log, db.sesionsPath, db.sessions),
 		save(db.log, db.productsPath, db.products),
 		save(db.log, db.recipesPath, db.recipes),
 		save(db.log, db.menusPath, db.menus),
