@@ -5,21 +5,19 @@ import { MockShoppingListEndpoint, ShoppingListEndpoint } from './endpoints/Shop
 import { MockIngredientUseEndpoint, IngredientUseEndpoint } from './endpoints/IngredientUse'
 import { MockNeedsEndpoint, NeedsEndpoint } from './endpoints/Needs'
 import RecipeEndpoint, { MockRecipeEndpoint } from './endpoints/Recipe'
-import Cache from './cache/Cache'
 import ProductsEndpoint, { MockProductsEndpoint } from './endpoints/Products'
 import ProviderEndpoint, { MockProvidersEndpoint } from './endpoints/Provider'
 import { AuthLoginEndpoint, MockAuthLoginEndpoint } from './endpoints/AuthLogin'
 import { AuthLogoutEndpoint, MockAuthLogoutEndpoint } from './endpoints/AuthLogout'
 import { AuthRefreshEndpoint, MockAuthRefreshEndpoint } from './endpoints/AuthRefresh'
+import Cache from './cache/Cache'
 
 class Backend {
     private mock: boolean = false
     private cache: Cache = new Cache()
-    private getAuth: () => string
 
-    constructor(authProvider: () => string | undefined) {
+    constructor() {
         this.mock = Backend.IsMock()
-        this.getAuth = () => authProvider() || ""
     }
 
     static IsMock(): boolean {
@@ -35,43 +33,43 @@ class Backend {
     }
 
     AuthLogout(): AuthLogoutEndpoint {
-        return this.mock ? new MockAuthLogoutEndpoint(this.getAuth()) : new AuthLogoutEndpoint(this.getAuth())
+        return this.mock ? new MockAuthLogoutEndpoint() : new AuthLogoutEndpoint()
     }
 
     Provider(): ProviderEndpoint {
-        return this.mock ? new MockProvidersEndpoint(this.getAuth(), this.cache) : new ProviderEndpoint(this.getAuth(), this.cache)
+        return this.mock ? new MockProvidersEndpoint(this.cache) : new ProviderEndpoint(this.cache)
     }
 
     Products(): ProductsEndpoint {
-        return this.mock ? new MockProductsEndpoint(this.getAuth(), this.cache) : new ProductsEndpoint(this.getAuth(), this.cache)
+        return this.mock ? new MockProductsEndpoint(this.cache) : new ProductsEndpoint(this.cache)
     }
 
     Recipe(id: number): RecipeEndpoint {
-        return this.mock ? new MockRecipeEndpoint(this.getAuth(), id, this.cache) : new RecipeEndpoint(this.getAuth(), id, this.cache)
+        return this.mock ? new MockRecipeEndpoint(id, this.cache) : new RecipeEndpoint(id, this.cache)
     }
 
     Menu(which: string): MenuEndpoint {
-        return this.mock ? new MockMenuEndpoint(this.getAuth(), which) : new MenuEndpoint(this.getAuth(), which)
+        return this.mock ? new MockMenuEndpoint(which) : new MenuEndpoint(which)
     }
 
     Dishes(): DishesEndpoint {
-        return this.mock ? new MockDishesEndpoint(this.getAuth()) : new DishesEndpoint(this.getAuth())
+        return this.mock ? new MockDishesEndpoint() : new DishesEndpoint()
     }
 
     Pantry(which: string): PantryEndpoint {
-        return this.mock ? new MockPantryEndpoint(this.getAuth(), which) : new PantryEndpoint(this.getAuth(), which)
+        return this.mock ? new MockPantryEndpoint(which) : new PantryEndpoint(which)
     }
 
     Needs(which: string): NeedsEndpoint {
-        return this.mock ? new MockNeedsEndpoint(this.getAuth(), which) : new NeedsEndpoint(this.getAuth(), which)
+        return this.mock ? new MockNeedsEndpoint(which) : new NeedsEndpoint(which)
     }
 
     IngredientUse(menu: string, ingredient: string): IngredientUseEndpoint {
-        return this.mock ? new MockIngredientUseEndpoint(this.getAuth(), menu, ingredient) : new IngredientUseEndpoint(this.getAuth(), menu, ingredient)
+        return this.mock ? new MockIngredientUseEndpoint(menu, ingredient) : new IngredientUseEndpoint(menu, ingredient)
     }
 
     ShoppingList(menu: string, pantry: string): ShoppingListEndpoint {
-        return this.mock ? new MockShoppingListEndpoint(this.getAuth(), menu, pantry) : new ShoppingListEndpoint(this.getAuth(), menu, pantry)
+        return this.mock ? new MockShoppingListEndpoint(menu, pantry) : new ShoppingListEndpoint(menu, pantry)
     }
 
     ClearCache() {

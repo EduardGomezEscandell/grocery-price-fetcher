@@ -2,12 +2,10 @@ import { Product } from "../../State/State";
 import Cache from "../cache/Cache";
 
 export default class ProviderEndpoint {
-    private auth: string
     cache: Cache | null = null;
     private static path = `/api/provider`
 
-    constructor(auth: string, cache?: Cache) {
-        this.auth = auth
+    constructor(cache?: Cache) {
         this.cache = cache || null;
     }
 
@@ -19,7 +17,6 @@ export default class ProviderEndpoint {
         return fetch(ProviderEndpoint.Path(q), {
             method: 'GET',
             headers: {
-                'Authorization': this.auth,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
@@ -60,6 +57,6 @@ export class MockProvidersEndpoint extends ProviderEndpoint {
         }
 
         return new Promise(resolve => setTimeout(resolve, 1000))
-            .then(() => {return 11.116}) // Extra precision to test rounding
+            .then(() => { return 11.116 }) // Extra precision to test rounding
     }
 }

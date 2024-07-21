@@ -5,11 +5,10 @@ export class AuthRefreshEndpoint {
         return AuthRefreshEndpoint.path
     }
 
-    async POST(auth: string): Promise<string> {
+    async POST(): Promise<string> {
         return fetch(AuthRefreshEndpoint.path, {
             method: 'POST',
             headers: {
-                'Authorization': auth,
                 'Accept': 'text/plain',
             },
         })
@@ -19,8 +18,8 @@ export class AuthRefreshEndpoint {
 }
 
 export class MockAuthRefreshEndpoint extends AuthRefreshEndpoint {
-    async POST(code: string): Promise<string> {
-        console.log(`POST to ${this.Path()}: ${code}`)
+    async POST(): Promise<string> {
+        console.log(`POST to ${this.Path()}`)
         return new Promise(resolve => setTimeout(resolve, 100))
             .then(() => 'Mock Google endpoint')
     }

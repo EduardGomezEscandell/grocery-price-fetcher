@@ -3,11 +3,9 @@ import Cache from "../cache/Cache";
 
 export default class ProductsEndpoint {
     private static path = `/api/products/`
-    private auth: string
     protected cache: Cache | null = null;
 
-    constructor(auth: string,  cache?: Cache) {
-        this.auth = auth
+    constructor(cache?: Cache) {
         this.cache = cache || null;
     }
 
@@ -23,7 +21,6 @@ export default class ProductsEndpoint {
         return fetch(this.PathAll(), {
             method: 'GET',
             headers: {
-                'Authorization': this.auth,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
@@ -37,7 +34,6 @@ export default class ProductsEndpoint {
         return fetch(this.Path(id), {
             method: 'GET',
             headers: {
-                'Authorization': this.auth,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
@@ -51,11 +47,10 @@ export default class ProductsEndpoint {
         return fetch(this.Path(p.id), {
             method: 'POST',
             headers: {
-                'Authorization': this.auth,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
-            body: JSON.stringify({...p, product_code: [p.product_code, "", ""]}),
+            body: JSON.stringify({ ...p, product_code: [p.product_code, "", ""] }),
         })
             .then(r => r.ok ? r : Promise.reject(r))
             .then(() => { })
@@ -65,7 +60,6 @@ export default class ProductsEndpoint {
         return fetch(this.Path(id), {
             method: 'DELETE',
             headers: {
-                'Authorization': this.auth,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
