@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"path"
 	"testing"
 
@@ -31,7 +32,7 @@ func TestVersion(t *testing.T) {
 
 func TestRefreshLogin(t *testing.T) {
 	t.Parallel()
-	resp, err := request(t, http.MethodPost, "api/auth/refresh", nil, authHeader)
+	resp, err := request(t, http.MethodPost, "api/auth/refresh", nil)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code %s", resp.Status)
 	require.NotEmpty(t, resp.Body, "Body should not be empty")
@@ -39,7 +40,7 @@ func TestRefreshLogin(t *testing.T) {
 
 func TestRecipes(t *testing.T) {
 	t.Parallel()
-	resp, err := request(t, http.MethodGet, "api/recipes", nil, authHeader)
+	resp, err := request(t, http.MethodGet, "api/recipes", nil)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code %s", resp.Status)
 	require.NotEmpty(t, resp.Body, "Body should not be empty")
@@ -47,7 +48,7 @@ func TestRecipes(t *testing.T) {
 
 func TestMenu(t *testing.T) {
 	t.Parallel()
-	resp, err := request(t, http.MethodGet, "api/menu/default", nil, authHeader)
+	resp, err := request(t, http.MethodGet, "api/menu/default", nil)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, resp.StatusCode, "Unexpected status code %s", resp.Status)
 	require.NotEmpty(t, resp.Body, "Body should not be empty")
@@ -86,11 +87,6 @@ var browserHeaders = []kv{
 	},
 }
 
-var authHeader = kv{
-	key:   "Authorization",
-	value: fmt.Sprintf("Bearer %s", e2e.TestSessionID),
-}
-
 type kv struct {
 	key   string
 	value string
@@ -106,8 +102,8 @@ func request(t *testing.T, method string, endpoint string, body []byte, headers 
 		return nil, fmt.Errorf("could not write body into buffer: %v", err)
 	}
 
-	url := "https://" + path.Join("localhost", endpoint)
-	req, err := http.NewRequest(method, url, nil)
+	uri := "https://" + path.Join("localhost", endpoint)
+	req, err := http.NewRequest(method, uri, nil)
 	if err != nil {
 		return nil, fmt.Errorf("could not create request: %v", err)
 	}
@@ -115,6 +111,11 @@ func request(t *testing.T, method string, endpoint string, body []byte, headers 
 	for _, h := range headers {
 		req.Header.Add(h.key, h.value)
 	}
+
+	req.AddCookie(&http.Cookie{
+		Name:  "GROCERY_PRICE_FETCHER_AUTH",
+		Value: url.QueryEscape(fmt.Sprintf("Bearer %s", e2e.TestSessionID)),
+	})
 
 	client := http.Client{
 		Transport: &http.Transport{
@@ -136,7 +137,7 @@ func request(t *testing.T, method string, endpoint string, body []byte, headers 
 		return nil, fmt.Errorf("could not read response body: %v", err)
 	}
 
-	t.Logf("Response to %s %s: %s\n%s", method, url, resp.Status, string(b))
+	t.Logf("Response to %s %s: %s\n%s", method, uri, resp.Status, string(b))
 
 	return &response{
 		Body:     string(b),
