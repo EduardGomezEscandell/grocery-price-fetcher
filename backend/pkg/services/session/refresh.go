@@ -3,7 +3,6 @@ package session
 import (
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/auth"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
@@ -43,15 +42,13 @@ func (s RefreshService) Handle(log logger.Logger, w http.ResponseWriter, r *http
 		return err
 	}
 
-	auth := r.Header.Get("Authorization")
-	if auth == "" {
-		return httputils.Errorf(http.StatusUnauthorized, "authorization header not found")
+	token, err := s.sessions.GetToken(r)
+	if err != nil {
+		return httputils.Errorf(http.StatusBadRequest, "could not get token: %v", err)
 	}
 
-	var token string
-	_, err := fmt.Fscanf(strings.NewReader(auth), "Bearer %s", &token)
-	if err != nil {
-		return httputils.Errorf(http.StatusUnauthorized, "could not parse authorization header: %v", err)
+	if token == "" {
+		return httputils.Error(http.StatusUnauthorized, "token is empty")
 	}
 
 	sess, err := s.sessions.Get(token)

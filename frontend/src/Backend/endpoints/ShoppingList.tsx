@@ -2,10 +2,8 @@ import { ShoppingList } from '../../State/State'
 
 export class ShoppingListEndpoint {
     protected path: string
-    private auth: string
 
-    constructor(auth: string, menu: string, pantry: string) {
-        this.auth = auth
+    constructor(menu: string, pantry: string) {
         this.path = `/api/shopping-list/${menu}/${pantry}`
     }
 
@@ -17,7 +15,6 @@ export class ShoppingListEndpoint {
         return fetch(this.path, {
             method: 'GET',
             headers: {
-                'Authorization': this.auth,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             }
@@ -31,7 +28,6 @@ export class ShoppingListEndpoint {
         return fetch(this.path, {
             method: 'PUT',
             headers: {
-                'Authorization': this.auth,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
@@ -45,7 +41,6 @@ export class ShoppingListEndpoint {
         return fetch(this.path, {
             method: 'DELETE',
             headers: {
-                'Authorization': this.auth,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             }
@@ -59,8 +54,8 @@ export class MockShoppingListEndpoint extends ShoppingListEndpoint {
     menu: string
     pantry: string
 
-    constructor(auth: string, menu: string, pantry: string) {
-        super(auth, menu, pantry)
+    constructor(menu: string, pantry: string) {
+        super(menu, pantry)
         this.menu = menu
         this.pantry = pantry
     }

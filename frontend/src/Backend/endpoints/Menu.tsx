@@ -2,11 +2,9 @@ import { Menu } from '../../State/State'
 
 export class MenuEndpoint {
     protected path: string
-    private auth: string
 
-    constructor(auth: string, which: string) {
+    constructor(which: string) {
         this.path = `/api/menu/${which}`
-        this.auth = auth
     }
 
     Path(): string {
@@ -17,7 +15,6 @@ export class MenuEndpoint {
         return fetch(this.path, {
             method: 'GET',
             headers: {
-                'Authorization': this.auth,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             }
@@ -31,7 +28,6 @@ export class MenuEndpoint {
         return fetch(this.path, {
             method: 'PUT',
             headers: {
-                'Authorization': this.auth,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
@@ -44,8 +40,8 @@ export class MenuEndpoint {
 
 export class MockMenuEndpoint extends MenuEndpoint {
     which: string
-    constructor(auth: string, which: string) {
-        super(auth, which)
+    constructor(which: string) {
+        super(which)
         this.which = which
     }
 

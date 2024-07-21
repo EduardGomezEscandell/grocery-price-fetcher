@@ -227,3 +227,7 @@ type mockAuth struct{}
 func (mockAuth) GetUserID(*http.Request) (string, error) {
 	return "test-user-123", nil
 }
+
+func (mockAuth) GetToken(*http.Request) (string, error) {
+	return "test-token", nil
+}

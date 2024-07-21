@@ -81,7 +81,7 @@ class Auth {
 
     constructor(cookie: Cookie) {
         this.cookie = cookie;
-        this.backend = new Backend(() => this.cookie.Get());
+        this.backend = new Backend();
     }
 
     loggedIn(): boolean {
@@ -89,12 +89,8 @@ class Auth {
     }
 
     async validate() {
-        const v = this.cookie.Get()
-        if (!v) {
-            return Promise.resolve()
-        }
         return this.backend.AuthRefresh()
-            .POST(v)
+            .POST()
             .then(v => this.cookie.Set(v))
             .catch(() => this.cookie.Remove())
     }

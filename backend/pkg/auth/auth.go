@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/auth/google"
@@ -172,26 +173,45 @@ func (m *Manager) Get(key string) (dbtypes.Session, error) {
 }
 
 type Getter interface {
+	GetToken(r *http.Request) (string, error)
 	GetUserID(r *http.Request) (string, error)
 }
 
-func (m *Manager) GetUserID(r *http.Request) (string, error) {
+func (m *Manager) GetToken(r *http.Request) (string, error) {
 	if err := m.checkStopped(); err != nil {
 		return "", err
 	}
 
-	auth := r.Header.Get("Authorization")
+	cookie, err := r.Cookie("GROCERY_PRICE_FETCHER_AUTH")
+	if err != nil {
+		return "", nil
+	}
+
+	auth, err := url.QueryUnescape(cookie.Value)
+	if err != nil {
+		return "", fmt.Errorf("could not parse cookie: %v", err)
+	}
+
 	if auth == "" {
-		return "", errors.New("missing token")
+		return "", nil
 	}
 
 	var key string
 	if _, err := fmt.Sscanf(auth, "Bearer %s", &key); err != nil {
-		return "", errors.New("could not parse token")
+		return "", fmt.Errorf("could not parse token %q: %v", auth, err)
+	}
+
+	return key, nil
+}
+
+func (m *Manager) GetUserID(r *http.Request) (string, error) {
+	key, err := m.GetToken(r)
+	if err != nil {
+		return "", fmt.Errorf("could not get token: %v", err)
 	}
 
 	if key == "" {
-		return "", errors.New("empty token")
+		return "", errors.New("missing token")
 	}
 
 	s, err := m.Get(key)

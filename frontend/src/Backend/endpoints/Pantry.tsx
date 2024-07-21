@@ -2,10 +2,8 @@ import { Pantry } from '../../State/State'
 
 export class PantryEndpoint {
     protected path: string
-    private auth: string
 
-    constructor(auth: string, which: string) {
-        this.auth = auth
+    constructor(which: string) {
         this.path = '/api/pantry/' + which
     }
 
@@ -17,7 +15,6 @@ export class PantryEndpoint {
         return fetch(this.path, {
             method: 'GET',
             headers: {
-                'Authorization': this.auth,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
@@ -31,7 +28,6 @@ export class PantryEndpoint {
         return fetch(this.path, {
             method: 'PUT',
             headers: {
-                'Authorization': this.auth,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
@@ -45,7 +41,6 @@ export class PantryEndpoint {
         return fetch(this.path, {
             method: 'DELETE',
             headers: {
-                'Authorization': this.auth,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             }
@@ -58,8 +53,8 @@ export class PantryEndpoint {
 
 export class MockPantryEndpoint extends PantryEndpoint {
     which: string
-    constructor(auth: string, which: string) {
-        super(auth, which)
+    constructor(which: string) {
+        super(which)
         this.which = which
     }
 
