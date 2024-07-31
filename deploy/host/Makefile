@@ -32,7 +32,7 @@ install: ## Install the service. Set environment variable FQDN to configure the 
 			   | sudo tee "$(ETC)/db_root_password.txt" > /dev/null   \
 			&& echo "Root password file created"                      \
 		)
-	
+
 	[ -f "$(ETC)/google_client_secret.txt" ]                             \
 		&& echo "Google client secret file already exists"               \
 		|| (                                                             \
@@ -40,7 +40,7 @@ install: ## Install the service. Set environment variable FQDN to configure the 
 			&& sudo chmod 0600 "$(ETC)/google_client_secret.txt"         \
 			&& echo "Empty Google client secret file created"            \
 		)
-	
+
 	[ -d "$(ETC)/certificates" ]                              		  \
 		&& echo "Certificate directory already exists"                \
 		|| (                                                          \
@@ -142,7 +142,7 @@ deploy-gce: package ## Deploy the package to a remote Google Compute Engine serv
 		--zone='$(GCLOUD_ZONE)'         \
 		$(GCLOUD_VM)                    \
 		--command="journalctl -u '$(PKG).service' --since '$(NOW_UTC)' --no-pager -l"
-	
+
 	@echo "Deployment sanity-test..."
 	curl --retry 20 --retry-delay 5 --retry-all-errors -k "$(FQDN)/api/version"
 
@@ -152,15 +152,15 @@ deploy-ssh: package ## Deploy the package to a remote server via SSH (requires S
 	scp "$(PKG).tar.gz" "$(SSH_TARGET):~/$(PKG).tar.gz"
 
 	ssh "$(SSH_TARGET)" \
-		bash -c "cd ~ && tar -xzf $(PKG).tar.gz && cd $(PKG) && make install && make start"
+		"cd ~ && tar -xzf $(PKG).tar.gz && cd $(PKG) && make install && make start"
 
 	@echo "Allowing server to start..."
 	sleep 10
 
 	@echo "Deployment logs:"
 	ssh "$(SSH_TARGET)" \
-		bash -c "journalctl -u '$(PKG).service' --since '$(NOW_UTC)' --no-pager -l"
-	
+		"journalctl -u '$(PKG).service' --since '$(NOW_UTC)' --no-pager -l"
+
 	@echo "Deployment sanity-test..."
 	curl --retry 20 --retry-delay 5 --retry-all-errors -k "$(FQDN)/api/version"
 
