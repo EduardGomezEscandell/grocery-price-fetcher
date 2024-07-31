@@ -38,7 +38,7 @@ package: ## Package the application for deployment (see deploy/host Makefile)
 	cd deploy/host && make package
 
 deploy: ## Deploy the application (see deploy/host Makefile)
-	cd deploy/host && make deploy
+	cd deploy/host && make deploy-ssh
 
 full-start: build-docker install start ## Build the application and self-host it
 
