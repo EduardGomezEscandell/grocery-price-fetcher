@@ -32,7 +32,7 @@ install: ## Install the service. Set environment variable FQDN to configure the 
 			   | sudo tee "$(ETC)/db_root_password.txt" > /dev/null   \
 			&& echo "Root password file created"                      \
 		)
-	
+
 	[ -f "$(ETC)/google_client_secret.txt" ]                             \
 		&& echo "Google client secret file already exists"               \
 		|| (                                                             \
@@ -40,7 +40,7 @@ install: ## Install the service. Set environment variable FQDN to configure the 
 			&& sudo chmod 0600 "$(ETC)/google_client_secret.txt"         \
 			&& echo "Empty Google client secret file created"            \
 		)
-	
+
 	[ -d "$(ETC)/certificates" ]                              		  \
 		&& echo "Certificate directory already exists"                \
 		|| (                                                          \
@@ -116,7 +116,7 @@ package: ## Build a deployable package (requires DOCKER_USER)
 	echo $(VERSION) > "$(PKG)/version"
 	tar -czf $(PKG).tar.gz $(PKG)
 
-deploy: package ## Deploy the package to a remote server (requires GCLOUD_VM, GCLOUD_ZONE, GCLOUD_PROJECT)
+deploy-gce: package ## Deploy the package to a remote Google Compute Engine server (requires GCLOUD_VM, GCLOUD_ZONE, GCLOUD_PROJECT)
 	if [ -z "$(GCLOUD_VM)"      ]; then echo "Error: Environment variable GCLOUD_VM not set" >&2;      exit 99; fi
 	if [ -z "$(GCLOUD_ZONE)"    ]; then echo "Error: Environment variable GCLOUD_ZONE not set" >&2;    exit 99; fi
 	if [ -z "$(GCLOUD_PROJECT)" ]; then echo "Error: Environment variable GCLOUD_PROJECT not set" >&2; exit 99; fi
@@ -142,17 +142,25 @@ deploy: package ## Deploy the package to a remote server (requires GCLOUD_VM, GC
 		--zone='$(GCLOUD_ZONE)'         \
 		$(GCLOUD_VM)                    \
 		--command="journalctl -u '$(PKG).service' --since '$(NOW_UTC)' --no-pager -l"
-	
+
 	@echo "Deployment sanity-test..."
+	curl --retry 20 --retry-delay 5 --retry-all-errors -k "$(FQDN)/api/version"
 
-	URL="https://$$(                      \
-		gcloud compute instances describe \
-		  $(GCLOUD_VM)                    \
-		  --project=$(GCLOUD_PROJECT)     \
-		  --zone=$(GCLOUD_ZONE)           \
-		  | grep natIP                    \
-		  | sed 's#^.*natIP: \(.*\)#\1#'  \
-		)/api/version";                   \
-	curl --retry 20 --retry-delay 5 --retry-all-errors -k "$$URL"
+deploy-ssh: package ## Deploy the package to a remote server via SSH (requires SSH_TARGET)
+	if [ -z "$(SSH_TARGET)" ]; then echo "Error: Environment variable SSH_TARGET not set" >&2; exit 99; fi
 
-	
+	scp "$(PKG).tar.gz" "$(SSH_TARGET):~/$(PKG).tar.gz"
+
+	ssh "$(SSH_TARGET)" \
+		"cd ~ && tar -xzf $(PKG).tar.gz && cd $(PKG) && make install && make start"
+
+	@echo "Allowing server to start..."
+	sleep 10
+
+	@echo "Deployment logs:"
+	ssh "$(SSH_TARGET)" \
+		"journalctl -u '$(PKG).service' --since '$(NOW_UTC)' --no-pager -l"
+
+	@echo "Deployment sanity-test..."
+	curl --retry 20 --retry-delay 5 --retry-all-errors -k "$(FQDN)/api/version"
+

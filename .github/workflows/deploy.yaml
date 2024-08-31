@@ -53,13 +53,31 @@ jobs:
           cache: false
     - name: Build container
       run: make build-docker
+    - name: Write SSH keys
+      run: |
+        mkdir -p ~/.ssh
+
+        install -m 0600 -D /dev/null ~/.ssh/id_ed25519
+        cat << EOF > ~/.ssh/id_ed25519
+        ${{ secrets.SSH_PRIVATE_KEY }}
+        EOF
+
+        cat << EOF > ~/.ssh/config
+        Host azurevm
+          HostName ${{ secrets.SSH_TARGET }}
+          User edu
+          Port 22
+          IdentityFile ~/.ssh/id_ed25519
+        EOF
+
+        ssh-keyscan -H ${{ secrets.SSH_TARGET }} | tee ~/.ssh/known_hosts
     - name: Deploy
       run: |
-        make deploy                                         \
-            DOCKER_USER="${{ secrets.DOCKER_USER }}"        \
-            GCLOUD_VM='${{ secrets.GCLOUD_VM }}'            \
-            GCLOUD_ZONE='${{ secrets.GCLOUD_ZONE }}'        \
-            GCLOUD_PROJECT='${{ secrets.GCLOUD_PROJECT }}'  \
+        eval $(ssh-agent -s)
+        ssh-add ~/.ssh/id_ed25519
+        make deploy                                   \
+            DOCKER_USER="${{ secrets.DOCKER_USER }}"  \
+            SSH_TARGET='azurevm'                      \
             FQDN='https://lacompradeledu.cat'
     - name: Upload package
       uses: actions/upload-artifact@v4
