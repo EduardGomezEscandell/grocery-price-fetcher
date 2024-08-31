@@ -2,6 +2,7 @@ package logger
 
 import (
 	"io"
+	"slices"
 
 	"github.com/sirupsen/logrus"
 )
@@ -58,7 +59,7 @@ func (l *l) WithField(key string, value interface{}) Logger {
 }
 
 func (l *l) SetLevel(level int) {
-	l.Logger.SetLevel(logrus.Level(level))
+	l.Logger.SetLevel(constrainLevel(level))
 }
 
 func (l *l) SetOutput(w io.Writer) {
@@ -71,9 +72,16 @@ func (en *e) WithField(key string, value interface{}) Logger {
 }
 
 func (en *e) SetLevel(level int) {
-	en.Logger.SetLevel(logrus.Level(level))
+	en.Logger.SetLevel(constrainLevel(level))
 }
 
 func (en *e) SetOutput(w io.Writer) {
 	en.Logger.SetOutput(w)
+}
+
+func constrainLevel(level int) logrus.Level {
+	maxlvl := slices.Max(logrus.AllLevels)
+	lvl := min(uint(max(0, level)), uint(maxlvl))
+	//nolint: gosec // We are constraining the level to the logrus levels
+	return logrus.Level(lvl)
 }

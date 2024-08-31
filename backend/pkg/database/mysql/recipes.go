@@ -264,7 +264,7 @@ func (s *SQL) insertNewRecipe(tx *sql.Tx, r recipe.Recipe) (recipe.ID, error) {
 
 	s.log.Tracef("Last insert ID: %d", id)
 
-	return recipe.ID(id), nil
+	return utils.SafeIntConvert[recipe.ID](id)
 }
 
 func (s *SQL) DeleteRecipe(asUser string, id recipe.ID) error {

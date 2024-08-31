@@ -13,6 +13,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/utils"
 )
 
 type Service struct {
@@ -82,13 +83,18 @@ func (s Service) handleGet(_ logger.Logger, w http.ResponseWriter, r *http.Reque
 		return nil
 	}
 
-	id, err := strconv.ParseUint(nm, 10, product.IDSize)
+	idRaw, err := strconv.ParseUint(nm, 10, product.IDSize)
 	if err != nil {
 		return httputils.Error(http.StatusBadRequest, "could not parse product ID")
 	}
 
 	// Return a single product
-	p, err := s.db.LookupProduct(product.ID(id))
+	ID, err := utils.SafeIntConvert[product.ID](idRaw)
+	if err != nil {
+		return httputils.Errorf(http.StatusBadRequest, "invalid ingredient ID %q: %v", idRaw, err)
+	}
+
+	p, err := s.db.LookupProduct(ID)
 	if errors.Is(err, fs.ErrNotExist) {
 		return httputils.Errorf(http.StatusNotFound, "product %s not found", nm)
 	} else if err != nil {
@@ -165,5 +171,5 @@ func parseEndpoint(r *http.Request) (id product.ID, err error) {
 		return 0, httputils.Errorf(http.StatusBadRequest, "invalid id: %v", err)
 	}
 
-	return product.ID(idURL), nil
+	return utils.SafeIntConvert[product.ID](idURL)
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/httputils"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/utils"
 )
 
 type Service struct {
@@ -79,7 +80,11 @@ func (s Service) Handle(_ logger.Logger, w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		return httputils.Errorf(http.StatusBadRequest, "invalid ingredient ID %q: %v", ingredientRaw, err)
 	}
-	ingredient := product.ID(tmp)
+
+	ingredient, err := utils.SafeIntConvert[product.ID](tmp)
+	if err != nil {
+		return httputils.Errorf(http.StatusBadRequest, "invalid ingredient ID %q: %v", ingredientRaw, err)
+	}
 
 	resp, err := s.compute(user, menu, ingredient)
 	if err != nil {
