@@ -1,5 +1,11 @@
 package utils
 
+import (
+	"fmt"
+
+	"golang.org/x/exp/constraints"
+)
+
 // Zipper goes through two sorted slices and calls:
 // - the left function for elements only in the first slice,
 // - the center function for elements in both slices
@@ -54,4 +60,12 @@ func Partition[T any](slice []T, predicate func(t T) bool) (p int) {
 		p++
 	}
 	return p
+}
+
+func SafeIntConvert[DST constraints.Integer, SRC constraints.Integer](u SRC) (DST, error) {
+	v := DST(u)
+	if SRC(v) != u {
+		return 0, fmt.Errorf("cannot convert: value %d is out of range", u)
+	}
+	return v, nil
 }

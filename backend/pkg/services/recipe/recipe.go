@@ -15,6 +15,7 @@ import (
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/logger"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/product"
 	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/recipe"
+	"github.com/EduardGomezEscandell/grocery-price-fetcher/backend/pkg/utils"
 )
 
 type Service struct {
@@ -224,5 +225,5 @@ func parseEndpoint(r *http.Request) (id recipe.ID, err error) {
 		return 0, httputils.Errorf(http.StatusBadRequest, "invalid id: %v", err)
 	}
 
-	return recipe.ID(idURL), nil
+	return utils.SafeIntConvert[recipe.ID](idURL)
 }
