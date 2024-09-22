@@ -32,31 +32,31 @@ run-mock: ## Start the frontend with a mock backend
 	cd frontend && npm run start
 
 build-docker: build-go build-js ## Build the Docker image
-	cd deploy/container && make build
+	cd deploy/container && $(MAKE) build
 
 package: ## Package the application for deployment (see deploy/host Makefile)
-	cd deploy/host && make package
+	cd deploy/host && $(MAKE) package
 
+FQDN ?= https://localhost
 deploy: ## Deploy the application (see deploy/host Makefile)
-	cd deploy/host && make deploy-ssh
+	cd deploy/host && $(MAKE) deploy-ssh
 
 full-start: build-docker install start ## Build the application and self-host it
 
-FQDN ?= https://localhost
 install: ## Install the the application locally (see deploy/install Makefile)
-	cd deploy/host && make install FQDN=$(FQDN)
+	cd deploy/host && $(MAKE) install
 
 start: ## Self-host the application (see deploy/start Makefile)
-	cd deploy/host && make start
+	cd deploy/host && $(MAKE) start
 
 stop: ## Stop the application (see deploy/host Makefile)
-	cd deploy/host && make stop
+	cd deploy/host && $(MAKE) stop
 
 uninstall: ## Uninstall the application (see deploy/purge Makefile)
-	cd deploy/host && make purge
+	cd deploy/host && $(MAKE) purge
 
 clean: ## Clean up build artifacts, Docker containers, and images
 	rm -r bin || true
-	cd deploy/container && make clean
-	cd deploy/host && make purge
-	cd backend && make clean
+	cd deploy/container && $(MAKE) clean
+	cd deploy/host && $(MAKE) purge
+	cd backend && $(MAKE) clean

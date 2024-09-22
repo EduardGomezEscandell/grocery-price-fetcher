@@ -93,7 +93,7 @@ purge: stop ## Stop and remove all service files and data
 	sudo rm -rf '$(ETC)' 	             || true
 
 # DO NOT DEPLOY AFTER THIS LINE
-.PHONY: package deploy
+.PHONY: package deploy-ssh deploy-gce
 
 VERSION := $(shell git describe --tags --always --dirty)
 package: ## Build a deployable package (requires DOCKER_USER)
@@ -131,7 +131,7 @@ deploy-gce: package ## Deploy the package to a remote Google Compute Engine serv
 		--project='$(GCLOUD_PROJECT)'   \
 		--zone='$(GCLOUD_ZONE)'         \
 		'$(GCLOUD_VM)'                  \
-		--command="cd ~ && tar -xzf '$(PKG).tar.gz' && cd '$(PKG)' && make install && make start"
+		"cd ~ && tar -xzf '$(PKG).tar.gz' && cd '$(PKG)' && make install FQDN='$(FQDN)' && make start"
 
 	@echo "Allowing server to start..."
 	sleep 10
@@ -141,7 +141,7 @@ deploy-gce: package ## Deploy the package to a remote Google Compute Engine serv
 		--project='$(GCLOUD_PROJECT)'   \
 		--zone='$(GCLOUD_ZONE)'         \
 		'$(GCLOUD_VM)'                  \
-		--command="journalctl -u '$(PKG).service' --since '$(NOW_UTC)' --no-pager -l"
+		"journalctl -u '$(PKG).service' --since '$(NOW_UTC)' --no-pager -l"
 
 	@echo "Deployment sanity-test..."
 	curl --retry 20 --retry-delay 5 --retry-all-errors -k '$(FQDN)/api/version'
@@ -152,7 +152,7 @@ deploy-ssh: package ## Deploy the package to a remote server via SSH (requires S
 	scp '$(PKG).tar.gz' '$(SSH_TARGET):~/$(PKG).tar.gz'
 
 	ssh '$(SSH_TARGET)' \
-		"cd ~ && tar -xzf '$(PKG).tar.gz' && cd '$(PKG)' && make install && make start"
+		"cd ~ && tar -xzf '$(PKG).tar.gz' && cd '$(PKG)' && make install FQDN='$(FQDN)' && make start"
 
 	@echo "Allowing server to start..."
 	sleep 10
