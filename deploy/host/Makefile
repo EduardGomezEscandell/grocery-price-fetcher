@@ -103,7 +103,7 @@ package: ## Build a deployable package (requires DOCKER_USER)
 	sudo docker tag $(PKG) $(DOCKER_USER)/$(PKG):$(VERSION)
 	sudo docker push $(DOCKER_USER)/$(PKG):$(VERSION)
 
-	rm -r $(PKG) / || true
+	rm -r '$(PKG)' || true
 	mkdir -p $(PKG)
 	rsync -r ./* $(PKG) --exclude $(PKG) --exclude .gitignore
 
