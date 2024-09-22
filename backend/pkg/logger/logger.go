@@ -80,8 +80,8 @@ func (en *e) SetOutput(w io.Writer) {
 }
 
 func constrainLevel(level int) logrus.Level {
-	maxlvl := slices.Max(logrus.AllLevels)
-	lvl := min(uint(max(0, level)), uint(maxlvl))
+	maxlvl := int(slices.Max(logrus.AllLevels))
+	lvl := max(0, min(level, maxlvl))
 	//nolint: gosec // We are constraining the level to the logrus levels
 	return logrus.Level(lvl)
 }
