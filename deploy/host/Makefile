@@ -23,30 +23,30 @@ install: ## Install the service. Set environment variable FQDN to configure the 
 	sudo cp ./config.yaml "$(ETC)/config.yaml"
 	sudo cp -r ./sample-data "$(ETC)/sample-data"
 
-	[ -f "$(ETC)/db_root_password.txt" ]                              \
+	[ -f '$(ETC)/db_root_password.txt' ]                              \
 		&& echo "Root password file already exists"                   \
 		|| (                                                          \
-			sudo touch         "$(ETC)/db_root_password.txt"          \
-			&& sudo chmod 0600 "$(ETC)/db_root_password.txt"          \
+			sudo touch         '$(ETC)/db_root_password.txt'          \
+			&& sudo chmod 0600 '$(ETC)/db_root_password.txt'          \
 			&& echo "$$(openssl rand -hex 32)"                        \
-			   | sudo tee "$(ETC)/db_root_password.txt" > /dev/null   \
+			   | sudo tee '$(ETC)/db_root_password.txt' > /dev/null   \
 			&& echo "Root password file created"                      \
 		)
 
-	[ -f "$(ETC)/google_client_secret.txt" ]                             \
+	[ -f '$(ETC)/google_client_secret.txt' ]                             \
 		&& echo "Google client secret file already exists"               \
 		|| (                                                             \
-			sudo touch         "$(ETC)/google_client_secret.txt"         \
-			&& sudo chmod 0600 "$(ETC)/google_client_secret.txt"         \
+			sudo touch         '$(ETC)/google_client_secret.txt'         \
+			&& sudo chmod 0600 '$(ETC)/google_client_secret.txt'         \
 			&& echo "Empty Google client secret file created"            \
 		)
 
-	[ -d "$(ETC)/certificates" ]                              		  \
+	[ -d '$(ETC)/certificates' ]                              		  \
 		&& echo "Certificate directory already exists"                \
 		|| (                                                          \
-			sudo mkdir -p      "$(ETC)/certificates"                  \
-			&& sudo chmod 0600 "$(ETC)/certificates"                  \
-			&& sudo cp ./certificates/* "$(ETC)/certificates"         \
+			sudo mkdir -p      '$(ETC)/certificates'                  \
+			&& sudo chmod 0600 '$(ETC)/certificates'                  \
+			&& sudo cp ./certificates/* '$(ETC)/certificates'         \
 			&& echo "Self-signed certificates used"                   \
 		)
 
@@ -71,7 +71,7 @@ start: ## Start the service
 	systemctl status "$(PKG).service" --no-pager -l
 	@echo To view logs run:
 	@echo
-	@echo journalctl -u \"$(PKG).service\" --since \"$(NOW)\"
+	@echo journalctl -u \'$(PKG).service\' --since \'$(NOW)\'
 	@echo
 
 db-shell: ## Open a shell in the database container
@@ -80,58 +80,58 @@ db-shell: ## Open a shell in the database container
 		bash -c 'mysql -u root -p$$(cat /run/secrets/db_root_password)'
 
 stop: ## Stop the service
-	sudo systemctl stop "$(PKG).service"    || true
-	sudo systemctl disable "$(PKG).service" || true
+	sudo systemctl stop '$(PKG).service'    || true
+	sudo systemctl disable '$(PKG).service' || true
 
 purge: stop ## Stop and remove all service files and data
 	sudo docker compose rm -fsv          || true
-	sudo docker container rm -f $(PKG)-grocery-1   || true
-	sudo docker container rm -f $(PKG)-database-1   || true
-	sudo docker container rm -f $(PKG)-prepopulate-1   || true
+	sudo docker container rm -f '$(PKG)-grocery-1'       || true
+	sudo docker container rm -f '$(PKG)-database-1'      || true
+	sudo docker container rm -f '$(PKG)-prepopulate-1'   || true
 	sudo docker volume rm -f $(PKG)_data || true
-	sudo rm -rf "$(SERVICE)"             || true
-	sudo rm -rf "$(ETC)" 	             || true
+	sudo rm -rf '$(SERVICE)'             || true
+	sudo rm -rf '$(ETC)' 	             || true
 
 # DO NOT DEPLOY AFTER THIS LINE
 .PHONY: package deploy
 
 VERSION := $(shell git describe --tags --always --dirty)
 package: ## Build a deployable package (requires DOCKER_USER)
-	@echo "Building package $(PKG) version $(VERSION)"
-	if [ -z "$(DOCKER_USER)" ]; then echo "Error: Environment variable DOCKER_USER not set" >&2; exit 99; fi
+	@echo 'Building package $(PKG) version $(VERSION)'
+	if [ -z '$(DOCKER_USER)' ]; then echo "Error: Environment variable DOCKER_USER not set" >&2; exit 99; fi
 
-	sudo docker tag $(PKG) $(DOCKER_USER)/$(PKG):$(VERSION)
-	sudo docker push $(DOCKER_USER)/$(PKG):$(VERSION)
+	sudo docker tag '$(PKG)' '$(DOCKER_USER)/$(PKG):$(VERSION)'
+	sudo docker push '$(DOCKER_USER)/$(PKG):$(VERSION)'
 
 	rm -r '$(PKG)' || true
-	mkdir -p $(PKG)
-	rsync -r ./* $(PKG) --exclude $(PKG) --exclude .gitignore
+	mkdir -p '$(PKG)'
+	rsync -r ./* '$(PKG)' --exclude '$(PKG)' --exclude .gitignore
 
 	# Remove package target from this very Makefile
-	sed -i -n '/# DO NOT DEPLOY AFTER THIS LINE/q;p' $(PKG)/Makefile
+	sed -i -n '/# DO NOT DEPLOY AFTER THIS LINE/q;p' '$(PKG)/Makefile'
 
 	# Patch compose.yaml to pull image from docker hub
 	sed -i 's#image: $(PKG)#image: docker.io/$(DOCKER_USER)/$(PKG):$(VERSION)#g' $(PKG)/compose.yaml
 
-	echo $(VERSION) > "$(PKG)/version"
-	tar -czf $(PKG).tar.gz $(PKG)
+	echo '$(VERSION)' > '$(PKG)/version'
+	tar -czf '$(PKG).tar.gz' '$(PKG)'
 
 deploy-gce: package ## Deploy the package to a remote Google Compute Engine server (requires GCLOUD_VM, GCLOUD_ZONE, GCLOUD_PROJECT)
-	if [ -z "$(GCLOUD_VM)"      ]; then echo "Error: Environment variable GCLOUD_VM not set" >&2;      exit 99; fi
-	if [ -z "$(GCLOUD_ZONE)"    ]; then echo "Error: Environment variable GCLOUD_ZONE not set" >&2;    exit 99; fi
-	if [ -z "$(GCLOUD_PROJECT)" ]; then echo "Error: Environment variable GCLOUD_PROJECT not set" >&2; exit 99; fi
+	if [ -z '$(GCLOUD_VM)'      ]; then echo "Error: Environment variable GCLOUD_VM not set" >&2;      exit 99; fi
+	if [ -z '$(GCLOUD_ZONE)'    ]; then echo "Error: Environment variable GCLOUD_ZONE not set" >&2;    exit 99; fi
+	if [ -z '$(GCLOUD_PROJECT)' ]; then echo "Error: Environment variable GCLOUD_PROJECT not set" >&2; exit 99; fi
 
 	gcloud compute scp                  \
-		$(PKG).tar.gz                   \
-		$(GCLOUD_VM):~/$(PKG).tar.gz     \
+		'$(PKG).tar.gz'                 \
+		'$(GCLOUD_VM):~/$(PKG).tar.gz'  \
 		--project='$(GCLOUD_PROJECT)'   \
 		--zone='$(GCLOUD_ZONE)'
 
 	gcloud compute ssh                  \
 		--project='$(GCLOUD_PROJECT)'   \
 		--zone='$(GCLOUD_ZONE)'         \
-		$(GCLOUD_VM)                    \
-		--command="cd ~ && tar -xzf $(PKG).tar.gz && cd $(PKG) && make install && make start"
+		'$(GCLOUD_VM)'                  \
+		--command="cd ~ && tar -xzf '$(PKG).tar.gz' && cd '$(PKG)' && make install && make start"
 
 	@echo "Allowing server to start..."
 	sleep 10
@@ -140,27 +140,27 @@ deploy-gce: package ## Deploy the package to a remote Google Compute Engine serv
 	gcloud compute ssh                  \
 		--project='$(GCLOUD_PROJECT)'   \
 		--zone='$(GCLOUD_ZONE)'         \
-		$(GCLOUD_VM)                    \
+		'$(GCLOUD_VM)'                  \
 		--command="journalctl -u '$(PKG).service' --since '$(NOW_UTC)' --no-pager -l"
 
 	@echo "Deployment sanity-test..."
-	curl --retry 20 --retry-delay 5 --retry-all-errors -k "$(FQDN)/api/version"
+	curl --retry 20 --retry-delay 5 --retry-all-errors -k '$(FQDN)/api/version'
 
 deploy-ssh: package ## Deploy the package to a remote server via SSH (requires SSH_TARGET)
-	if [ -z "$(SSH_TARGET)" ]; then echo "Error: Environment variable SSH_TARGET not set" >&2; exit 99; fi
+	if [ -z '$(SSH_TARGET)' ]; then echo "Error: Environment variable SSH_TARGET not set" >&2; exit 99; fi
 
-	scp "$(PKG).tar.gz" "$(SSH_TARGET):~/$(PKG).tar.gz"
+	scp '$(PKG).tar.gz' '$(SSH_TARGET):~/$(PKG).tar.gz'
 
-	ssh "$(SSH_TARGET)" \
-		"cd ~ && tar -xzf $(PKG).tar.gz && cd $(PKG) && make install && make start"
+	ssh '$(SSH_TARGET)' \
+		"cd ~ && tar -xzf '$(PKG).tar.gz' && cd '$(PKG)' && make install && make start"
 
 	@echo "Allowing server to start..."
 	sleep 10
 
 	@echo "Deployment logs:"
-	ssh "$(SSH_TARGET)" \
+	ssh '$(SSH_TARGET)' \
 		"journalctl -u '$(PKG).service' --since '$(NOW_UTC)' --no-pager -l"
 
 	@echo "Deployment sanity-test..."
-	curl --retry 20 --retry-delay 5 --retry-all-errors -k "$(FQDN)/api/version"
+	curl --retry 20 --retry-delay 5 --retry-all-errors -k '$(FQDN)/api/version'
 
