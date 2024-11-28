@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/EduardGomezEscandell/grocery-price-fetcher/backend v0.0.0-20240705232603-db47708097b6
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 )
 
 require (
